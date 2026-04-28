@@ -86,36 +86,23 @@ main {
 .ldot { width:18px; height:3px; border-radius:2px; }
 #mainCanvas { display:block; width:100%; border-radius:6px; }
 
-.section-label {
-  font-size:.63rem; text-transform:uppercase; letter-spacing:2px; color:var(--muted);
-  padding:0 2px; flex-shrink:0;
-}
-#scrollArea { position:relative; flex:1; min-height:0; overflow:hidden; }
-#historyList { display:flex; flex-direction:column; gap:4px; height:100%; overflow-y:auto; scrollbar-width:none; }
-#historyList::-webkit-scrollbar { display:none; }
-.scroll-arrow {
-  position:absolute; left:50%; transform:translateX(-50%);
-  background:var(--surface2); border:1px solid var(--border);
-  color:var(--muted); border-radius:20px; padding:3px 20px 4px;
-  font-size:.6rem; cursor:pointer; opacity:0; transition:opacity .2s;
-  pointer-events:none; z-index:10;
-}
-.scroll-arrow.visible { opacity:1; pointer-events:auto; }
-.scroll-arrow:hover { color:var(--text); border-color:var(--muted); }
-.scroll-arrow.up { top:2px; }
-.scroll-arrow.down { bottom:2px; }
+#historyList { display:grid; grid-template-rows:repeat(6,1fr); gap:5px; flex:1; min-height:0; }
+.h-placeholder { border:1px solid var(--border); border-radius:10px; opacity:0.5; }
 
 .h-item {
   display:flex; align-items:center; gap:8px;
-  background:var(--surface); border:1px solid var(--border);
+  background: color-mix(in srgb, var(--c, transparent) 8%, var(--surface));
+  border:1px solid color-mix(in srgb, var(--c, var(--border)) 30%, var(--border));
   border-radius:10px; padding:5px 10px;
   cursor:pointer; transition:border-color .2s, background .2s;
   animation:fadeSlide .22s ease; user-select:none;
+  min-height:0; overflow:hidden;
 }
-.h-item:hover { border-color:var(--muted); }
-.h-item.active-on { border-color:#f59e0b55; background:#12100a; }
-.h-item.last-item  { border-color:#f59e0b33; }
-.h-item.won-item   { border-color:#10b98133; background:#061210; }
+.h-item:hover { border-color: color-mix(in srgb, var(--c, var(--muted)) 60%, var(--muted)); }
+.h-item.active-on {
+  background: color-mix(in srgb, var(--c, #f59e0b) 18%, #060606);
+  border-color: color-mix(in srgb, var(--c, #f59e0b) 70%, transparent);
+}
 @keyframes fadeSlide { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:none} }
 
 .h-word {
@@ -124,10 +111,10 @@ main {
   flex-shrink:0;
 }
 .h-word.won { color:#10b981; }
-.h-mini { flex:1; min-width:0; height:52px; display:block; }
+.h-mini { flex:1; min-width:0; align-self:stretch; display:block; height:auto; }
 .h-right { display:flex; flex-direction:column; align-items:flex-end; gap:1px; flex-shrink:0; }
 .h-delta { font-size:.7rem; min-width:38px; text-align:right; color:var(--muted); font-variant-numeric:tabular-nums; }
-.h-delta.close { color:#f59e0b; }
+.h-delta.close { color:#facc15; }
 .h-delta.hot   { color:#10b981; }
 .h-toggle { font-size:.58rem; color:var(--muted); text-transform:uppercase; letter-spacing:1px; }
 .h-item.active-on .h-toggle { color:#f59e0b; }
@@ -261,12 +248,7 @@ main {
     <canvas id="mainCanvas" height="150"></canvas>
   </div>
 
-  <div class="section-label" id="histLabel" style="display:none">- palpites anteriores -</div>
-  <div id="scrollArea">
-    <div id="historyList"></div>
-    <button class="scroll-arrow up" id="scrollUp" onclick="document.getElementById('historyList').scrollTo({top:0,behavior:'smooth'})">▲</button>
-    <button class="scroll-arrow down" id="scrollDown" onclick="document.getElementById('historyList').scrollTo({top:document.getElementById('historyList').scrollHeight,behavior:'smooth'})">▼</button>
-  </div>
+  <div id="historyList"></div>
 
   <div class="input-card">
     <div class="lboxes" id="lboxes"></div>
@@ -368,9 +350,7 @@ const KEY_FREE  = "pr_free";
 function newGame(free=false){
   closeRes(); isDaily=!free; done=false;
   guesses=[]; current=Array(5).fill(""); focusIdx=0;
-  document.getElementById("historyList").innerHTML="";
-  document.getElementById("histLabel").style.display="none";
-  updateScrollArrows();
+  createPlaceholders();
 
   if(isDaily){
     // Tenta restaurar sessão diária salva
@@ -380,7 +360,6 @@ function newGame(free=false){
       guesses=saved.guesses; done=saved.done;
       updateBadge(); buildBoxes(); buildKB();
       guesses.forEach((_,i)=>addHistItem(i));
-      if(guesses.length>0) document.getElementById("histLabel").style.display="";
       drawMain();
       if(done) setTimeout(()=>showRes(saved.won),400);
       return;
@@ -491,7 +470,6 @@ function submit(){
   const won=norm(word)===norm(target);
   guesses.push({word,vals,delta,won,visible:true});
   addHistItem(guesses.length-1);
-  document.getElementById("histLabel").style.display="";
   drawMain();
 
   const finished=won||guesses.length>=6;
@@ -556,19 +534,19 @@ function drawMain(){
   const{ctx,W,H}=setupCanvas(); ctx.clearRect(0,0,W,H); drawGuides(ctx,W,H);
   const last=guesses.length-1; const won=guesses.length>0&&guesses[last].won;
   guesses.forEach((g,i)=>{ if(i===last||!g.visible)return; drawCurve(ctx,toPoints(g.vals,W,H),"#2a3a50",1.5,0.7); });
-  if(guesses.length>0){ const g=guesses[last]; if(g.visible) drawCurve(ctx,toPoints(g.vals,W,H),g.won?"#10b981":"#f59e0b",2.2,0.95,0.04); }
+  if(guesses.length>0){ const g=guesses[last]; if(g.visible) drawCurve(ctx,toPoints(g.vals,W,H),dotCol(g),2.2,0.95,0.04); }
   drawCurve(ctx,toPoints(targetV,W,H),won?"#10b981":"#3b82f6",2.5,0.9);
 }
 
 // ===================== HISTÓRICO =====================
 function drawMini(mc, g){
-  const dpr=window.devicePixelRatio||1, pw=mc.clientWidth||200;
-  mc.width=pw*dpr; mc.height=52*dpr; mc.style.height="52px";
+  const dpr=window.devicePixelRatio||1, pw=mc.clientWidth||200, ph=mc.clientHeight||52;
+  mc.width=pw*dpr; mc.height=ph*dpr;
   const mctx=mc.getContext("2d"); mctx.scale(dpr,dpr);
-  const W2=pw,H2=52,pad=6;
+  const W2=pw,H2=ph,pad=6;
   function mpts(vs){ const xs=(W2-pad*2)/(vs.length-1); return vs.map((v,i)=>({x:pad+i*xs,y:pad+(1-v/25)*(H2-pad*2)})); }
   function mc2(pts,col,lw,alpha){ if(pts.length<2)return; mctx.save(); mctx.globalAlpha=alpha; mctx.strokeStyle=col; mctx.lineWidth=lw; mctx.lineJoin="round"; mctx.lineCap="round"; mctx.beginPath(); mctx.moveTo(pts[0].x,pts[0].y); for(let i=0;i<pts.length-1;i++){const mx=(pts[i].x+pts[i+1].x)/2;mctx.bezierCurveTo(mx,pts[i].y,mx,pts[i+1].y,pts[i+1].x,pts[i+1].y);} mctx.stroke(); pts.forEach(p=>{mctx.beginPath();mctx.arc(p.x,p.y,2.5,0,Math.PI*2);mctx.fillStyle=col;mctx.fill();}); mctx.restore(); }
-  mc2(mpts(g.vals),g.won?"#10b981":"#f59e0b",2.5,1);
+  mc2(mpts(g.vals),dotCol(g),2.5,1);
 }
 function redrawAllMinis(){
   document.querySelectorAll(".h-mini").forEach(mc=>{
@@ -576,30 +554,38 @@ function redrawAllMinis(){
     if(!isNaN(idx)&&guesses[idx]) drawMini(mc,guesses[idx]);
   });
 }
+function createPlaceholders(){
+  const list=document.getElementById("historyList");
+  list.innerHTML="";
+  for(let i=0;i<6;i++){
+    const p=document.createElement("div");
+    p.className="h-placeholder"; p.id="slot-"+i;
+    list.appendChild(p);
+  }
+}
 function addHistItem(idx){
   const g=guesses[idx];
   const item=document.createElement("div");
-  item.className="h-item"+(g.won?" won-item":" last-item"); item.id="hitem-"+idx;
+  item.className="h-item active-on"+(g.won?" won-item":""); item.id="hitem-"+idx;
+  item.style.setProperty('--c', dotCol(g));
   const wl=document.createElement("div"); wl.className="h-word"+(g.won?" won":""); wl.textContent=g.word; item.appendChild(wl);
   const mc=document.createElement("canvas"); mc.className="h-mini"; mc.dataset.idx=idx; item.appendChild(mc);
   const right=document.createElement("div"); right.className="h-right";
-  const dl=document.createElement("div"); dl.className="h-delta"+(g.delta<10?" hot":g.delta<28?" close":""); dl.textContent=g.won?"✓":"Δ "+g.delta; right.appendChild(dl);
+  const dl=document.createElement("div"); dl.className="h-delta"+(g.won||g.delta<10?" hot":g.delta<20?" close":""); dl.textContent=g.won?"✓":"Δ "+g.delta; right.appendChild(dl);
   const tg=document.createElement("div"); tg.className="h-toggle"; tg.textContent="ocultar"; right.appendChild(tg);
   item.appendChild(right);
-  item.addEventListener("click",()=>{ g.visible=!g.visible; tg.textContent=g.visible?"ocultar":"mostrar"; item.classList.toggle("active-on",g.visible&&idx!==guesses.length-1); drawMain(); });
-  document.getElementById("historyList").appendChild(item);
-  setTimeout(updateScrollArrows, 50);
+  item.addEventListener("click",()=>{ g.visible=!g.visible; tg.textContent=g.visible?"ocultar":"mostrar"; item.classList.toggle("active-on",g.visible); drawMain(); });
+  const slot=document.getElementById("slot-"+idx);
+  if(slot) slot.replaceWith(item); else document.getElementById("historyList").appendChild(item);
   setTimeout(()=>drawMini(mc,g), 30);
-  if(idx>0){ const prev=document.getElementById("hitem-"+(idx-1)); if(prev){prev.classList.remove("last-item"); if(guesses[idx-1].visible)prev.classList.add("active-on");} }
 }
 
 // ===================== COR DA BOLINHA =====================
 function dotCol(g){
-  if(g.won) return "#10b981";
-  if(g.delta<15) return"#34d399";
-  if(g.delta<35) return"#f59e0b";
-  if(g.delta<60) return"#f97316";
-  return"#ef4444";
+  if(g.won||g.delta<10) return "#10b981"; // 🟢
+  if(g.delta<20)        return "#facc15"; // 🟡
+  if(g.delta<40)        return "#f97316"; // 🟠
+  return                       "#ef4444"; // 🔴
 }
 
 // ===================== RESULTADO =====================
@@ -631,9 +617,9 @@ function buildShareText(){
   const dayN=getDayN();
   const score=won?`${guesses.length}/6`:"X/6";
   const dotsLine=guesses.map(g=>{
-    if(g.won) return "🟢";
-    if(g.delta<15) return "🟡";
-    if(g.delta<35) return "🟠";
+    if(g.won||g.delta<10) return "🟢";
+    if(g.delta<20)        return "🟡";
+    if(g.delta<40)        return "🟠";
     return "🔴";
   }).join(" ");
   const blanks=Array(6-guesses.length).fill("⚫").join(" ");
@@ -689,16 +675,7 @@ document.getElementById("statsModal").addEventListener("click",function(e){ if(e
 let tt;
 function toast(m){ const t=document.getElementById("toast"); t.textContent=m; t.classList.add("show"); clearTimeout(tt); tt=setTimeout(()=>t.classList.remove("show"),2300); }
 
-function updateScrollArrows(){
-  const el=document.getElementById("historyList");
-  const up=document.getElementById("scrollUp");
-  const dn=document.getElementById("scrollDown");
-  if(!el||!up||!dn) return;
-  up.classList.toggle("visible", el.scrollTop > 8);
-  dn.classList.toggle("visible", el.scrollTop + el.clientHeight < el.scrollHeight - 8);
-}
-document.getElementById("historyList").addEventListener("scroll", updateScrollArrows);
-window.addEventListener("resize", ()=>{ drawMain(); redrawAllMinis(); updateScrollArrows(); });
+window.addEventListener("resize", ()=>{ drawMain(); redrawAllMinis(); });
 
 // ===================== START =====================
 // Migra stats antigos se necessário
