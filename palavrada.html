@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PalavRada 🌊</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #080d18;
+  --surface: #0f1623;
+  --surface2: #111827;
+  --border: #1e2a3a;
+  --text: #e8f0fe;
+  --muted: #4a6080;
+  --accent: #3b82f6;
+  --key-bg: #141e2e;
+  --wave-target: #3b82f6;
+  --wave-last: #f59e0b;
+  --wave-old: #2a3a50;
+  --wave-win: #10b981;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background:var(--bg); color:var(--text);
+  font-family:'Space Grotesk',sans-serif;
+  min-height:100vh; display:flex; flex-direction:column; align-items:center;
+  -webkit-tap-highlight-color:transparent;
+}
+header {
+  width:100%; max-width:560px;
+  padding:14px 20px 10px;
+  display:flex; align-items:center; justify-content:space-between;
+  border-bottom:1px solid var(--border); flex-shrink:0;
+}
+.logo {
+  font-family:'DM Sans',sans-serif; font-size:1.3rem; font-weight:800;
+  background:linear-gradient(90deg,#60a5fa,#a78bfa,#f472b6);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+}
+.logo small {
+  display:block; font-size:.6rem; letter-spacing:2px; text-transform:uppercase;
+  color:var(--muted); -webkit-text-fill-color:var(--muted); margin-top:-2px;
+}
+.header-btns { display:flex; gap:8px; }
+.hbtn {
+  background:var(--key-bg); border:1px solid var(--border); color:var(--muted);
+  width:34px; height:34px; border-radius:8px; cursor:pointer;
+  font-size:1rem; display:grid; place-items:center; transition:color .2s, border-color .2s;
+}
+.hbtn:hover { color:var(--text); border-color:var(--muted); }
+
+.mode-badge {
+  font-size:.63rem; letter-spacing:1.5px; text-transform:uppercase;
+  padding:3px 12px; border-radius:30px; font-weight:700;
+  border:1px solid var(--border); color:var(--muted); background:var(--surface2);
+}
+.mode-badge.daily { color:#60a5fa; border-color:#1e3a5f; background:#0a1628; }
+.mode-badge.free  { color:#a78bfa; border-color:#2d1f5e; background:#0e0a1e; }
+
+#toast {
+  position:fixed; top:68px; left:50%;
+  transform:translateX(-50%) translateY(-10px);
+  background:var(--text); color:var(--bg);
+  padding:8px 20px; border-radius:30px; font-weight:700; font-size:.82rem;
+  opacity:0; transition:all .25s; z-index:200; pointer-events:none; white-space:nowrap;
+}
+#toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
+main {
+  width:100%; max-width:560px; padding:8px 14px 0;
+  display:flex; flex-direction:column; gap:8px; flex:1; overflow-y:auto;
+}
+
+.wave-card {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:14px; padding:10px 14px 8px; flex-shrink:0;
+}
+.wave-legend {
+  display:flex; gap:14px; margin-bottom:6px;
+  font-size:.66rem; letter-spacing:1px; text-transform:uppercase; color:var(--muted);
+}
+.wave-legend span { display:flex; align-items:center; gap:5px; }
+.ldot { width:18px; height:3px; border-radius:2px; }
+#mainCanvas { display:block; width:100%; border-radius:6px; }
+
+.section-label {
+  font-size:.63rem; text-transform:uppercase; letter-spacing:2px; color:var(--muted);
+  padding:0 2px; flex-shrink:0;
+}
+#historyList { display:flex; flex-direction:column; gap:4px; }
+
+.h-item {
+  display:flex; align-items:center; gap:8px;
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:10px; padding:5px 10px;
+  cursor:pointer; transition:border-color .2s, background .2s;
+  animation:fadeSlide .22s ease; user-select:none;
+}
+.h-item:hover { border-color:var(--muted); }
+.h-item.active-on { border-color:#f59e0b55; background:#12100a; }
+.h-item.last-item  { border-color:#f59e0b33; }
+.h-item.won-item   { border-color:#10b98133; background:#061210; }
+@keyframes fadeSlide { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:none} }
+
+.h-word {
+  font-family:'DM Sans',sans-serif; font-size:.93rem; font-weight:700;
+  letter-spacing:3px; text-transform:uppercase; min-width:76px; color:var(--text);
+}
+.h-word.won { color:#10b981; }
+.h-mini { flex:1; height:32px; }
+.h-right { display:flex; flex-direction:column; align-items:flex-end; gap:1px; }
+.h-delta { font-size:.7rem; min-width:38px; text-align:right; color:var(--muted); font-variant-numeric:tabular-nums; }
+.h-delta.close { color:#f59e0b; }
+.h-delta.hot   { color:#10b981; }
+.h-toggle { font-size:.58rem; color:var(--muted); text-transform:uppercase; letter-spacing:1px; }
+.h-item.active-on .h-toggle { color:#f59e0b; }
+
+.input-card {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:14px; padding:10px 12px 12px; flex-shrink:0;
+}
+.lboxes { display:flex; gap:5px; justify-content:center; margin-bottom:10px; }
+.lbox {
+  width:48px; height:50px; background:var(--bg);
+  border:2px solid var(--border); border-radius:9px;
+  display:flex; align-items:center; justify-content:center;
+  font-family:'DM Sans',sans-serif; font-size:1.35rem; font-weight:800;
+  text-transform:uppercase; color:var(--text); cursor:pointer; position:relative;
+  transition:border-color .15s, box-shadow .15s;
+}
+.lbox.focused { border-color:var(--accent); box-shadow:0 0 0 2px rgba(59,130,246,.2); }
+.lbox.filled  { border-color:#253345; }
+.lbox.focused.filled { border-color:var(--accent); }
+.lbox.focused::after {
+  content:''; display:block; width:2px; height:55%;
+  background:var(--accent); position:absolute; animation:blink 1s step-end infinite;
+}
+.lbox.filled.focused::after { display:none; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+@keyframes pop   { 0%{transform:scale(1)} 50%{transform:scale(1.1)} 100%{transform:scale(1)} }
+@keyframes shk   {
+  0%,100%{transform:translateX(0)} 20%{transform:translateX(-7px)}
+  40%{transform:translateX(7px)}  60%{transform:translateX(-5px)} 80%{transform:translateX(5px)}
+}
+.lbox.pop { animation:pop .12s ease; }
+
+.kb { display:flex; flex-direction:column; gap:4px; }
+.kb-row { display:flex; justify-content:center; gap:3px; }
+.key {
+  height:46px; flex:1; max-width:38px;
+  background:var(--key-bg); border:1px solid var(--border);
+  border-radius:7px; color:var(--text);
+  font-family:'Space Grotesk',sans-serif; font-size:.84rem; font-weight:700;
+  cursor:pointer; display:flex; align-items:center; justify-content:center;
+  text-transform:uppercase; transition:background .15s, transform .1s;
+}
+.key.wide { max-width:56px; font-size:.67rem; }
+.key:active { transform:scale(.91); }
+
+.overlay {
+  position:fixed; inset:0; background:rgba(0,0,0,.82);
+  backdrop-filter:blur(8px); z-index:300;
+  display:flex; align-items:center; justify-content:center;
+  opacity:0; pointer-events:none; transition:opacity .3s;
+}
+.overlay.open { opacity:1; pointer-events:all; }
+.modal {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:18px; padding:26px 22px; max-width:370px; width:92%;
+  transform:translateY(14px); transition:transform .3s;
+}
+.overlay.open .modal { transform:none; }
+.modal h2 {
+  font-family:'DM Sans',sans-serif; font-size:1.15rem; font-weight:800; margin-bottom:12px;
+  background:linear-gradient(90deg,#60a5fa,#a78bfa);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+}
+.modal p { color:var(--muted); line-height:1.75; font-size:.86rem; margin-bottom:9px; }
+.modal strong { color:var(--text); }
+.mbtn {
+  margin-top:14px; width:100%; padding:11px;
+  background:linear-gradient(90deg,#3b82f6,#8b5cf6); border:none; border-radius:11px;
+  color:#fff; font-family:'DM Sans',sans-serif; font-weight:700; font-size:.92rem;
+  cursor:pointer; transition:opacity .2s;
+}
+.mbtn:hover { opacity:.85; }
+.mbtn.sec {
+  background:transparent; border:1px solid var(--border); color:var(--muted); margin-top:7px;
+  font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:.86rem;
+}
+.mbtn.sec:hover { border-color:var(--muted); color:var(--text); }
+.mbtn.free-btn { background:linear-gradient(90deg,#7c3aed,#4f46e5); }
+
+/* resultado */
+.res-tag { font-size:.65rem; letter-spacing:3px; text-transform:uppercase; color:var(--muted); text-align:center; }
+.res-day { font-size:.72rem; color:var(--muted); text-align:center; margin-bottom:2px; }
+.res-num {
+  font-family:'DM Sans',sans-serif; font-size:2.4rem; font-weight:800;
+  color:var(--text); text-align:center; line-height:1.1; margin:2px 0 6px;
+}
+.res-label { font-size:.7rem; color:var(--muted); text-align:center; margin-bottom:2px; }
+.res-word {
+  font-family:'DM Sans',sans-serif; font-size:1.6rem; font-weight:800;
+  letter-spacing:5px; text-align:center; margin-bottom:10px; color:#10b981;
+}
+.res-word.lost { color:var(--muted); }
+
+.dots-row { display:flex; gap:7px; justify-content:center; margin:4px 0 14px; }
+.dot { width:30px; height:30px; border-radius:50%; }
+
+.stats { display:flex; gap:20px; justify-content:center; margin:0 0 8px; }
+.stat { text-align:center; }
+.stat-n { font-family:'DM Sans',sans-serif; font-size:1.6rem; font-weight:800; }
+.stat-l { font-size:.63rem; text-transform:uppercase; letter-spacing:1px; color:var(--muted); }
+
+.divider { height:1px; background:var(--border); margin:10px 0; }
+.countdown-lbl { text-align:center; font-size:.66rem; letter-spacing:2px; text-transform:uppercase; color:var(--muted); margin-bottom:3px; }
+.countdown { text-align:center; font-family:'DM Sans',sans-serif; font-size:1.5rem; font-weight:800; letter-spacing:3px; margin-bottom:8px; }
+</style>
+</head>
+<body>
+<div id="toast"></div>
+
+<header>
+  <div class="logo">PalavRada <small>🌊 jogo de ondas</small></div>
+  <div class="header-btns">
+    <button class="hbtn" id="btnToggleMode" onclick="toggleMode()" title="Alternar modo">🎲</button>
+    <button class="hbtn" onclick="openHelp()" title="Ajuda">❓</button>
+    <button class="hbtn" onclick="openStats()" title="Estatísticas">📊</button>
+  </div>
+</header>
+
+<main>
+  <div style="display:flex;justify-content:center;padding:2px 0">
+    <div class="mode-badge daily" id="modeBadge">🌞 Desafio Diário</div>
+  </div>
+
+  <div class="wave-card">
+    <div class="wave-legend">
+      <span><div class="ldot" style="background:var(--wave-target)"></div>Alvo</span>
+      <span><div class="ldot" style="background:var(--wave-last)"></div>Último</span>
+      <span><div class="ldot" style="background:var(--wave-old)"></div>Anteriores</span>
+    </div>
+    <canvas id="mainCanvas" height="150"></canvas>
+  </div>
+
+  <div class="section-label" id="histLabel" style="display:none">— palpites anteriores —</div>
+  <div id="historyList"></div>
+
+  <div class="input-card">
+    <div class="lboxes" id="lboxes"></div>
+    <div class="kb" id="kb"></div>
+  </div>
+</main>
+
+<!-- Help -->
+<div class="overlay" id="helpModal">
+  <div class="modal">
+    <h2>Como Jogar 🌊</h2>
+    <p>Cada letra tem um valor numérico: <strong>A = 0, B = 1 ... Z = 25</strong>. Esses valores formam os picos e vales de uma onda.</p>
+    <p>A onda da <strong>palavra-alvo</strong> fica sempre visível em <strong style="color:#60a5fa">azul</strong>. Ao dar Enter, sua onda aparece por cima. O objetivo é <strong>fazer as ondas coincidirem</strong>.</p>
+    <p>💡 Clique em qualquer letra para editar aquela posição. Use ← → para navegar.</p>
+    <p>💡 Clique num palpite anterior para mostrar/ocultar a onda no gráfico.</p>
+    <p>⚠️ Só são aceitas <strong>palavras válidas</strong> do português brasileiro (~6.700 palavras).</p>
+    <button class="mbtn" onclick="closeHelp()">Entendi!</button>
+  </div>
+</div>
+
+<!-- Stats -->
+<div class="overlay" id="statsModal">
+  <div class="modal" style="text-align:center">
+    <h2>Estatísticas 📊</h2>
+    <div class="stats" style="margin:16px 0">
+      <div class="stat"><div class="stat-n" id="stP">0</div><div class="stat-l">Jogos</div></div>
+      <div class="stat"><div class="stat-n" id="stW">0</div><div class="stat-l">Vitórias</div></div>
+      <div class="stat"><div class="stat-n" id="stS">0</div><div class="stat-l">Sequência 🔥</div></div>
+    </div>
+    <p style="font-size:.78rem;margin-bottom:0">Streak conta apenas com o <strong>desafio diário</strong>.</p>
+    <button class="mbtn sec" onclick="closeStats()">Fechar</button>
+  </div>
+</div>
+
+<!-- Resultado -->
+<div class="overlay" id="resModal">
+  <div class="modal">
+    <div class="res-tag" id="resTag">GAME OVER</div>
+    <div class="res-day" id="resDay"></div>
+    <div class="res-num" id="resNum">X/6</div>
+    <div class="dots-row" id="dotsRow"></div>
+    <div class="res-label">A palavra era</div>
+    <div class="res-word" id="resWord"></div>
+    <div class="stats">
+      <div class="stat"><div class="stat-n" id="sP">0</div><div class="stat-l">Jogos</div></div>
+      <div class="stat"><div class="stat-n" id="sW">0</div><div class="stat-l">Vitórias</div></div>
+      <div class="stat"><div class="stat-n" id="sS">0</div><div class="stat-l">Sequência</div></div>
+    </div>
+    <button class="mbtn" onclick="shareResult()">Compartilhar Resultado</button>
+    <div id="dailyExtras">
+      <div class="divider"></div>
+      <div class="countdown-lbl">Próxima palavra em</div>
+      <div class="countdown" id="countdown">--:--:--</div>
+      <button class="mbtn free-btn" onclick="startFree()">🎲 Jogar Modo Livre</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const POOL = ["ABRIR", "ABRIU", "ACABA", "ACABO", "ACASO", "ACHAM", "ACHAR", "ACHAS", "ACHEI", "ACHOU", "ACIMA", "ADAGA", "ADEUS", "ADORA", "ADORO", "AGORA", "AGUDO", "AINDA", "AJUDA", "AJUDE", "ALGUM", "ALMAS", "AMAVA", "AMBAS", "AMBOS", "AMIGA", "AMIGO", "AMPLO", "ANDAM", "ANDAR", "ANDAS", "ANDEI", "ANDOU", "ANTES", "AONDE", "APOIO", "ARAME", "AREIA", "ARMAS", "ASSIM", "ATIVO", "ATLAS", "ATRAS", "AUDIO", "AULAS", "AVIAO", "AVISO", "BAILE", "BAIXA", "BAIXO", "BALAS", "BALSA", "BANCO", "BANDA", "BANDO", "BANHO", "BARCO", "BASTA", "BATER", "BATEU", "BEBER", "BEBES", "BEIJO", "BEIRA", "BLOCO", "BOLAS", "BOLHA", "BOLSA", "BOLSO", "BOMBA", "BORDO", "BOTAO", "BOTAS", "BRACO", "BRAVO", "BREVE", "BRISA", "BROTO", "BRUMA", "BRUXA", "BURRO", "BUSCA", "CABRA", "CACAR", "CAIXA", "CALDO", "CALMA", "CALOR", "CALVO", "CAMPO", "CANAL", "CANTO", "CAPAZ", "CARAS", "CARGA", "CARGO", "CARNE", "CARRO", "CARTA", "CASAL", "CASAR", "CASAS", "CASCA", "CASOS", "CAULE", "CAUSA", "CENAS", "CERCA", "CERTA", "CERTO", "CHAMA", "CHAME", "CHAMO", "CHAVE", "CHEFE", "CHEGA", "CHEIA", "CHEIO", "CHUVA", "CINCO", "CLARO", "CLUBE", "COBRA", "COFRE", "COISA", "COMER", "COMEU", "COMUM", "CONTA", "CONTO", "COPIA", "CORDA", "CORPO", "CORRE", "CORTE", "CORVO", "COSTA", "CREIO", "CREME", "CRIAR", "CRIME", "CRIOU", "CRISE", "CULPA", "CUNHA", "CURSO", "CUSTA", "DADOS", "DAMOS", "DANCA", "DANOS", "DAQUI", "DARIA", "DEDOS", "DEIXA", "DEIXE", "DEIXO", "DELAS", "DELES", "DENSO", "DERAM", "DESDE", "DESSA", "DESSE", "DESTA", "DESTE", "DETER", "DEVEM", "DEVER", "DEVES", "DEVIA", "DIABO", "DIGAM", "DIGAS", "DIRIA", "DISCO", "DISSE", "DISSO", "DISTO", "DIZEM", "DIZER", "DIZES", "DIZIA", "DOBRO", "DOIDO", "DORES", "DORME", "DRAMA", "DROGA", "DURAR", "DUZIA", "ENTAO", "ENTRA", "ENTRE", "EPOCA", "ERROS", "ESSAS", "ESSES", "ESTAO", "ESTAR", "ESTAS", "ESTES", "ESTOU", "ETAPA", "EXAME", "EXTRA", "FACAM", "FACAS", "FACIL", "FACTO", "FAIXA", "FALAM", "FALAR", "FALAS", "FALEI", "FALES", "FALHA", "FALOU", "FALSO", "FALTA", "FARDO", "FAREI", "FARIA", "FARPA", "FARTA", "FARTO", "FAVOR", "FAZEM", "FAZER", "FAZES", "FAZIA", "FECHA", "FEITA", "FEITO", "FELIZ", "FESTA", "FIBRA", "FICAM", "FICAR", "FICAS", "FICOU", "FILHA", "FILHO", "FILME", "FINAL", "FIQUE", "FIRME", "FIZER", "FLORA", "FLUXO", "FOMOS", "FONTE", "FORAM", "FORCA", "FOREM", "FORES", "FORMA", "FORNO", "FORTE", "FOSCO", "FOSSE", "FOSTE", "FOTOS", "FRACO", "FUGIR", "FUGIU", "FUMAR", "FUNDO", "GAJOS", "GANHA", "GANHO", "GARFO", "GENIO", "GENTE", "GLOBO", "GOLPE", "GORDO", "GOSTA", "GOSTE", "GOSTO", "GOZAR", "GRACA", "GRADE", "GRATO", "GRAVE", "GRILO", "GRUPO", "HABIL", "HASTE", "HAVER", "HAVIA", "HEROI", "HOMEM", "HONRA", "HORAS", "HORTA", "HOTEL", "HOUVE", "HUMOR", "IAMOS", "IDADE", "IDEAL", "IDEIA", "IGUAL", "IMUNE", "IRIAM", "IRIAS", "IRMAO", "IRMOS", "JEITO", "JOGAR", "JOGOS", "JOVEM", "JUNTO", "JUSTO", "LANCE", "LARGA", "LARGO", "LASCA", "LATAO", "LAVAR", "LEITE", "LENDA", "LENHA", "LENTO", "LESTE", "LEVAM", "LEVAR", "LEVAS", "LEVEI", "LEVES", "LEVOU", "LICAO", "LIDAR", "LIDER", "LIGAR", "LIGOU", "LIGUE", "LIMPA", "LIMPO", "LINDA", "LINDO", "LINHA", "LISTA", "LIVRE", "LIVRO", "LOCAL", "LOIRO", "LONGA", "LONGE", "LONGO", "LOUCA", "LOUCO", "LUGAR", "LUTAR", "LUZES", "MAGIA", "MAGMA", "MAIOR", "MALAS", "MALHA", "MAMAS", "MANDA", "MANHA", "MARCA", "MASSA", "MATAR", "MATEI", "MATOU", "MEDIR", "MEIOS", "MENOR", "MENOS", "MENTE", "MERDA", "MESES", "MESMA", "MESMO", "METAS", "METER", "METEU", "METRO", "MEXER", "MICRO", "MILHO", "MINHA", "MIUDA", "MIUDO", "MOEDA", "MOLHO", "MONTE", "MORAR", "MORNO", "MORRE", "MORTA", "MORTE", "MORTO", "MOSCA", "MOTOR", "MUDAR", "MUDOU", "MUITA", "MUITO", "MUNDO", "NACAO", "NADAR", "NARIZ", "NAVES", "NAVIO", "NEGRO", "NERVO", "NESSA", "NESSE", "NESTA", "NESTE", "NISSO", "NISTO", "NIVEL", "NOBRE", "NOCAO", "NOITE", "NOIVA", "NOMES", "NORMA", "NORTE", "NOSSA", "NOSSO", "NOTAS", "NOVAS", "NOVOS", "NUNCA", "NUVEM", "OBTER", "ODEIA", "ODEIO", "OLHAR", "OLHEM", "OLHES", "OLHOS", "OLHOU", "ONDAS", "ONTEM", "OPACO", "OPCAO", "ORDEM", "OSSOS", "OSTRA", "OUTRA", "OUTRO", "OUVIR", "OUVIU", "PACTO", "PADRE", "PAGAR", "PAGOU", "PALMO", "PAPEL", "PARAR", "PAREM", "PAROU", "PARTE", "PASSA", "PASSE", "PASSO", "PASTA", "PECAS", "PEDIR", "PEDIU", "PEDRA", "PEGAR", "PEGOU", "PEITO", "PEIXE", "PELAS", "PELOS", "PENSA", "PENSE", "PENSO", "PERDA", "PERDE", "PERDI", "PERNA", "PERTO", "PIADA", "PILHA", "PINGO", "PISTA", "PLANO", "PLUMA", "POBRE", "PODEM", "PODER", "PODES", "PODIA", "POLPA", "POMBO", "PONHA", "PONTA", "PONTE", "PONTO", "PORCO", "PORRA", "PORTA", "POSSA", "POSSE", "POSSO", "POSTO", "POUCA", "POUCO", "PRAIA", "PRATO", "PRECO", "PRESA", "PRESO", "PRETO", "PRIMO", "PROVA", "PUDER", "PULAR", "PUXAR", "QUAIS", "QUASE", "QUEDA", "QUERO", "RADAR", "RADIO", "RAIOS", "RAIVA", "RAPAZ", "RASGO", "RASTO", "RAZAO", "REGRA", "REINO", "RESTA", "RESTO", "REVER", "REZAR", "RICOS", "RISCO", "RITMO", "ROCHA", "ROSTO", "ROUBO", "ROUPA", "SABEM", "SABER", "SABES", "SABIA", "SABOR", "SACOS", "SAFRA", "SAIAM", "SAIAS", "SAIBA", "SAIDA", "SAIDO", "SALSA", "SALTO", "SALVA", "SALVO", "SAUDE", "SEGUE", "SEJAM", "SEJAS", "SENAO", "SENDO", "SENSO", "SENTE", "SENTI", "SERAO", "SERAS", "SEREI", "SEREM", "SERES", "SERIA", "SERIE", "SERIO", "SERVE", "SERVO", "SINAL", "SINTA", "SINTO", "SITIO", "SOBRE", "SOLAR", "SOMOS", "SONHO", "SOPRO", "SORTE", "SOUBE", "SUBIR", "SULCO", "SUPER", "SURDO", "SUSTO", "TANGO", "TANTA", "TANTO", "TARDE", "TEMOS", "TEMPO", "TENDO", "TENHA", "TENHO", "TENSO", "TENTA", "TENTE", "TENTO", "TERAO", "TERAS", "TEREI", "TEREM", "TERES", "TERIA", "TERMO", "TERNO", "TERRA", "TESTE", "TIGRE", "TINHA", "TINTA", "TIPOS", "TIRAR", "TIREI", "TIROS", "TIROU", "TIVER", "TOCAR", "TODAS", "TODOS", "TOMAR", "TOMEI", "TOMOU", "TOQUE", "TORNA", "TORRE", "TOTAL", "TRAGA", "TRAMA", "TRATA", "TRATO", "TRAVA", "TRAVE", "TRETA", "TRIBO", "TROCA", "TUNEL", "TURBO", "TURMA", "TURNO", "TURVO", "UNICA", "UNICO", "USADA", "USADO", "USAVA", "VALOR", "VAMOS", "VAPOR", "VASTO", "VAZIO", "VEJAM", "VELHA", "VELHO", "VELOZ", "VEMOS", "VENDA", "VENDO", "VENHA", "VENHO", "VENTO", "VERAO", "VERDE", "VERSO", "VEZES", "VIBRA", "VIDAS", "VIDEO", "VIDRO", "VIGOR", "VILAO", "VIMOS", "VINDO", "VINHA", "VINHO", "VINTE", "VIOLA", "VIRAM", "VIRAR", "VIREM", "VIRES", "VIRUS", "VISAO", "VISTA", "VISTE", "VISTO", "VIVEM", "VIVER", "VIVES", "VIVIA", "VIVOS", "VOCAL", "VOCES", "VOLTA", "VOLTE", "VOLTO", "VOSSA", "VOSSO", "VULTO", "ZEBRA", "ZINCO"];
+const VALIDAS = new Set(["ABACO", "ABADE", "ABAFA", "ABAFE", "ABAFO", "ABALA", "ABALE", "ABALO", "ABANA", "ABANE", "ABANO", "ABATA", "ABATE", "ABATI", "ABATO", "ABDUZ", "ABETO", "ABOBA", "ABOBE", "ABOBO", "ABOIM", "ABOLE", "ABOLI", "ABONA", "ABONE", "ABONO", "ABRAM", "ABRAS", "ABREM", "ABRES", "ABREU", "ABRIA", "ABRIL", "ABRIR", "ABRIS", "ABRIU", "ABULA", "ABULO", "ABUSA", "ABUSE", "ABUSO", "ACABA", "ACABE", "ACABO", "ACAMA", "ACAME", "ACAMO", "ACARO", "ACASO", "ACATA", "ACATE", "ACATO", "ACEDA", "ACEDE", "ACEDI", "ACEDO", "ACENA", "ACENE", "ACENO", "ACESA", "ACESO", "ACHAI", "ACHAM", "ACHAR", "ACHAS", "ACHEI", "ACHEM", "ACHES", "ACHOU", "ACIDA", "ACIDE", "ACIDO", "ACIMA", "ACNES", "ACODE", "ACOES", "ACOLA", "ACUDA", "ACUDE", "ACUDI", "ACUDO", "ACUME", "ACURA", "ACURE", "ACURO", "ACUSA", "ACUSE", "ACUSO", "ADAGA", "ADAIS", "ADAMS", "ADEGA", "ADEGO", "ADEJA", "ADEJE", "ADEJO", "ADERE", "ADERI", "ADEUS", "ADIAI", "ADIAM", "ADIAR", "ADIAS", "ADIDA", "ADIDO", "ADIEI", "ADIEM", "ADIES", "ADIOU", "ADIRA", "ADIRO", "ADITA", "ADITE", "ADITO", "ADOBE", "ADOCA", "ADOCE", "ADOCO", "ADORA", "ADORE", "ADORO", "ADOTA", "ADOTE", "ADOTO", "ADROS", "ADUBA", "ADUBE", "ADUBO", "ADUFE", "ADULA", "ADULE", "ADULO", "ADUZA", "ADUZI", "ADUZO", "ADVEM", "ADVIM", "ADVIR", "AEREA", "AEREO", "AFACA", "AFACO", "AFAGA", "AFAGO", "AFAMA", "AFAME", "AFAMO", "AFANA", "AFANE", "AFANO", "AFARA", "AFAZE", "AFEGA", "AFERE", "AFERI", "AFETA", "AFETE", "AFETO", "AFIAI", "AFIAM", "AFIAR", "AFIAS", "AFIEI", "AFIEM", "AFIES", "AFIFA", "AFIFE", "AFIFO", "AFILA", "AFILE", "AFILO", "AFINA", "AFINE", "AFINO", "AFINS", "AFIOU", "AFIRA", "AFIRO", "AFIXA", "AFIXE", "AFIXO", "AFLUA", "AFLUI", "AFLUO", "AFOFA", "AFOFE", "AFOFO", "AFOGA", "AFOGO", "AFOLA", "AFOLE", "AFOLO", "AFONO", "AFORA", "AFORE", "AFORO", "AFTAS", "AFUMA", "AFUME", "AFUMO", "AGATA", "AGEIS", "AGIAM", "AGIAS", "AGIDA", "AGIDO", "AGIRA", "AGITA", "AGITE", "AGITO", "AGORA", "AGROR", "AGUAI", "AGUAM", "AGUAR", "AGUAS", "AGUCA", "AGUCE", "AGUCO", "AGUDA", "AGUDO", "AGUEI", "AGUEM", "AGUES", "AGUIA", "AGUOU", "AINDA", "AIPOS", "AIRES", "AJAIS", "AJUDA", "AJUDE", "AJUDO", "ALADA", "ALADO", "ALAGA", "ALAGO", "ALAIS", "ALAMO", "ALAPA", "ALAPE", "ALAPO", "ALARA", "ALAVA", "ALBAS", "ALBUM", "ALCAI", "ALCAM", "ALCAR", "ALCAS", "ALCEI", "ALCEM", "ALCES", "ALCOU", "ALDEA", "ALEGA", "ALEGO", "ALEIS", "ALEMA", "ALGAS", "ALGES", "ALGOZ", "ALGUM", "ALHEA", "ALHEE", "ALHEO", "ALHOS", "ALIAI", "ALIAM", "ALIAR", "ALIAS", "ALIBI", "ALICE", "ALIEI", "ALIEM", "ALIES", "ALIJA", "ALIJE", "ALIJO", "ALIOU", "ALISA", "ALISE", "ALISO", "ALLEN", "ALMAS", "ALOCA", "ALOCO", "ALOJA", "ALOJE", "ALOJO", "ALPES", "ALTAR", "ALTAS", "ALTEA", "ALTER", "ALTOS", "ALUAI", "ALUAM", "ALUAR", "ALUAS", "ALUDA", "ALUDE", "ALUDI", "ALUDO", "ALUEI", "ALUEM", "ALUES", "ALUGA", "ALUGO", "ALUIA", "ALUIR", "ALUIS", "ALUIU", "ALUNA", "ALUNE", "ALUNO", "ALUOU", "ALVAS", "ALVES", "ALVIM", "ALVOR", "ALVOS", "AMADA", "AMADO", "AMAGO", "AMAIS", "AMAPA", "AMARA", "AMARE", "AMARO", "AMATO", "AMAVA", "AMBAR", "AMBAS", "AMBOS", "AMEAI", "AMEAR", "AMEBA", "AMEEI", "AMEIA", "AMEIE", "AMEIO", "AMEIS", "AMENA", "AMENO", "AMENS", "AMEOU", "AMIBA", "AMIDO", "AMIGA", "AMIGO", "AMIMA", "AMIME", "AMIMO", "AMOJA", "AMOJE", "AMOJO", "AMOLA", "AMOLE", "AMOLO", "AMORA", "AMOVA", "AMOVE", "AMOVI", "AMOVO", "AMPLA", "AMPLO", "AMUAI", "AMUAM", "AMUAR", "AMUAS", "AMUEI", "AMUEM", "AMUES", "AMUOS", "AMUOU", "AMURA", "AMURE", "AMURO", "ANAFA", "ANAFE", "ANAFO", "ANAIS", "ANATA", "ANATE", "ANATO", "ANCAS", "ANCIA", "ANDAI", "ANDAM", "ANDAR", "ANDAS", "ANDEI", "ANDEM", "ANDES", "ANDOR", "ANDOU", "ANDRE", "ANEIS", "ANELA", "ANELE", "ANELO", "ANEXA", "ANEXE", "ANEXO", "ANGRA", "ANHOS", "ANIAO", "ANILA", "ANILE", "ANILO", "ANIMA", "ANIME", "ANIMO", "ANISA", "ANISE", "ANISO", "ANITA", "ANJOS", "ANODO", "ANOES", "ANOJA", "ANOJE", "ANOJO", "ANOSA", "ANOSO", "ANOTA", "ANOTE", "ANOTO", "ANSAS", "ANSIA", "ANTAO", "ANTAS", "ANTES", "ANTRO", "ANUAL", "ANUAM", "ANUAS", "ANUEM", "ANUIA", "ANUIR", "ANUIS", "ANUIU", "ANULA", "ANULE", "ANULO", "ANZOL", "AONDE", "AORTA", "APAGA", "APAGO", "APARA", "APARE", "APARO", "APEAI", "APEAR", "APEEI", "APEGA", "APEGO", "APEIA", "APEIE", "APEIO", "APELA", "APELE", "APELO", "APEOU", "APICE", "APIPA", "APIPE", "APIPO", "APITA", "APITE", "APITO", "APOEM", "APOES", "APOIA", "APOIE", "APOIO", "APOLO", "APORA", "APPLE", "APRAZ", "APROA", "APROE", "APROO", "APTAS", "APTOS", "APUPA", "APUPE", "APUPO", "APURA", "APURE", "APURO", "AQUEM", "ARAAO", "ARABE", "ARADA", "ARADE", "ARADO", "ARAIS", "ARAMA", "ARAME", "ARAMO", "ARARA", "ARAVA", "ARCAI", "ARCAM", "ARCAR", "ARCAS", "ARCAZ", "ARCOS", "ARCOU", "ARDAM", "ARDAS", "ARDEI", "ARDEM", "ARDER", "ARDES", "ARDEU", "ARDIA", "ARDIL", "ARDIS", "ARDOR", "ARDUA", "ARDUO", "AREAL", "AREAS", "AREIA", "AREIS", "AREJA", "AREJE", "AREJO", "ARENA", "ARFAI", "ARFAM", "ARFAR", "ARFAS", "ARFEI", "ARFEM", "ARFES", "ARFOU", "ARGEL", "ARGON", "ARGUA", "ARGUI", "ARGUO", "ARIAS", "ARIDA", "ARIDO", "ARLES", "ARMAI", "ARMAM", "ARMAR", "ARMAS", "ARMEI", "ARMEM", "ARMES", "ARMOU", "AROMA", "AROME", "AROMO", "ARPAI", "ARPAM", "ARPAO", "ARPAR", "ARPAS", "ARPEA", "ARPEI", "ARPEM", "ARPES", "ARPOA", "ARPOE", "ARPOO", "ARPOU", "ARQUE", "ARREA", "ARRIA", "ARRIE", "ARRIO", "ARROZ", "ARRUA", "ARRUE", "ARRUO", "ARTES", "ARTUR", "ARUBA", "ASADA", "ASADO", "ASAIS", "ASARA", "ASAVA", "ASCII", "ASCOS", "ASEIS", "ASILA", "ASILE", "ASILO", "ASNAL", "ASNAS", "ASNEA", "ASNOS", "ASPAS", "ASSAI", "ASSAM", "ASSAR", "ASSAS", "ASSAZ", "ASSEA", "ASSEI", "ASSEM", "ASSES", "ASSIM", "ASSIS", "ASSOA", "ASSOE", "ASSOO", "ASSOU", "ASTRO", "ATACA", "ATACO", "ATADA", "ATADO", "ATAIS", "ATALO", "ATARA", "ATAVA", "ATEAI", "ATEAM", "ATEAR", "ATEAS", "ATEEI", "ATEEM", "ATEES", "ATEIA", "ATEIE", "ATEIO", "ATEIS", "ATEOU", "ATEUS", "ATICA", "ATICE", "ATICO", "ATILA", "ATINA", "ATINE", "ATINO", "ATIRA", "ATIRE", "ATIRO", "ATIVA", "ATIVE", "ATIVO", "ATLAS", "ATOIS", "ATOLA", "ATOLE", "ATOLO", "ATOMO", "ATONA", "ATONE", "ATONO", "ATRAI", "ATRAS", "ATRIO", "ATRIZ", "ATROA", "ATROE", "ATROO", "ATROZ", "ATUAI", "ATUAL", "ATUAM", "ATUAR", "ATUAS", "ATUEI", "ATUEM", "ATUES", "ATUNS", "ATUOU", "ATURA", "ATURE", "ATURO", "AUDAZ", "AUDIO", "AUGIA", "AUGIR", "AUGIU", "AULAS", "AUNAI", "AUNAM", "AUNAS", "AUNEM", "AUNES", "AURAS", "AUREA", "AUREO", "AUTOR", "AUTOS", "AUTUA", "AUTUE", "AUTUO", "AVARA", "AVARO", "AVEIA", "AVEIO", "AVELA", "AVENS", "AVIAI", "AVIAM", "AVIAO", "AVIAR", "AVIAS", "AVIDA", "AVIDO", "AVIEI", "AVIEM", "AVIER", "AVIES", "AVILA", "AVIOU", "AVIRA", "AVISA", "AVISE", "AVISO", "AVIVA", "AVIVE", "AVIVO", "AXIAL", "AXILA", "AZARA", "AZARE", "AZARO", "AZEDA", "AZEDE", "AZEDO", "AZIMO", "AZOTA", "AZOTE", "AZOTO", "AZUIS", "AZULA", "AZULE", "AZULO", "BABAI", "BABAM", "BABAO", "BABAR", "BABAS", "BABEI", "BABEL", "BABEM", "BABES", "BABOU", "BACAS", "BACIA", "BACIO", "BACON", "BACOS", "BAFAI", "BAFAM", "BAFAR", "BAFAS", "BAFEI", "BAFEM", "BAFES", "BAFIO", "BAFOS", "BAFOU", "BAGAI", "BAGAM", "BAGAR", "BAGAS", "BAGOS", "BAGOU", "BAGUE", "BAIAO", "BAIAS", "BAILA", "BAILE", "BAILO", "BAIXA", "BAIXE", "BAIXO", "BAKER", "BALAO", "BALAS", "BALDA", "BALDE", "BALDO", "BALEA", "BALIA", "BALIR", "BALIU", "BALSA", "BAMBA", "BAMBO", "BAMBU", "BANAL", "BANAM", "BANAS", "BANCA", "BANCO", "BANDA", "BANDO", "BANEM", "BANES", "BANHA", "BANHE", "BANHO", "BANIA", "BANIR", "BANIS", "BANIU", "BANJO", "BANTO", "BANZA", "BANZE", "BANZO", "BAQUE", "BARAO", "BARBA", "BARBE", "BARBO", "BARCA", "BARCO", "BARDO", "BARES", "BARIA", "BARIO", "BARRA", "BARRE", "BARRO", "BASAL", "BASCA", "BASCO", "BASEA", "BASES", "BASIC", "BASTA", "BASTE", "BASTO", "BATAM", "BATAS", "BATEI", "BATEL", "BATEM", "BATER", "BATES", "BATEU", "BATIA", "BATOM", "BAZAR", "BEATA", "BEATO", "BEBAM", "BEBAS", "BEBEI", "BEBEM", "BEBER", "BEBES", "BEBEU", "BEBIA", "BECOS", "BEICA", "BEICO", "BEIJA", "BEIJE", "BEIJO", "BEIRA", "BEIRE", "BEIRO", "BELAS", "BELEM", "BELGA", "BELOS", "BEMOL", "BENIM", "BENTA", "BENTO", "BENZA", "BENZE", "BENZI", "BENZO", "BERCO", "BERMA", "BERNA", "BERRA", "BERRE", "BERRO", "BERTA", "BERTO", "BESCL", "BESSA", "BESTA", "BETAO", "BICAI", "BICAL", "BICAM", "BICAR", "BICAS", "BICHA", "BICHE", "BICHO", "BICOS", "BICOU", "BIDAO", "BIDES", "BIELA", "BIFES", "BIGLE", "BILHA", "BILIS", "BILRO", "BIMBA", "BINGO", "BIQUE", "BIRMA", "BIRRA", "BIRRE", "BIRRO", "BISAI", "BISAM", "BISAO", "BISAR", "BISAS", "BISCA", "BISCO", "BISEI", "BISEM", "BISES", "BISOU", "BISPO", "BIZET", "BLOCO", "BLUSA", "BOATA", "BOATE", "BOATO", "BOBAS", "BOBEA", "BOBOS", "BOCAL", "BOCAS", "BOCHE", "BOCIO", "BODAS", "BODES", "BOFES", "BOFIA", "BOGAS", "BOIAI", "BOIAM", "BOIAO", "BOIAR", "BOIAS", "BOIEI", "BOIEM", "BOIES", "BOINA", "BOIOU", "BOITE", "BOJAI", "BOJAM", "BOJAR", "BOJAS", "BOJEI", "BOJEM", "BOJES", "BOJOU", "BOLAI", "BOLAM", "BOLAR", "BOLAS", "BOLBO", "BOLEI", "BOLEM", "BOLES", "BOLHA", "BOLHE", "BOLHO", "BOLOR", "BOLOS", "BOLOU", "BOLSA", "BOLSE", "BOLSO", "BOMBA", "BOMBO", "BONDE", "BONES", "BONUS", "BOOLE", "BORBA", "BORDA", "BORDE", "BORDO", "BORIS", "BORLA", "BOROA", "BORRA", "BORRE", "BORRO", "BOSAO", "BOSSA", "BOSTA", "BOSTE", "BOSTO", "BOTAI", "BOTAM", "BOTAO", "BOTAR", "BOTAS", "BOTEI", "BOTEM", "BOTES", "BOTIM", "BOTOU", "BOUCA", "BOUCE", "BOUCO", "BOURO", "BOYLE", "BRACA", "BRACO", "BRADA", "BRADE", "BRADO", "BRAGA", "BRAMA", "BRAME", "BRAMI", "BRAMO", "BRASA", "BRAUN", "BRAVA", "BRAVO", "BREAI", "BREAR", "BRECA", "BRECO", "BREEI", "BREIA", "BREIE", "BREIO", "BREJO", "BREOU", "BRETA", "BREVE", "BRIGA", "BRIGO", "BRIOL", "BRIOS", "BRISA", "BRITA", "BRITE", "BRITO", "BROAS", "BROCA", "BROCO", "BROMA", "BROME", "BROMO", "BROTA", "BROTE", "BROTO", "BROWN", "BRUCE", "BRUMA", "BRUNA", "BRUNE", "BRUNO", "BRUTA", "BRUTO", "BRUXA", "BRUXE", "BRUXO", "BUCAL", "BUCHA", "BUCHO", "BUFAI", "BUFAM", "BUFAO", "BUFAR", "BUFAS", "BUFEI", "BUFEM", "BUFES", "BUFOS", "BUFOU", "BUGIA", "BUGIE", "BUGIO", "BULAI", "BULAM", "BULAR", "BULAS", "BULBO", "BULEI", "BULEM", "BULES", "BULHA", "BULHE", "BULHO", "BULIA", "BULIR", "BULIS", "BULIU", "BULOU", "BUMBA", "BUREL", "BURGO", "BURIL", "BURLA", "BURLE", "BURLO", "BURRA", "BURRO", "BUSCA", "BUSCO", "BUSTO", "BUXOS", "BUZIO", "BYRON", "BYTES", "CABAL", "CABAZ", "CABEI", "CABEM", "CABER", "CABES", "CABIA", "CABOS", "CABRA", "CABUL", "CACAI", "CACAM", "CACAO", "CACAR", "CACAS", "CACAU", "CACEI", "CACEM", "CACES", "CACHE", "CACHO", "CACOA", "CACOE", "CACOO", "CACOS", "CACOU", "CADIS", "CAFES", "CAGAI", "CAGAM", "CAGAR", "CAGAS", "CAGOU", "CAGUE", "CAIAI", "CAIAM", "CAIAR", "CAIAS", "CAIBA", "CAIBO", "CAIDA", "CAIDO", "CAIEI", "CAIEM", "CAIES", "CAIOU", "CAIRA", "CAIRO", "CAIXA", "CAJUS", "CALAI", "CALAM", "CALAO", "CALAR", "CALAS", "CALCA", "CALCE", "CALCO", "CALDA", "CALDE", "CALDO", "CALEI", "CALEM", "CALES", "CALFE", "CALHA", "CALHE", "CALHO", "CALMA", "CALME", "CALMO", "CALOR", "CALOS", "CALOU", "CALVA", "CALVE", "CALVO", "CAMAS", "CAMPA", "CAMPO", "CANAA", "CANAL", "CANAS", "CANIL", "CANIS", "CANJA", "CANOA", "CANON", "CANOS", "CANSA", "CANSE", "CANSO", "CANTA", "CANTE", "CANTO", "CAPAI", "CAPAM", "CAPAO", "CAPAR", "CAPAS", "CAPAZ", "CAPEA", "CAPEI", "CAPEM", "CAPES", "CAPIM", "CAPOU", "CAPTA", "CAPTE", "CAPTO", "CAPUZ", "CAQUI", "CARAO", "CARAS", "CARDA", "CARDE", "CARDO", "CARGA", "CARGO", "CARIA", "CARIE", "CARIL", "CARIO", "CARIZ", "CARLA", "CARMO", "CARNE", "CAROL", "CAROS", "CARPA", "CARPE", "CARPI", "CARPO", "CARRO", "CARTA", "CARTE", "CASAI", "CASAL", "CASAM", "CASAO", "CASAR", "CASAS", "CASCA", "CASCO", "CASEI", "CASEM", "CASES", "CASOS", "CASOU", "CASPA", "CASTA", "CASTO", "CATAI", "CATAM", "CATAR", "CATAS", "CATEI", "CATEM", "CATES", "CATIA", "CATOS", "CATOU", "CAUDA", "CAULE", "CAUSA", "CAUSE", "CAUSO", "CAUTO", "CAVAI", "CAVAM", "CAVAR", "CAVAS", "CAVEI", "CAVEM", "CAVES", "CAVOS", "CAVOU", "CEADA", "CEADO", "CEAIS", "CEARA", "CEATA", "CEAVA", "CECAL", "CEDAM", "CEDAS", "CEDEI", "CEDEM", "CEDER", "CEDES", "CEDEU", "CEDIA", "CEDRO", "CEEIS", "CEGAI", "CEGAM", "CEGAR", "CEGAS", "CEGOS", "CEGOU", "CEGUE", "CEIAM", "CEIAS", "CEIEM", "CEIES", "CEIFA", "CEIFE", "CEIFO", "CEITA", "CELAS", "CELHA", "CELIA", "CELSO", "CELTA", "CENAS", "CENSO", "CENTO", "CEPAS", "CEPOS", "CERAS", "CERCA", "CERCO", "CERNA", "CERNE", "CERNI", "CERNO", "CERRA", "CERRE", "CERRO", "CERTA", "CERTO", "CERVO", "CERZI", "CESAR", "CESIO", "CESSA", "CESSE", "CESSO", "CESTA", "CESTO", "CETIM", "CETRA", "CETRO", "CEUTA", "CHADE", "CHAGA", "CHAGO", "CHALE", "CHAMA", "CHAME", "CHAMO", "CHANG", "CHAPA", "CHAPE", "CHAPO", "CHATA", "CHATO", "CHAVE", "CHAVO", "CHECA", "CHECO", "CHEFE", "CHEGA", "CHEGO", "CHEIA", "CHEIO", "CHETA", "CHIAI", "CHIAM", "CHIAR", "CHIAS", "CHIBO", "CHICA", "CHICO", "CHIEI", "CHIEM", "CHIES", "CHILA", "CHILE", "CHINA", "CHINO", "CHIOU", "CHIPS", "CHITA", "CHOCA", "CHOCO", "CHOES", "CHORA", "CHORE", "CHORO", "CHOVA", "CHOVE", "CHOVI", "CHOVO", "CHUCO", "CHULA", "CHULE", "CHULO", "CHUPA", "CHUPE", "CHUPO", "CHUTA", "CHUTE", "CHUTO", "CHUVA", "CIANO", "CICLO", "CIDRA", "CIFRA", "CIFRE", "CIFRO", "CILIO", "CIMAS", "CIMOS", "CINCO", "CINDA", "CINDE", "CINDI", "CINDO", "CINGE", "CINGI", "CINJA", "CINJO", "CINTA", "CINTE", "CINTO", "CINZA", "CINZE", "CINZO", "CIOSA", "CIOSO", "CIRCE", "CIRCO", "CIRIO", "CIRZA", "CIRZE", "CIRZO", "CISAI", "CISAM", "CISAO", "CISAR", "CISAS", "CISCO", "CISEI", "CISEM", "CISES", "CISMA", "CISME", "CISMO", "CISNE", "CISOU", "CITAI", "CITAM", "CITAR", "CITAS", "CITEI", "CITEM", "CITES", "CITOU", "CITRO", "CIUMA", "CIUME", "CIUMO", "CIVEL", "CIVIL", "CIVIS", "CLAMA", "CLAME", "CLAMO", "CLARA", "CLARK", "CLARO", "CLAVA", "CLAVE", "CLERO", "CLICA", "CLICO", "CLIMA", "CLIVA", "CLIVE", "CLIVO", "CLONA", "CLONE", "CLONO", "CLORO", "CLUBE", "COADA", "COADO", "COAGE", "COAGI", "COAIS", "COAJA", "COAJO", "COARA", "COAVA", "COAXA", "COAXE", "COAXO", "COBOL", "COBRA", "COBRE", "COBRI", "COBRO", "COCAI", "COCAM", "COCAR", "COCAS", "COCEI", "COCEM", "COCES", "COCHA", "COCHE", "COCHO", "COCOS", "COCOU", "CODEA", "CODEX", "COEIS", "COERE", "COERI", "COESA", "COESO", "COFIA", "COFIE", "COFIO", "COFRE", "COHEN", "COIBA", "COIBE", "COIBI", "COIBO", "COICE", "COIFA", "COIMA", "COIRA", "COIRO", "COISA", "COISO", "COITA", "COITE", "COITO", "COLAI", "COLAM", "COLAR", "COLAS", "COLEI", "COLEM", "COLES", "COLHA", "COLHE", "COLHI", "COLHO", "COLMA", "COLME", "COLMO", "COLON", "COLOS", "COLOU", "COMAM", "COMAS", "COMBA", "COMEI", "COMEM", "COMER", "COMES", "COMEU", "COMIA", "COMUM", "CONDE", "CONES", "CONGA", "CONGO", "CONTA", "CONTE", "CONTO", "COPAS", "COPIA", "COPIE", "COPIO", "COPOS", "COPRA", "COPTA", "COQUE", "CORAI", "CORAL", "CORAM", "CORAO", "CORAR", "CORAS", "CORCA", "CORCO", "CORDA", "COREI", "COREM", "CORES", "CORJA", "CORNO", "COROA", "COROE", "COROO", "COROS", "COROU", "CORPO", "CORRA", "CORRE", "CORRI", "CORRO", "CORSA", "CORSO", "CORTA", "CORTE", "CORTO", "CORVO", "COSAM", "COSAS", "COSEI", "COSEM", "COSER", "COSES", "COSEU", "COSIA", "COSME", "COSPE", "COSTA", "COTAI", "COTAM", "COTAO", "COTAR", "COTAS", "COTEI", "COTEM", "COTES", "COTOS", "COTOU", "COUBE", "COURA", "COURO", "COUSA", "COUTA", "COUTE", "COUTO", "COUVE", "COVAL", "COVAO", "COVAS", "COVIL", "COVIS", "COXAL", "COXAO", "COXAS", "COXEA", "COXIA", "COXOS", "COZAM", "COZAS", "COZEI", "COZEM", "COZER", "COZES", "COZEU", "COZIA", "CRASE", "CRATO", "CRAVA", "CRAVE", "CRAVO", "CREDE", "CREDO", "CREEM", "CREIA", "CREIO", "CREMA", "CREME", "CREMO", "CREPE", "CRERA", "CRETA", "CRIAI", "CRIAM", "CRIAR", "CRIAS", "CRIDA", "CRIDO", "CRIEI", "CRIEM", "CRIES", "CRIME", "CRINA", "CRIOU", "CRISE", "CRIVA", "CRIVE", "CRIVO", "CROMA", "CROME", "CROMO", "CRUAS", "CRUDE", "CRUEL", "CRUZA", "CRUZE", "CRUZO", "CUBAI", "CUBAM", "CUBAR", "CUBAS", "CUBEI", "CUBEM", "CUBES", "CUBOS", "CUBOU", "CUBRA", "CUBRO", "CUCOS", "CUECA", "CUIDA", "CUIDE", "CUIDO", "CUJAS", "CUJOS", "CULPA", "CULPE", "CULPO", "CULTA", "CULTO", "CUMES", "CUNHA", "CUNHE", "CUNHO", "CUPAO", "CURAI", "CURAM", "CURAR", "CURAS", "CURDA", "CURDO", "CUREI", "CUREM", "CURES", "CURIA", "CURIE", "CUROU", "CURRO", "CURSA", "CURSE", "CURSO", "CURTA", "CURTE", "CURTI", "CURTO", "CURVA", "CURVE", "CURVO", "CUSPA", "CUSPE", "CUSPI", "CUSPO", "CUSTA", "CUSTE", "CUSTO", "DACAO", "DACIA", "DADAS", "DADOR", "DADOS", "DAIRE", "DALEM", "DALGO", "DALIA", "DAMAS", "DAMOS", "DANAI", "DANAM", "DANAR", "DANAS", "DANCA", "DANCE", "DANCO", "DANDO", "DANEI", "DANEM", "DANES", "DANOS", "DANOU", "DANTE", "DAQUI", "DARAO", "DARAS", "DARDO", "DAREI", "DAREM", "DARES", "DARIA", "DARIO", "DATAI", "DATAL", "DATAM", "DATAR", "DATAS", "DATEI", "DATEM", "DATES", "DATOU", "DAVAM", "DAVAS", "DAVID", "DAVIS", "DEBIL", "DECAI", "DECIL", "DEDAL", "DEDAO", "DEDOS", "DEDUZ", "DEITA", "DEITE", "DEITO", "DEIXA", "DEIXE", "DEIXO", "DELAS", "DELEM", "DELES", "DELIS", "DELTA", "DEMAO", "DEMOS", "DENSA", "DENSO", "DENTA", "DENTE", "DENTO", "DEOES", "DEPOE", "DEPOR", "DEPOS", "DEPUS", "DERAM", "DERAS", "DERBI", "DEREM", "DERES", "DERME", "DESCA", "DESCE", "DESCI", "DESCO", "DESDE", "DESPE", "DESPI", "DESSA", "DESSE", "DESTA", "DESTE", "DETEM", "DETER", "DEUSA", "DEVAM", "DEVAS", "DEVEI", "DEVEM", "DEVER", "DEVES", "DEVEU", "DEVIA", "DEVIM", "DEVIR", "DIABA", "DIABO", "DIANA", "DICAS", "DIEGO", "DIETA", "DIGAM", "DIGAS", "DIGNA", "DIGNE", "DIGNO", "DILAM", "DILAS", "DILUA", "DILUI", "DILUO", "DINAR", "DINIS", "DIODO", "DIOGO", "DIQUE", "DIRAC", "DIRAO", "DIRAS", "DIREI", "DIRIA", "DISCA", "DISCO", "DISPA", "DISPO", "DISSE", "DISSO", "DISTA", "DISTE", "DISTO", "DITAI", "DITAM", "DITAR", "DITAS", "DITEI", "DITEM", "DITES", "DITOS", "DITOU", "DIVAS", "DIZEI", "DIZEM", "DIZER", "DIZES", "DIZIA", "DOADA", "DOADO", "DOAIS", "DOARA", "DOAVA", "DOBAI", "DOBAM", "DOBAR", "DOBAS", "DOBEI", "DOBEM", "DOBES", "DOBOU", "DOBRA", "DOBRE", "DOBRO", "DOCAS", "DOCES", "DOCIL", "DOEIS", "DOERA", "DOGMA", "DOIAM", "DOIAS", "DOIDA", "DOIDO", "DOIRA", "DOIRE", "DOIRO", "DOLAR", "DOMAI", "DOMAM", "DOMAR", "DOMAS", "DOMEI", "DOMEM", "DOMES", "DOMOU", "DONAS", "DONDE", "DONOS", "DORES", "DORIS", "DORME", "DORMI", "DORSO", "DOSAI", "DOSAM", "DOSAR", "DOSAS", "DOSEA", "DOSEI", "DOSEM", "DOSES", "DOSOU", "DOTAI", "DOTAM", "DOTAR", "DOTAS", "DOTEI", "DOTEM", "DOTES", "DOTOU", "DOURA", "DOURE", "DOURO", "DOUTA", "DOUTO", "DRAGA", "DRAGO", "DRAKE", "DRAMA", "DRENA", "DRENE", "DRENO", "DRIVE", "DROGA", "DRUSA", "DRUSO", "DUAIS", "DUBIA", "DUBIO", "DUCAL", "DUCHE", "DUELO", "DUETO", "DULCE", "DUMAS", "DUNAS", "DUPLA", "DUPLO", "DUQUE", "DURAI", "DURAM", "DURAO", "DURAR", "DURAS", "DUREI", "DUREM", "DURES", "DURMA", "DURMO", "DUROS", "DUROU", "DUZIA", "DYLAN", "EANES", "EBANO", "EBRIO", "EBULO", "ECOAI", "ECOAM", "ECOAR", "ECOAS", "ECOEI", "ECOEM", "ECOES", "ECOOU", "ECRAS", "EDEMA", "EDGAR", "EDIPO", "EDITA", "EDITE", "EDITO", "EDUCA", "EDUCO", "EFESO", "EFLUA", "EFLUI", "EFLUO", "EFUSO", "EGIDE", "EGITO", "EGUAS", "EIRAS", "EIXOS", "EJETA", "EJETE", "EJETO", "ELEGE", "ELEGI", "ELEJA", "ELEJO", "ELEVA", "ELEVE", "ELEVO", "ELIAS", "ELIDA", "ELIDE", "ELIDI", "ELIDO", "ELISA", "ELITE", "ELMOS", "ELUDA", "ELUDE", "ELUDI", "ELUDO", "ELVAS", "EMAIL", "EMANA", "EMANE", "EMANO", "EMILE", "EMITA", "EMITE", "EMITI", "EMITO", "EMPOA", "EMPOE", "EMPOO", "EMULA", "EMULE", "EMULO", "ENCHA", "ENCHE", "ENCHI", "ENCHO", "ENFEA", "ENFIA", "ENFIE", "ENFIM", "ENFIO", "ENJOA", "ENJOE", "ENJOO", "ENOJA", "ENOJE", "ENOJO", "ENTAO", "ENTEA", "ENTES", "ENTOA", "ENTOE", "ENTOO", "ENTRA", "ENTRE", "ENTRO", "ENVIA", "ENVIE", "ENVIO", "EPICA", "EPICO", "EPOCA", "EREIS", "ERETA", "ERETO", "ERGAM", "ERGAS", "ERGUE", "ERGUI", "ERICA", "ERICE", "ERICH", "ERICO", "ERIGE", "ERIGI", "ERIJA", "ERIJO", "ERMOS", "ERNST", "ERRAI", "ERRAM", "ERRAR", "ERRAS", "ERREI", "ERREM", "ERRES", "ERROS", "ERROU", "ERVAS", "ESCOA", "ESCOE", "ESCOO", "ESMOS", "ESPIA", "ESPIE", "ESPIO", "ESQUI", "ESSAS", "ESSES", "ESTAI", "ESTAO", "ESTAR", "ESTAS", "ESTES", "ESTIO", "ESTOU", "ESVAI", "ETANO", "ETAPA", "ETICA", "ETICO", "ETIMO", "ETNIA", "EULER", "EUROS", "EVADA", "EVADE", "EVADI", "EVADO", "EVANS", "EVITA", "EVITE", "EVITO", "EVOCA", "EVOCO", "EVORA", "EXALA", "EXALE", "EXALO", "EXAME", "EXARA", "EXARE", "EXARO", "EXATA", "EXATO", "EXIBA", "EXIBE", "EXIBI", "EXIBO", "EXIGE", "EXIGI", "EXIJA", "EXIJO", "EXILA", "EXILE", "EXILO", "EXIMA", "EXIME", "EXIMI", "EXIMO", "EXITO", "EXODO", "EXPIA", "EXPIE", "EXPIO", "EXPOE", "EXPOR", "EXPOS", "EXPUS", "EXTRA", "EXULA", "EXULE", "EXULO", "EXUMA", "EXUME", "EXUMO", "FABIO", "FACAM", "FACAO", "FACAS", "FACES", "FACHO", "FACIL", "FACTO", "FADAI", "FADAM", "FADAR", "FADAS", "FADEI", "FADEM", "FADES", "FADOS", "FADOU", "FAIAL", "FAIAS", "FAINA", "FAIXA", "FAIXE", "FAIXO", "FALAI", "FALAM", "FALAR", "FALAS", "FALEI", "FALEM", "FALES", "FALHA", "FALHE", "FALHO", "FALIA", "FALIR", "FALIS", "FALIU", "FALOS", "FALOU", "FALSA", "FALSO", "FALTA", "FALTE", "FALTO", "FALUA", "FAMAS", "FANAI", "FANAM", "FANAR", "FANAS", "FANEI", "FANEM", "FANES", "FANFA", "FANFE", "FANFO", "FANNY", "FANOU", "FARAD", "FARAO", "FARAS", "FARDA", "FARDE", "FARDO", "FAREI", "FARIA", "FAROL", "FAROS", "FARPA", "FARPE", "FARPO", "FARRA", "FARSA", "FARTA", "FARTE", "FARTO", "FASEA", "FASEE", "FASEO", "FASES", "FASTO", "FATAL", "FATIA", "FATIE", "FATIO", "FATOR", "FATOS", "FATUO", "FAUNA", "FAUNO", "FAVAL", "FAVAS", "FAVOR", "FAVOS", "FAXES", "FAZEI", "FAZEM", "FAZER", "FAZES", "FAZIA", "FEBRA", "FEBRE", "FECAL", "FECHA", "FECHE", "FECHO", "FEDAM", "FEDAS", "FEDEI", "FEDEM", "FEDER", "FEDES", "FEDEU", "FEDIA", "FEDOR", "FEIAS", "FEIJO", "FEIOS", "FEIRA", "FEIRE", "FEIRO", "FEITA", "FEITO", "FEIXE", "FELIX", "FELIZ", "FEMEA", "FEMEO", "FEMUR", "FENDA", "FENDE", "FENDI", "FENDO", "FENIX", "FENOL", "FENOS", "FERAS", "FEREM", "FERES", "FERIA", "FERIE", "FERIO", "FERIR", "FERIS", "FERIU", "FERMI", "FEROZ", "FERRA", "FERRE", "FERRO", "FERVA", "FERVE", "FERVI", "FERVO", "FESTA", "FETAL", "FETOS", "FEUDO", "FEVRA", "FEZES", "FIADA", "FIADO", "FIAIS", "FIARA", "FIAVA", "FIBRA", "FICAI", "FICAM", "FICAR", "FICAS", "FICHA", "FICHE", "FICHO", "FICOU", "FIEIS", "FIFIA", "FIGAS", "FIGOS", "FILAI", "FILAM", "FILAO", "FILAR", "FILAS", "FILEI", "FILEM", "FILES", "FILHA", "FILHO", "FILIA", "FILIE", "FILIO", "FILMA", "FILME", "FILMO", "FILOS", "FILOU", "FINAI", "FINAL", "FINAM", "FINAR", "FINAS", "FINCA", "FINCO", "FINDA", "FINDE", "FINDO", "FINEI", "FINEM", "FINES", "FINGE", "FINGI", "FINJA", "FINJO", "FINOS", "FINOU", "FINTA", "FINTE", "FINTO", "FIQUE", "FIRAM", "FIRAS", "FIRMA", "FIRME", "FIRMO", "FISCO", "FISGA", "FISGO", "FITAI", "FITAM", "FITAR", "FITAS", "FITEI", "FITEM", "FITES", "FITOU", "FIXAI", "FIXAM", "FIXAR", "FIXAS", "FIXEI", "FIXEM", "FIXES", "FIXOS", "FIXOU", "FIZER", "FLASH", "FLAVA", "FLETE", "FLETI", "FLITA", "FLITO", "FLOCO", "FLORA", "FLORE", "FLORI", "FLORO", "FLUAM", "FLUAS", "FLUEM", "FLUIA", "FLUIR", "FLUIS", "FLUIU", "FLUOR", "FLUXO", "FOBIA", "FOCAI", "FOCAL", "FOCAM", "FOCAR", "FOCAS", "FOCOS", "FOCOU", "FOFAS", "FOFOS", "FOGAO", "FOGEM", "FOGES", "FOGOS", "FOICE", "FOLAR", "FOLES", "FOLGA", "FOLGO", "FOLHA", "FOLHE", "FOLHO", "FOLIA", "FOLIE", "FOLIO", "FOMES", "FOMOS", "FONIA", "FONTE", "FOQUE", "FORAL", "FORAM", "FORAS", "FORCA", "FORCE", "FORCO", "FOREM", "FORES", "FORJA", "FORJE", "FORJO", "FORMA", "FORME", "FORMO", "FORNO", "FOROS", "FORRA", "FORRE", "FORRO", "FORTE", "FORUM", "FOSCA", "FOSCO", "FOSSA", "FOSSE", "FOSSO", "FOSTE", "FOTAO", "FOTOS", "FOUCE", "FRACA", "FRACO", "FRADE", "FRAGA", "FRANK", "FRANZ", "FRASE", "FREIO", "FREIS", "FREME", "FREMI", "FRENA", "FRENE", "FRENO", "FRESA", "FRESE", "FRESO", "FRETA", "FRETE", "FRETO", "FREUD", "FRIAS", "FRIMA", "FRIMO", "FRIOS", "FRISA", "FRISE", "FRISO", "FRITA", "FRITE", "FRITO", "FRITZ", "FROTA", "FRUAM", "FRUAS", "FRUEM", "FRUIA", "FRUIR", "FRUIS", "FRUIU", "FRUTA", "FRUTO", "FUCAS", "FUGAS", "FUGAZ", "FUGIA", "FUGIR", "FUGIS", "FUGIU", "FUJAM", "FUJAO", "FUJAS", "FULAS", "FULOS", "FUMAI", "FUMAM", "FUMAO", "FUMAR", "FUMAS", "FUMEI", "FUMEM", "FUMES", "FUMOS", "FUMOU", "FUNDA", "FUNDE", "FUNDI", "FUNDO", "FUNGA", "FUNGO", "FUNIL", "FUNIS", "FURAI", "FURAM", "FURAO", "FURAR", "FURAS", "FUREI", "FUREM", "FURES", "FURIA", "FURNA", "FUROR", "FUROS", "FUROU", "FURTA", "FURTE", "FURTO", "FUSAO", "FUSAS", "FUSCA", "FUSCO", "FUSOS", "FUTIL", "FUZZY", "GABAI", "GABAM", "GABAO", "GABAR", "GABAS", "GABEI", "GABEM", "GABES", "GABOU", "GADOS", "GAGAS", "GAGOS", "GAITA", "GAJAO", "GAJAS", "GAJOS", "GALAI", "GALAM", "GALAO", "GALAR", "GALAS", "GALEA", "GALEI", "GALEM", "GALES", "GALGA", "GALGO", "GALHA", "GALHO", "GALIA", "GALIO", "GALOS", "GALOU", "GAMAI", "GAMAM", "GAMAO", "GAMAR", "GAMAS", "GAMBA", "GAMEI", "GAMEM", "GAMES", "GAMOS", "GAMOU", "GANAM", "GANAS", "GANEM", "GANES", "GANGA", "GANHA", "GANHE", "GANHO", "GANIA", "GANIR", "GANIS", "GANIU", "GANSO", "GARBO", "GARCA", "GARES", "GARFA", "GARFE", "GARFO", "GARRA", "GARRE", "GARRI", "GARRO", "GASEA", "GASES", "GASTA", "GASTE", "GASTO", "GATAS", "GATES", "GATOS", "GAUSS", "GAVEA", "GAZEA", "GAZES", "GAZUA", "GEADA", "GEADO", "GEAIS", "GEARA", "GEAVA", "GEEIS", "GEIAM", "GEIAS", "GEIEM", "GEIES", "GELAI", "GELAM", "GELAR", "GELAS", "GELEI", "GELEM", "GELES", "GELOS", "GELOU", "GEMAI", "GEMAM", "GEMAR", "GEMAS", "GEMEA", "GEMEI", "GEMEM", "GEMEO", "GEMER", "GEMES", "GEMEU", "GEMIA", "GEMOU", "GENES", "GENIO", "GENRO", "GENTE", "GERAI", "GERAL", "GERAM", "GERAR", "GERAS", "GEREI", "GEREM", "GERES", "GERIA", "GERIR", "GERIS", "GERIU", "GERME", "GEROU", "GESSA", "GESSE", "GESSO", "GESTA", "GESTO", "GIGAS", "GILDA", "GINGA", "GINGO", "GINJA", "GIRAI", "GIRAM", "GIRAO", "GIRAR", "GIRAS", "GIREI", "GIREM", "GIRES", "GIRIA", "GIROS", "GIROU", "GIZAI", "GIZAM", "GIZAR", "GIZAS", "GIZEI", "GIZEM", "GIZES", "GIZOU", "GLEBA", "GLIFO", "GLOBO", "GLOSA", "GLOTE", "GNOMA", "GNOMO", "GNOSE", "GODAS", "GODOS", "GOELA", "GOELE", "GOELO", "GOESA", "GOIAS", "GOLAS", "GOLEA", "GOLES", "GOLFA", "GOLFE", "GOLFO", "GOLOS", "GOLPE", "GOMES", "GOMEZ", "GOMOS", "GONGO", "GONZO", "GORAI", "GORAM", "GORAR", "GORAS", "GORDA", "GORDO", "GOREI", "GOREM", "GORES", "GORKI", "GOROU", "GORRA", "GORRO", "GOSTA", "GOSTE", "GOSTO", "GOTAS", "GOTEA", "GOZAI", "GOZAM", "GOZAR", "GOZAS", "GOZEI", "GOZEM", "GOZES", "GOZOS", "GOZOU", "GRAAL", "GRACA", "GRADA", "GRADE", "GRADO", "GRAFA", "GRAFE", "GRAFO", "GRAMA", "GRAME", "GRAMO", "GRANA", "GRANE", "GRANO", "GRAOS", "GRATA", "GRATO", "GRAUS", "GRAVA", "GRAVE", "GRAVO", "GRAXA", "GREGA", "GREGO", "GRELA", "GRELE", "GRELO", "GRETA", "GRETE", "GRETO", "GREVE", "GRIEG", "GRIFO", "GRILO", "GRIPA", "GRIPE", "GRIPO", "GRISA", "GRISE", "GRISO", "GRITA", "GRITE", "GRITO", "GROSA", "GROUS", "GRUAS", "GRUDA", "GRUDE", "GRUDO", "GRUPO", "GRUTA", "GUAPO", "GUARA", "GUARE", "GUARI", "GUARO", "GUETO", "GUIAI", "GUIAM", "GUIAO", "GUIAR", "GUIAS", "GUIDA", "GUIEI", "GUIEM", "GUIES", "GUINA", "GUINE", "GUINO", "GUIOU", "GUISA", "GUISE", "GUISO", "GUITA", "GUIZO", "GULAS", "GUMES", "GURUS", "HABIL", "HAITI", "HAJAM", "HAJAS", "HALLE", "HANSA", "HAREM", "HARPA", "HARPE", "HARPO", "HASTA", "HASTE", "HAVEI", "HAVER", "HAVIA", "HEGEL", "HELEN", "HELGA", "HELIO", "HEMOS", "HENRI", "HENRY", "HERAS", "HERDA", "HERDE", "HERDO", "HEROI", "HERTZ", "HIATO", "HIDRA", "HIENA", "HIFEN", "HIMEN", "HINDI", "HINDU", "HINOS", "HIRTA", "HIRTO", "HOARE", "HOMEM", "HONOR", "HONRA", "HONRE", "HONRO", "HORAS", "HORDA", "HORTA", "HORTO", "HOSTE", "HOTEL", "HOUVE", "HULHA", "HUMOR", "HUMUS", "HUNAS", "HUNOS", "HURRA", "IAMBO", "IAMOS", "IATES", "IBERA", "IBERO", "ICADA", "ICADO", "ICAIS", "ICARA", "ICARO", "ICAVA", "ICEIS", "ICONE", "IDADE", "IDEAL", "IDEIA", "IDOLO", "IDOSA", "IDOSO", "IENES", "IGLUS", "IGNEA", "IGUAL", "ILESA", "ILESO", "ILHAI", "ILHAL", "ILHAM", "ILHAR", "ILHAS", "ILHEI", "ILHEM", "ILHES", "ILHEU", "ILHOU", "ILIBA", "ILIBE", "ILIBO", "ILUDA", "ILUDE", "ILUDI", "ILUDO", "IMAGO", "IMAME", "IMANE", "IMBUA", "IMBUI", "IMBUO", "IMITA", "IMITE", "IMITO", "IMOLA", "IMOLE", "IMOLO", "IMPAR", "IMPIA", "IMPIO", "IMPOE", "IMPOR", "IMPOS", "IMPUS", "IMUNE", "IMUTA", "IMUTE", "IMUTO", "INALA", "INALE", "INALO", "INATA", "INATO", "INCAS", "INCHA", "INCHE", "INCHO", "INCRA", "INCRE", "INCRI", "INCRO", "INDEX", "INDIA", "INDIO", "INDUZ", "INESC", "INGRE", "INIBA", "INIBE", "INIBI", "INIBO", "INOVA", "INOVE", "INOVO", "INPUT", "INSTA", "INSTE", "INSTO", "INTEL", "INTRA", "INTUA", "INTUI", "INTUO", "INVES", "INVIO", "IODAI", "IODAM", "IODAR", "IODAS", "IODEI", "IODEM", "IODES", "IODOU", "IONIO", "IPPAR", "IRADA", "IRADO", "IRAIS", "IRARA", "IRAVA", "IRDES", "IREIS", "IRENE", "IRIAM", "IRIAS", "IRISA", "IRISE", "IRISO", "IRMAO", "IRMAS", "IRMOS", "IROSO", "ISAAC", "ISCAI", "ISCAM", "ISCAR", "ISCAS", "ISCOS", "ISCOU", "ISLAO", "ISOLA", "ISOLE", "ISOLO", "ISQUE", "ISTMO", "ITENS", "ITERA", "ITERE", "ITERO", "IVONE", "JACOB", "JADES", "JAIME", "JAMES", "JANET", "JANTA", "JANTE", "JANTO", "JANUS", "JAPAO", "JARDA", "JARRA", "JARRO", "JATOS", "JAULA", "JAZAM", "JAZAS", "JAZEI", "JAZEM", "JAZER", "JAZES", "JAZEU", "JAZIA", "JEANS", "JEITO", "JEJUA", "JEJUE", "JEJUM", "JEJUO", "JENNY", "JEOVA", "JESUS", "JIPES", "JOANA", "JOGAI", "JOGAM", "JOGAO", "JOGAR", "JOGAS", "JOGOS", "JOGOU", "JOGUE", "JOIAS", "JONAS", "JONIO", "JORGE", "JORRA", "JORRE", "JORRO", "JOSEF", "JOSUE", "JOULE", "JOVEM", "JOYCE", "JUBAS", "JUDAS", "JUDEU", "JUDIA", "JUDIE", "JUDIO", "JUGOS", "JUIZA", "JUIZO", "JULES", "JULGA", "JULGO", "JULHO", "JULIA", "JULIE", "JULIO", "JUNCA", "JUNCO", "JUNHO", "JUNTA", "JUNTE", "JUNTO", "JURAI", "JURAM", "JURAR", "JURAS", "JUREI", "JUREM", "JURES", "JURIS", "JUROS", "JUROU", "JUSTA", "JUSTO", "KAFKA", "KAZAN", "KIWIS", "KLEIN", "KOALA", "LABIA", "LABIO", "LABOR", "LACAI", "LACAM", "LACAR", "LACAS", "LACEA", "LACEI", "LACEM", "LACES", "LACOS", "LACOU", "LACRA", "LACRE", "LACRO", "LACTA", "LACTE", "LACTO", "LADEA", "LADOS", "LADRA", "LADRE", "LADRO", "LAGAR", "LAGOA", "LAGOS", "LAICA", "LAICO", "LAIVO", "LAJEA", "LAJES", "LAMAS", "LAMBA", "LAMBE", "LAMBI", "LAMBO", "LANAR", "LANCA", "LANCE", "LANCO", "LANHA", "LANHE", "LANHO", "LAPAO", "LAPAS", "LAPIS", "LAPSO", "LARES", "LAREU", "LARGA", "LARGO", "LARVA", "LASCA", "LASCO", "LASER", "LASSA", "LASSE", "LASSO", "LATAM", "LATAO", "LATAS", "LATEM", "LATES", "LATEX", "LATIA", "LATIM", "LATIR", "LATIS", "LATIU", "LAURA", "LAUTA", "LAUTO", "LAVAI", "LAVAM", "LAVAR", "LAVAS", "LAVEI", "LAVEM", "LAVES", "LAVOR", "LAVOU", "LAVRA", "LAVRE", "LAVRO", "LAZER", "LAZIO", "LEAIS", "LEBRE", "LEDES", "LEDOR", "LEGAI", "LEGAL", "LEGAM", "LEGAR", "LEGAS", "LEGOU", "LEGUA", "LEGUE", "LEIAM", "LEIAS", "LEIDA", "LEIGA", "LEIGO", "LEIRA", "LEITE", "LEITO", "LEIVA", "LEMAS", "LEMES", "LEMOS", "LENCO", "LENDA", "LENDO", "LENHA", "LENHE", "LENHO", "LENTA", "LENTE", "LENTO", "LEOAS", "LEOES", "LEPRA", "LEQUE", "LERAM", "LERAO", "LERAS", "LEREI", "LEREM", "LERES", "LERIA", "LESAI", "LESAM", "LESAO", "LESAR", "LESAS", "LESEI", "LESEM", "LESES", "LESMA", "LESME", "LESMO", "LESOU", "LESSE", "LESTA", "LESTE", "LESTO", "LETAL", "LETAO", "LETAS", "LETRA", "LEVAI", "LEVAM", "LEVAR", "LEVAS", "LEVEI", "LEVEM", "LEVES", "LEVOU", "LEWIS", "LIBIA", "LIBIO", "LIBRA", "LICAO", "LICEU", "LICOR", "LIDAI", "LIDAM", "LIDAR", "LIDAS", "LIDEI", "LIDEM", "LIDER", "LIDES", "LIDIA", "LIDOS", "LIDOU", "LIEGE", "LIEIS", "LIGAI", "LIGAM", "LIGAR", "LIGAS", "LIGOU", "LIGUE", "LILAS", "LILIA", "LIMAI", "LIMAM", "LIMAO", "LIMAR", "LIMAS", "LIMBO", "LIMEI", "LIMEM", "LIMES", "LIMOU", "LIMPA", "LIMPE", "LIMPO", "LINCE", "LINDA", "LINDO", "LINFA", "LINHA", "LINHO", "LINKS", "LINUX", "LIRAS", "LIRIO", "LISAS", "LISOS", "LISTA", "LISTE", "LISTO", "LITIO", "LITRO", "LIVRA", "LIVRE", "LIVRO", "LIXAI", "LIXAM", "LIXAR", "LIXAS", "LIXEI", "LIXEM", "LIXES", "LIXOS", "LIXOU", "LOBAL", "LOBAO", "LOBAS", "LOBOS", "LOCAI", "LOCAL", "LOCAM", "LOCAO", "LOCAR", "LOCAS", "LOCOU", "LODOS", "LOGOS", "LOGRA", "LOGRE", "LOGRO", "LOICA", "LOIRA", "LOIRE", "LOIRO", "LOISA", "LOJAS", "LOMBA", "LOMBO", "LONAS", "LONGA", "LONGE", "LONGO", "LOPES", "LOPEZ", "LOQUE", "LORDE", "LORPA", "LOTAI", "LOTAM", "LOTAR", "LOTAS", "LOTEA", "LOTEI", "LOTEM", "LOTES", "LOTOS", "LOTOU", "LOUCA", "LOUCO", "LOUIS", "LOULE", "LOURA", "LOURE", "LOURO", "LOUSA", "LOUVA", "LOUVE", "LOUVO", "LUCAS", "LUCIA", "LUCIO", "LUCRA", "LUCRE", "LUCRO", "LUFAI", "LUFAM", "LUFAR", "LUFAS", "LUFEI", "LUFEM", "LUFES", "LUFOU", "LUGAR", "LUIGI", "LUISA", "LULAS", "LUMEN", "LUMES", "LUNAR", "LUPAS", "LUPUS", "LURAS", "LUSAS", "LUSCO", "LUSOS", "LUTAI", "LUTAM", "LUTAR", "LUTAS", "LUTEI", "LUTEM", "LUTES", "LUTOS", "LUTOU", "LUVAS", "LUXAI", "LUXAM", "LUXAR", "LUXAS", "LUXEI", "LUXEM", "LUXES", "LUXOS", "LUXOU", "LUZAM", "LUZAS", "LUZEM", "LUZES", "LUZIA", "LUZIR", "LUZIS", "LUZIU", "MACAI", "MACAM", "MACAO", "MACAR", "MACAS", "MACAU", "MACEI", "MACEM", "MACES", "MACHA", "MACHO", "MACIA", "MACIO", "MACOS", "MACOU", "MACRO", "MADRE", "MAFIA", "MAFRA", "MAGAS", "MAGDA", "MAGIA", "MAGMA", "MAGNA", "MAGNO", "MAGOA", "MAGOE", "MAGOO", "MAGOS", "MAGRA", "MAGRO", "MAIAS", "MAIOR", "MAJOR", "MALAR", "MALAS", "MALES", "MALGA", "MALHA", "MALHE", "MALHO", "MALTA", "MALTE", "MALVA", "MAMAE", "MAMAI", "MAMAL", "MAMAM", "MAMAO", "MAMAR", "MAMAS", "MAMBO", "MAMEI", "MAMEM", "MAMES", "MAMOU", "MANAI", "MANAM", "MANAR", "MANAS", "MANCA", "MANCO", "MANDA", "MANDE", "MANDO", "MANEI", "MANEL", "MANEM", "MANES", "MANGA", "MANGO", "MANHA", "MANIA", "MANJA", "MANJE", "MANJO", "MANOS", "MANOU", "MANSA", "MANSO", "MANTA", "MANTO", "MAOME", "MAPAS", "MAPEA", "MARAO", "MARCA", "MARCO", "MAREA", "MARES", "MARGA", "MARIA", "MARIE", "MARIM", "MARIO", "MARIZ", "MARRA", "MARRE", "MARRO", "MARTA", "MARTE", "MASCA", "MASCO", "MASER", "MASSA", "MATAI", "MATAM", "MATAR", "MATAS", "MATEI", "MATEM", "MATES", "MATIZ", "MATOS", "MATOU", "MAURO", "MEADA", "MEADO", "MEATO", "MECAM", "MECAS", "MECHA", "MEDAO", "MEDAS", "MEDEM", "MEDES", "MEDIA", "MEDIO", "MEDIR", "MEDIS", "MEDIU", "MEDOS", "MEDRA", "MEDRE", "MEDRO", "MEIAS", "MEIGA", "MEIGO", "MEIJE", "MEIOS", "MELAI", "MELAM", "MELAO", "MELAR", "MELAS", "MELEI", "MELEM", "MELES", "MELGA", "MELOA", "MELOU", "MELRA", "MELRO", "MENDO", "MENEA", "MENIR", "MENOR", "MENOS", "MENTA", "MENTE", "MENTI", "MENUS", "MERAS", "MERCE", "MERDA", "MEROS", "MESAO", "MESAS", "MESES", "MESMA", "MESMO", "MESSE", "METAL", "METAM", "METAS", "METEI", "METEM", "METER", "METES", "METEU", "METIA", "METRO", "MEXAM", "MEXAS", "MEXEI", "MEXEM", "MEXER", "MEXES", "MEXEU", "MEXIA", "MIADA", "MIADO", "MIAIS", "MIAMI", "MIARA", "MIAVA", "MICRA", "MICRO", "MIDAS", "MIEIS", "MIGAI", "MIGAM", "MIGAR", "MIGAS", "MIGOU", "MIGRA", "MIGRE", "MIGRO", "MIGUE", "MIJAI", "MIJAM", "MIJAO", "MIJAR", "MIJAS", "MIJEI", "MIJEM", "MIJES", "MIJOS", "MIJOU", "MILAO", "MILHA", "MILHO", "MILLE", "MIMAI", "MIMAM", "MIMAR", "MIMAS", "MIMEI", "MIMEM", "MIMES", "MIMOS", "MIMOU", "MINAI", "MINAM", "MINAR", "MINAS", "MINEI", "MINEM", "MINES", "MINGA", "MINGO", "MINHA", "MINHO", "MINOU", "MINSK", "MINTA", "MINTO", "MIOLO", "MIOPE", "MIRAI", "MIRAM", "MIRAR", "MIRAS", "MIREI", "MIREM", "MIRES", "MIROU", "MIRRA", "MIRRE", "MIRRO", "MISSA", "MISSE", "MISSO", "MISTA", "MISTO", "MITOS", "MITRA", "MITRE", "MITRO", "MIUDA", "MIUDO", "MOAIS", "MOBIL", "MOCAO", "MOCAS", "MOCHO", "MOCOS", "MODAL", "MODAS", "MODEM", "MODOS", "MOEDA", "MOEIS", "MOELA", "MOERA", "MOFAI", "MOFAM", "MOFAR", "MOFAS", "MOFEI", "MOFEM", "MOFES", "MOFOU", "MOGNO", "MOIAM", "MOIAS", "MOIDA", "MOIDO", "MOINA", "MOINE", "MOINO", "MOIRA", "MOIRO", "MOITA", "MOLAR", "MOLAS", "MOLDA", "MOLDE", "MOLDO", "MOLES", "MOLHA", "MOLHE", "MOLHO", "MONAS", "MONCO", "MONDA", "MONDE", "MONDO", "MONGE", "MONHE", "MONIZ", "MONJA", "MONTA", "MONTE", "MONTO", "MONZA", "MOORE", "MORAI", "MORAL", "MORAM", "MORAO", "MORAR", "MORAS", "MORDA", "MORDE", "MORDI", "MORDO", "MOREI", "MOREM", "MORES", "MORIN", "MORNA", "MORNO", "MOROU", "MORRA", "MORRE", "MORRI", "MORRO", "MORSA", "MORSE", "MORTA", "MORTE", "MORTO", "MOSCA", "MOSSA", "MOSSE", "MOSSO", "MOSTO", "MOTAS", "MOTEL", "MOTES", "MOTIM", "MOTOR", "MOTOS", "MOUCA", "MOUCO", "MOURA", "MOURO", "MOVAM", "MOVAS", "MOVEI", "MOVEL", "MOVEM", "MOVER", "MOVES", "MOVEU", "MOVIA", "MUDAI", "MUDAM", "MUDAR", "MUDAS", "MUDEI", "MUDEM", "MUDES", "MUDEZ", "MUDOS", "MUDOU", "MUGEM", "MUGES", "MUGIA", "MUGIR", "MUGIS", "MUGIU", "MUITA", "MUITO", "MUJAM", "MUJAS", "MULAS", "MULTA", "MULTE", "MULTI", "MULTO", "MUMIA", "MUNAM", "MUNAS", "MUNDO", "MUNEM", "MUNES", "MUNGE", "MUNGI", "MUNIA", "MUNIR", "MUNIS", "MUNIU", "MUNJA", "MUNJO", "MURAI", "MURAL", "MURAM", "MURAR", "MURAS", "MURCA", "MUREI", "MUREM", "MURES", "MUROS", "MUROU", "MURRO", "MUSAL", "MUSAS", "MUSEU", "MUSGO", "MUTUA", "MUTUE", "MUTUO", "NABAL", "NABOS", "NACAO", "NACOS", "NADAI", "NADAM", "NADAR", "NADAS", "NADEI", "NADEM", "NADES", "NADIA", "NADOU", "NAFTA", "NAIFA", "NAIPE", "NANAI", "NANAM", "NANAR", "NANAS", "NANCI", "NANCY", "NANEI", "NANEM", "NANES", "NANOU", "NARIZ", "NARRA", "NARRE", "NARRO", "NARVA", "NASAL", "NASCA", "NASCE", "NASCI", "NASCO", "NATAL", "NATAS", "NATOS", "NAVAL", "NAVES", "NAVIO", "NAZIS", "NECAS", "NEGAI", "NEGAM", "NEGAR", "NEGAS", "NEGOU", "NEGRA", "NEGRO", "NEGUE", "NEIVA", "NELAS", "NELES", "NENES", "NEPAL", "NERVO", "NESGA", "NESSA", "NESSE", "NESTA", "NESTE", "NETAS", "NETOS", "NEURA", "NEURO", "NEVAO", "NEVAR", "NEVEI", "NEVES", "NEVIS", "NEVOA", "NEVOU", "NEXOS", "NICAI", "NICAM", "NICAR", "NICAS", "NICHO", "NICOU", "NIGER", "NIMBO", "NINAI", "NINAM", "NINAR", "NINAS", "NINEI", "NINEM", "NINES", "NINFA", "NINHA", "NINHE", "NINHO", "NINOU", "NIQUE", "NISSO", "NISTO", "NITRA", "NITRE", "NITRO", "NIVEL", "NIVEO", "NOBEL", "NOBRE", "NOCAO", "NODAL", "NODOA", "NODOS", "NOEMA", "NOESE", "NOITE", "NOIVA", "NOIVE", "NOIVO", "NOMEA", "NOMES", "NONAS", "NORAS", "NORMA", "NORTE", "NOSSA", "NOSSO", "NOTAI", "NOTAM", "NOTAR", "NOTAS", "NOTEI", "NOTEM", "NOTES", "NOTOU", "NOTRE", "NOVAS", "NOVEL", "NOVOS", "NOZES", "NUBLA", "NUBLE", "NUBLO", "NUCAL", "NUDEZ", "NULAS", "NULOS", "NUMAS", "NUNCA", "NUNES", "NUTRA", "NUTRE", "NUTRI", "NUTRO", "NUVEM", "NUVEO", "NYLON", "OASIS", "OBESA", "OBESO", "OBICE", "OBITO", "OBOES", "OBRAI", "OBRAM", "OBRAR", "OBRAS", "OBREI", "OBREM", "OBRES", "OBROU", "OBSTA", "OBSTE", "OBSTO", "OBTEM", "OBTER", "OBVIA", "OBVIO", "OCASO", "OCIOS", "OCULO", "OCUPA", "OCUPE", "OCUPO", "ODEIA", "ODEIE", "ODEIO", "ODETE", "ODIAI", "ODIAR", "ODIEI", "ODIOS", "ODIOU", "ODORA", "ODORE", "ODORO", "ODRES", "OESTE", "OFEGA", "OFEGO", "OGIVA", "OGRES", "OICAM", "OICAS", "OIDIO", "OIRAR", "OIROS", "OLEAI", "OLEAR", "OLEEI", "OLEIA", "OLEIE", "OLEIO", "OLEOS", "OLEOU", "OLHAI", "OLHAL", "OLHAM", "OLHAO", "OLHAR", "OLHAS", "OLHEI", "OLHEM", "OLHES", "OLHOS", "OLHOU", "OLIVA", "OLMOS", "OMBRO", "OMEGA", "OMITA", "OMITE", "OMITI", "OMITO", "ONCAS", "ONDAS", "ONDEA", "ONERA", "ONERE", "ONERO", "ONTEM", "OPACA", "OPACO", "OPALA", "OPCAO", "OPERA", "OPERE", "OPERO", "OPIAI", "OPIAM", "OPIAR", "OPIAS", "OPIEI", "OPIEM", "OPIES", "OPINA", "OPINE", "OPINO", "OPIOU", "OPOEM", "OPOES", "OPORA", "OPTAI", "OPTAM", "OPTAR", "OPTAS", "OPTEI", "OPTEM", "OPTES", "OPTOU", "ORADA", "ORADO", "ORAIS", "ORARA", "ORAVA", "ORCAI", "ORCAM", "ORCAR", "ORCAS", "ORCEI", "ORCEM", "ORCES", "ORCOU", "ORDEM", "OREIS", "ORFAO", "ORFAS", "ORFEU", "ORGAO", "ORGIA", "ORLAI", "ORLAM", "ORLAR", "ORLAS", "ORLEI", "ORLEM", "ORLES", "ORLOU", "ORMUZ", "ORNAI", "ORNAM", "ORNAR", "ORNAS", "ORNEI", "ORNEM", "ORNES", "ORNOU", "OSACA", "OSAKA", "OSCAR", "OSGAS", "OSSEA", "OSSEO", "OSSOS", "OSTRA", "OTELO", "OTICA", "OTICO", "OTIMA", "OTIMO", "OUCAM", "OUCAS", "OUGAI", "OUGAM", "OUGAR", "OUGAS", "OUGOU", "OUGUE", "OURAI", "OURAM", "OURAR", "OURAS", "OUREI", "OUREM", "OURES", "OUROS", "OUROU", "OUSAI", "OUSAM", "OUSAR", "OUSAS", "OUSEI", "OUSEM", "OUSES", "OUSOU", "OUTRA", "OUTRO", "OUVEM", "OUVES", "OUVIA", "OUVIR", "OUVIS", "OUVIU", "OVADA", "OVADO", "OVAIS", "OVALA", "OVALE", "OVALO", "OVARA", "OVAVA", "OVEIS", "OVINO", "OVULO", "OXALA", "OXIDA", "OXIDE", "OXIDO", "OZONA", "OZONE", "OZONO", "PACOS", "PACTO", "PADRE", "PADUA", "PAGAI", "PAGAM", "PAGAO", "PAGAR", "PAGAS", "PAGOS", "PAGOU", "PAGUE", "PAIGC", "PAIOL", "PAIOS", "PAIRA", "PAIRE", "PAIRO", "PAIVA", "PAJEM", "PALAS", "PALAU", "PALCO", "PALHA", "PALIA", "PALIE", "PALIO", "PALMA", "PALME", "PALMO", "PALOP", "PALPA", "PALPE", "PALPO", "PALRA", "PALRE", "PALRO", "PANAI", "PANAL", "PANAM", "PANAR", "PANAS", "PANCA", "PANDA", "PANEI", "PANEM", "PANES", "PANOS", "PANOU", "PAPAI", "PAPAL", "PAPAM", "PAPAO", "PAPAR", "PAPAS", "PAPEI", "PAPEL", "PAPEM", "PAPES", "PAPOU", "PARAI", "PARAM", "PARAR", "PARAS", "PARCA", "PARCO", "PARDA", "PARDO", "PAREA", "PAREI", "PAREM", "PARES", "PARIA", "PARIR", "PARIS", "PARIU", "PARLA", "PARLE", "PARLO", "PARMA", "PAROU", "PARRA", "PARTA", "PARTE", "PARTI", "PARTO", "PARVA", "PARVO", "PASMA", "PASME", "PASMO", "PASSA", "PASSE", "PASSO", "PASTA", "PASTE", "PASTO", "PATAO", "PATAS", "PATIM", "PATIO", "PATOS", "PAULA", "PAULI", "PAULO", "PAUSA", "PAUSE", "PAUSO", "PAUTA", "PAUTE", "PAUTO", "PAVAO", "PAVIO", "PAVOA", "PAVOR", "PAZES", "PEANO", "PECAI", "PECAM", "PECAR", "PECAS", "PECHA", "PECOU", "PEDAL", "PEDEM", "PEDES", "PEDIA", "PEDIP", "PEDIR", "PEDIS", "PEDIU", "PEDRA", "PEDRO", "PEGAI", "PEGAM", "PEGAR", "PEGAS", "PEGOU", "PEGUE", "PEITO", "PEIXE", "PEJAI", "PEJAM", "PEJAR", "PEJAS", "PEJEI", "PEJEM", "PEJES", "PEJOU", "PELAI", "PELAM", "PELAR", "PELAS", "PELEI", "PELEM", "PELES", "PELOS", "PELOU", "PELVE", "PENAI", "PENAL", "PENAM", "PENAR", "PENAS", "PENCA", "PENCE", "PENDA", "PENDE", "PENDI", "PENDO", "PENEI", "PENEM", "PENES", "PENHA", "PENIS", "PENOU", "PENSA", "PENSE", "PENSO", "PENTE", "PEOES", "PEQUE", "PERAL", "PERAS", "PERCA", "PERCO", "PERDA", "PERDE", "PERDI", "PERES", "PEREZ", "PERNA", "PERRA", "PERRO", "PERSA", "PERTO", "PERUA", "PERUS", "PESAI", "PESAM", "PESAR", "PESAS", "PESCA", "PESCO", "PESEI", "PESEM", "PESES", "PESOS", "PESOU", "PESTE", "PETIZ", "PEUGA", "PIADA", "PIADO", "PIAIS", "PIANO", "PIARA", "PIAUI", "PIAVA", "PICAI", "PICAM", "PICAR", "PICAS", "PICHE", "PICOS", "PICOU", "PIEIS", "PIELA", "PIFIA", "PIFIO", "PILAI", "PILAM", "PILAO", "PILAR", "PILAS", "PILEI", "PILEM", "PILES", "PILHA", "PILHE", "PILHO", "PILOU", "PIMBA", "PIMPA", "PIMPE", "PIMPO", "PINCA", "PINGA", "PINGO", "PINHA", "PINHO", "PINOS", "PINTA", "PINTE", "PINTO", "PIOES", "PIORA", "PIORE", "PIORO", "PIPAS", "PIQUE", "PIRAI", "PIRAM", "PIRAR", "PIRAS", "PIREI", "PIREM", "PIRES", "PIREU", "PIROU", "PIRRO", "PISAI", "PISAM", "PISAR", "PISAS", "PISCA", "PISCO", "PISEI", "PISEM", "PISES", "PISGA", "PISGO", "PISOS", "PISOU", "PISTA", "PITAO", "PITEU", "PIVOS", "PIXEL", "PIZAS", "PIZZA", "PLACA", "PLANA", "PLANE", "PLANO", "PLEBE", "PLENA", "PLENO", "PLEXO", "PLICA", "PLICO", "PLUMA", "PNEUS", "POBRE", "POCAO", "POCAS", "POCOS", "PODAI", "PODAL", "PODAM", "PODAO", "PODAR", "PODAS", "PODEI", "PODEM", "PODER", "PODES", "PODIA", "PODIO", "PODOU", "PODRE", "POEMA", "POETA", "POISA", "POISE", "POISO", "POJAI", "POJAM", "POJAR", "POJAS", "POJEI", "POJEM", "POJES", "POJOU", "POLAR", "POLCA", "POLCO", "POLEN", "POLIA", "POLIR", "POLIS", "POLIU", "POLOS", "POLPA", "POLUA", "POLUI", "POLUO", "POLVO", "POMAR", "POMBA", "POMBO", "POMES", "POMOS", "POMPA", "PONDE", "PONDO", "PONEI", "PONHA", "PONHO", "PONTA", "PONTE", "PONTO", "POPOS", "PORAO", "PORAS", "PORCA", "PORCO", "POREI", "POREM", "PORES", "PORIA", "POROS", "PORRA", "PORTA", "PORTE", "PORTO", "POSAI", "POSAM", "POSAR", "POSAS", "POSEI", "POSEM", "POSES", "POSOU", "POSSA", "POSSE", "POSSO", "POSTA", "POSTE", "POSTO", "POTES", "POTRA", "POTRO", "POUCA", "POUCO", "POUPA", "POUPE", "POUPO", "POUSA", "POUSE", "POUSO", "POVOA", "POVOE", "POVOO", "POVOS", "PRACA", "PRADO", "PRAGA", "PRAIA", "PRATA", "PRATO", "PRAXE", "PRAZO", "PRECE", "PRECO", "PREGA", "PREGO", "PRELO", "PREMA", "PREME", "PREMI", "PREMO", "PRESA", "PRESE", "PRESO", "PRETA", "PRETO", "PREVE", "PREVI", "PREZA", "PREZE", "PREZO", "PRIAO", "PRIMA", "PRIME", "PRIMO", "PRIOR", "PRIVA", "PRIVE", "PRIVO", "PROAS", "PROBO", "PROFS", "PROLE", "PROSA", "PROSE", "PROSO", "PROVA", "PROVE", "PROVI", "PROVO", "PRUMO", "PRURA", "PRURE", "PRURI", "PRURO", "PSICO", "PSKOV", "PUBIS", "PUDER", "PUDIM", "PUDOR", "PUGNA", "PUGNE", "PUGNO", "PUJAI", "PUJAM", "PUJAR", "PUJAS", "PUJEI", "PUJEM", "PUJES", "PUJOU", "PULAI", "PULAM", "PULAR", "PULAS", "PULEI", "PULEM", "PULES", "PULGA", "PULHA", "PULOS", "PULOU", "PULSA", "PULSE", "PULSO", "PUMAS", "PUMBA", "PUNAM", "PUNAS", "PUNEM", "PUNES", "PUNGE", "PUNGI", "PUNHA", "PUNHO", "PUNIA", "PUNIR", "PUNIS", "PUNIU", "PUNJA", "PUNJO", "PUNKS", "PURAS", "PURGA", "PURGO", "PUROS", "PUSER", "PUTOS", "PUXAI", "PUXAM", "PUXAO", "PUXAR", "PUXAS", "PUXEI", "PUXEM", "PUXES", "PUXOS", "PUXOU", "QUAIS", "QUASE", "QUEDA", "QUEDE", "QUEDO", "QUERO", "QUICA", "QUICO", "QUILO", "QUIMO", "QUINA", "QUINE", "QUINO", "QUITA", "QUITE", "QUITO", "QUIVI", "QUOTA", "RABAO", "RABEA", "RABOS", "RACAO", "RACAS", "RACHA", "RACHE", "RACHO", "RACIO", "RADAR", "RADIA", "RADIE", "RADIO", "RADON", "RAFAI", "RAFAM", "RAFAR", "RAFAS", "RAFEI", "RAFEM", "RAFES", "RAFIA", "RAFOU", "RAIAI", "RAIAM", "RAIAR", "RAIAS", "RAIEI", "RAIEM", "RAIES", "RAIOS", "RAIOU", "RAIVA", "RALAI", "RALAM", "RALAR", "RALAS", "RALEA", "RALEI", "RALEM", "RALES", "RALHA", "RALHE", "RALHO", "RALIS", "RALOS", "RALOU", "RAMAL", "RAMAS", "RAMON", "RAMOS", "RAMPA", "RANCA", "RANCE", "RANCO", "RANGE", "RANGI", "RANHO", "RANJA", "RANJO", "RAPAI", "RAPAM", "RAPAR", "RAPAS", "RAPAZ", "RAPEI", "RAPEM", "RAPES", "RAPOU", "RAPTA", "RAPTE", "RAPTO", "RARAS", "RAREA", "RAROS", "RASAI", "RASAM", "RASAR", "RASAS", "RASCA", "RASCO", "RASEI", "RASEM", "RASES", "RASGA", "RASGO", "RASOS", "RASOU", "RASPA", "RASPE", "RASPO", "RASTO", "RATAI", "RATAM", "RATAO", "RATAR", "RATAS", "RATEA", "RATEI", "RATEM", "RATES", "RATOS", "RATOU", "RAVEL", "RAZAO", "RAZIA", "RAZIE", "RAZIO", "RAZOA", "RAZOE", "RAZOO", "REAGE", "REAGI", "REAIS", "REAJA", "REAJO", "REATA", "REATE", "REATO", "REAVA", "REAVE", "REAVI", "REAVO", "RECAI", "RECEA", "RECEM", "RECUA", "RECUE", "RECUO", "REDEA", "REDES", "REDOR", "REDUZ", "REFAZ", "REFEM", "REFEZ", "REFIA", "REFIE", "REFIO", "REFIZ", "REGAI", "REGAM", "REGAR", "REGAS", "REGEI", "REGEM", "REGER", "REGES", "REGEU", "REGIA", "REGIE", "REGIO", "REGOS", "REGOU", "REGRA", "REGRE", "REGRO", "REGUA", "REGUE", "REIAM", "REIAS", "REINA", "REINE", "REINO", "REJAM", "REJAS", "RELAM", "RELAS", "RELEI", "RELEM", "RELER", "RELES", "RELEU", "RELIA", "RELUZ", "RELVA", "RELVE", "RELVO", "REMAI", "REMAM", "REMAR", "REMAS", "REMEI", "REMEM", "REMES", "REMIA", "REMIR", "REMIS", "REMIU", "REMOA", "REMOI", "REMOO", "REMOS", "REMOU", "RENAL", "RENAS", "RENDA", "RENDE", "RENDI", "RENDO", "RENHA", "RENHE", "RENHI", "RENHO", "RENTE", "REPAS", "REPOE", "REPOR", "REPOS", "REPTA", "REPTE", "REPTO", "REPUS", "RESMA", "RESTA", "RESTE", "RESTO", "RETAL", "RETAS", "RETEM", "RETER", "RETOS", "RETRO", "REUMA", "REUNA", "REUNE", "REUNI", "REUNO", "REVEM", "REVER", "REVES", "REVIA", "REVIM", "REVIR", "REVIU", "REVOO", "REZAI", "REZAM", "REZAO", "REZAR", "REZAS", "REZEI", "REZEM", "REZES", "REZOU", "RIAIS", "RICAS", "RICOS", "RIDAS", "RIDES", "RIDOS", "RIEIS", "RIFAI", "RIFAM", "RIFAR", "RIFAS", "RIFEI", "RIFEM", "RIFES", "RIFLE", "RIFOU", "RIGOR", "RIJAO", "RIJAS", "RIJOS", "RILHA", "RILHE", "RILHO", "RIMAI", "RIMAM", "RIMAR", "RIMAS", "RIMEI", "RIMEM", "RIMES", "RIMOS", "RIMOU", "RINDO", "RIOJA", "RIPAI", "RIPAM", "RIPAR", "RIPAS", "RIPEI", "RIPEM", "RIPES", "RIPOU", "RIRAM", "RIRAO", "RIRAS", "RIREI", "RIREM", "RIRES", "RIRIA", "RISCA", "RISCO", "RISOS", "RISSE", "RISTE", "RITMA", "RITME", "RITMO", "RITOS", "RIVAL", "RIXAI", "RIXAM", "RIXAR", "RIXAS", "RIXEI", "RIXEM", "RIXES", "RIXOU", "ROAIS", "ROBES", "ROBIN", "ROBOS", "ROCAI", "ROCAM", "ROCAR", "ROCAS", "ROCEI", "ROCEM", "ROCES", "ROCHA", "ROCOU", "RODAI", "RODAM", "RODAO", "RODAR", "RODAS", "RODEA", "RODEI", "RODEM", "RODES", "RODOS", "RODOU", "ROEIS", "ROERA", "ROGAI", "ROGAM", "ROGAR", "ROGAS", "ROGOU", "ROGUE", "ROIAM", "ROIAS", "ROIDA", "ROIDO", "ROJAO", "ROLAI", "ROLAM", "ROLAO", "ROLAR", "ROLAS", "ROLEI", "ROLEM", "ROLES", "ROLHA", "ROLHE", "ROLHO", "ROLOS", "ROLOU", "ROMAO", "ROMAS", "ROMBO", "ROMEU", "ROMPA", "ROMPE", "ROMPI", "ROMPO", "RONCA", "RONCO", "RONDA", "RONDE", "RONDO", "ROQUE", "ROSAL", "ROSAS", "ROSCA", "ROSCO", "ROSEA", "ROSEO", "ROSNA", "ROSNE", "ROSNO", "ROSTO", "ROTAI", "ROTAM", "ROTAR", "ROTAS", "ROTEI", "ROTEM", "ROTES", "ROTOR", "ROTOS", "ROTOU", "ROUBA", "ROUBE", "ROUBO", "ROUCA", "ROUCO", "ROUPA", "ROXAS", "ROXEA", "ROXOS", "ROYAL", "RUAIS", "RUBEN", "RUBEO", "RUBIS", "RUBLO", "RUBOR", "RUBRA", "RUBRO", "RUCAS", "RUCOS", "RUDES", "RUDEZ", "RUELA", "RUFAI", "RUFAM", "RUFAR", "RUFAS", "RUFEI", "RUFEM", "RUFES", "RUFIA", "RUFIE", "RUFIO", "RUFOU", "RUGAS", "RUGEM", "RUGES", "RUGIA", "RUGIR", "RUGIS", "RUGIU", "RUIAM", "RUIAS", "RUIDA", "RUIDO", "RUINA", "RUINS", "RUIRA", "RUIVA", "RUIVO", "RUJAM", "RUJAS", "RUMAI", "RUMAM", "RUMAR", "RUMAS", "RUMEI", "RUMEM", "RUMES", "RUMOR", "RUMOS", "RUMOU", "RUPIA", "RURAL", "RUSGA", "RUSGO", "RUSSA", "RUSSO", "SAARA", "SABAO", "SABEI", "SABEM", "SABER", "SABES", "SABIA", "SABIO", "SABOR", "SABRE", "SACAI", "SACAM", "SACAR", "SACAS", "SACHA", "SACHE", "SACHO", "SACIA", "SACIE", "SACIO", "SACOS", "SACOU", "SACRA", "SACRO", "SADIA", "SADIO", "SAFAI", "SAFAM", "SAFAR", "SAFAS", "SAFEI", "SAFEM", "SAFES", "SAFOS", "SAFOU", "SAFRA", "SAGAS", "SAGAZ", "SAGRA", "SAGRE", "SAGRO", "SAIAM", "SAIAS", "SAIBA", "SAIDA", "SAIDO", "SAINT", "SAIRA", "SALAO", "SALAS", "SALDA", "SALDE", "SALDO", "SALGA", "SALGO", "SALLY", "SALMO", "SALSA", "SALTA", "SALTE", "SALTO", "SALVA", "SALVE", "SALVO", "SAMBA", "SAMBE", "SAMBO", "SAMOA", "SANAI", "SANAM", "SANAR", "SANAS", "SANCA", "SANDE", "SANEA", "SANEI", "SANEM", "SANES", "SANHA", "SANOU", "SANTA", "SANTO", "SAPAL", "SAPOS", "SAQUE", "SARAH", "SARAI", "SARAM", "SARAR", "SARAS", "SARAU", "SARCA", "SARDA", "SAREI", "SAREM", "SARES", "SARJA", "SARJE", "SARJO", "SARNA", "SARNE", "SARNI", "SARNO", "SAROU", "SARRE", "SARRO", "SATAN", "SATAO", "SATIS", "SAUDA", "SAUDE", "SAUDO", "SAUNA", "SAVEL", "SAXAO", "SCALA", "SCOTT", "SEARA", "SEBES", "SEBOS", "SECAI", "SECAM", "SECAR", "SECAS", "SECOS", "SECOU", "SEDAI", "SEDAM", "SEDAR", "SEDAS", "SEDEI", "SEDEM", "SEDES", "SEDIA", "SEDIE", "SEDIO", "SEDOU", "SEDUZ", "SEGAI", "SEGAM", "SEGAR", "SEGAS", "SEGOU", "SEGUE", "SEGUI", "SEIOS", "SEITA", "SEIVA", "SEIXO", "SEJAM", "SEJAS", "SELAI", "SELAM", "SELAR", "SELAS", "SELEI", "SELEM", "SELES", "SELIM", "SELOS", "SELOU", "SELVA", "SEMEA", "SEMEN", "SENAO", "SENAS", "SENDA", "SENDO", "SENHA", "SENIL", "SENIS", "SENSO", "SENTA", "SENTE", "SENTI", "SENTO", "SEPTO", "SEQUE", "SERAO", "SERAS", "SEREI", "SEREM", "SERES", "SERIA", "SERIE", "SERIO", "SERPA", "SERPE", "SERRA", "SERRE", "SERRO", "SERTA", "SERVA", "SERVE", "SERVI", "SERVO", "SERZE", "SERZI", "SESTA", "SETAS", "SETEA", "SETOR", "SEVER", "SEXOS", "SEXTA", "SEXTO", "SHELL", "SHOWS", "SIDAS", "SIDON", "SIDOS", "SIDRA", "SIGAM", "SIGAS", "SIGLA", "SIGMA", "SIGNO", "SIGUI", "SILEX", "SILOS", "SILVA", "SILVE", "SILVO", "SIMAO", "SIMIO", "SIMON", "SINAI", "SINAL", "SINAS", "SINES", "SINHA", "SINOS", "SINTA", "SINTO", "SIQUE", "SIRGA", "SIRIA", "SIRIO", "SIRVA", "SIRVO", "SIRZA", "SIRZO", "SISAI", "SISAM", "SISAR", "SISAS", "SISEI", "SISEM", "SISES", "SISMO", "SISOU", "SITES", "SITIA", "SITIE", "SITIO", "SITOS", "SITUA", "SITUE", "SITUO", "SKATE", "SLIDE", "SMITH", "SOADA", "SOADO", "SOAIS", "SOARA", "SOAVA", "SOBEM", "SOBES", "SOBRA", "SOBRE", "SOBRO", "SOCAI", "SOCAM", "SOCAR", "SOCAS", "SOCIA", "SOCIO", "SOCOS", "SOCOU", "SODIO", "SOEIS", "SOFAS", "SOFIA", "SOFRA", "SOFRE", "SOFRI", "SOFRO", "SOGRA", "SOGRO", "SOLAR", "SOLAS", "SOLDA", "SOLDE", "SOLDO", "SOLHA", "SOLOS", "SOLTA", "SOLTE", "SOLTO", "SOLVA", "SOLVE", "SOLVI", "SOLVO", "SOMAI", "SOMAM", "SOMAR", "SOMAS", "SOMEI", "SOMEM", "SOMES", "SOMOS", "SOMOU", "SONAR", "SONDA", "SONDE", "SONDO", "SONHA", "SONHE", "SONHO", "SONIA", "SONOS", "SONSA", "SONSO", "SOPAS", "SOPRA", "SOPRE", "SOPRO", "SOQUE", "SORNA", "SORNE", "SORNO", "SOROR", "SOROS", "SORRI", "SORTE", "SORTI", "SORVA", "SORVE", "SORVI", "SORVO", "SOSIA", "SOTAO", "SOUBE", "SOURE", "SOUSA", "SOUTO", "SOVAI", "SOVAM", "SOVAR", "SOVAS", "SOVEI", "SOVEM", "SOVES", "SOVOU", "SPRAY", "STAFF", "STAND", "STERN", "STOCK", "STOPS", "SUADA", "SUADO", "SUAIS", "SUARA", "SUAVA", "SUAVE", "SUBAM", "SUBAS", "SUBIA", "SUBIR", "SUBIS", "SUBIU", "SUCOS", "SUDAO", "SUECA", "SUECO", "SUEIS", "SUEVA", "SUEVO", "SUFLE", "SUGAI", "SUGAM", "SUGAR", "SUGAS", "SUGOU", "SUGUE", "SUICA", "SUICO", "SUINA", "SUINO", "SUITE", "SUJAI", "SUJAM", "SUJAR", "SUJAS", "SUJEI", "SUJEM", "SUJES", "SUJOS", "SUJOU", "SULCA", "SULCO", "SUMAM", "SUMAS", "SUMIA", "SUMIR", "SUMIS", "SUMIU", "SUMOS", "SUPER", "SUPOE", "SUPOR", "SUPOS", "SUPRA", "SUPRE", "SUPRI", "SUPRO", "SUPUS", "SURDA", "SURDE", "SURDI", "SURDO", "SURFE", "SURGE", "SURGI", "SURJA", "SURJO", "SURRA", "SURRE", "SURRO", "SURTA", "SURTE", "SURTI", "SURTO", "SUSAN", "SUSHI", "SUSTA", "SUSTE", "SUSTO", "SUTIA", "SUTRA", "SZABO", "TABUA", "TABUS", "TACAO", "TACAS", "TACHA", "TACHE", "TACHO", "TACOS", "TADEU", "TAIPA", "TAIRA", "TAIZE", "TALAI", "TALAM", "TALAO", "TALAR", "TALAS", "TALCO", "TALEI", "TALEM", "TALES", "TALHA", "TALHE", "TALHO", "TALIN", "TALIO", "TALOS", "TALOU", "TAMAO", "TAMIL", "TAMPA", "TAMPE", "TAMPO", "TANAS", "TANGA", "TANGE", "TANGI", "TANGO", "TANIA", "TANJA", "TANJO", "TANSO", "TANTA", "TANTO", "TAPAI", "TAPAM", "TAPAR", "TAPAS", "TAPEA", "TAPEI", "TAPEM", "TAPES", "TAPOU", "TARAI", "TARAM", "TARAR", "TARAS", "TARDA", "TARDE", "TARDO", "TAREI", "TAREM", "TARES", "TARJA", "TARJE", "TARJO", "TAROU", "TARSO", "TARTE", "TASCA", "TASCO", "TATEA", "TATIL", "TATUA", "TATUE", "TATUO", "TATUS", "TAURO", "TAXAI", "TAXAM", "TAXAR", "TAXAS", "TAXEI", "TAXEM", "TAXES", "TAXIS", "TAXOU", "TEBAS", "TECAM", "TECAS", "TECEI", "TECEM", "TECER", "TECES", "TECEU", "TECIA", "TECLA", "TECLE", "TECLO", "TEDIO", "TEIAS", "TEIMA", "TEIME", "TEIMO", "TEIXO", "TELAO", "TELAS", "TELES", "TELEX", "TELHA", "TELHE", "TELHO", "TELMO", "TEMAM", "TEMAS", "TEMEI", "TEMEM", "TEMER", "TEMES", "TEMEU", "TEMIA", "TEMOR", "TEMOS", "TEMPO", "TENAZ", "TENDA", "TENDE", "TENDI", "TENDO", "TENHA", "TENHO", "TENIA", "TENIS", "TENOR", "TENRA", "TENRO", "TENSA", "TENSO", "TENTA", "TENTE", "TENTO", "TENUE", "TERAO", "TERAS", "TERCA", "TERCE", "TERCO", "TEREI", "TEREM", "TERES", "TERIA", "TERMO", "TERNA", "TERNO", "TERRA", "TESAO", "TESAS", "TESES", "TESEU", "TESOS", "TESTA", "TESTE", "TESTO", "TETAS", "TETOS", "TETUM", "TEXAS", "TEXTO", "THORP", "TIAGO", "TIARA", "TIBIA", "TIBRE", "TICAO", "TIDAS", "TIDOS", "TIFOS", "TIGRE", "TILIA", "TIMOR", "TINAM", "TINAS", "TINEM", "TINES", "TINGA", "TINGE", "TINGI", "TINHA", "TINIA", "TINIR", "TINIS", "TINIU", "TINJA", "TINJO", "TINTA", "TINTO", "TIPAS", "TIPOS", "TIQUE", "TIRAI", "TIRAM", "TIRAR", "TIRAS", "TIREI", "TIREM", "TIRES", "TIROL", "TIROS", "TIROU", "TIRSO", "TISNA", "TISNE", "TISNO", "TITAS", "TIVER", "TOADA", "TOADO", "TOAIS", "TOARA", "TOAVA", "TOCAI", "TOCAM", "TOCAR", "TOCAS", "TOCHA", "TOCOU", "TODAS", "TODOS", "TOEIS", "TOGAI", "TOGAM", "TOGAR", "TOGAS", "TOGOU", "TOGUE", "TOIRO", "TOJOS", "TOLAS", "TOLDA", "TOLDE", "TOLDO", "TOLHA", "TOLHE", "TOLHI", "TOLHO", "TOLOS", "TOMAI", "TOMAM", "TOMAR", "TOMAS", "TOMBA", "TOMBE", "TOMBO", "TOMEI", "TOMEM", "TOMES", "TOMOS", "TOMOU", "TONAI", "TONAL", "TONAM", "TONAR", "TONAS", "TONEI", "TONEL", "TONEM", "TONES", "TONGA", "TONIA", "TONOU", "TONTA", "TONTO", "TOPAI", "TOPAM", "TOPAR", "TOPAS", "TOPEI", "TOPEM", "TOPES", "TOPOS", "TOPOU", "TOQUE", "TORAI", "TORAM", "TORAR", "TORAS", "TORAX", "TORCA", "TORCE", "TORCI", "TORCO", "TORDA", "TORDO", "TOREI", "TOREM", "TORES", "TORGA", "TORIO", "TORNA", "TORNE", "TORNO", "TOROS", "TOROU", "TORPE", "TORRA", "TORRE", "TORRO", "TORSO", "TORTA", "TORTO", "TORVA", "TORVE", "TORVO", "TOSCA", "TOSCO", "TOSSE", "TOSSI", "TOSTA", "TOSTE", "TOSTO", "TOTAL", "TOTEM", "TOUCA", "TOUCO", "TOURA", "TOURO", "TRACA", "TRACE", "TRACO", "TRACY", "TRAEM", "TRAGA", "TRAGO", "TRAIA", "TRAIO", "TRAIR", "TRAIS", "TRAIU", "TRAJA", "TRAJE", "TRAJO", "TRAMA", "TRAME", "TRAMO", "TRAPO", "TRARA", "TRATA", "TRATE", "TRATO", "TRAVA", "TRAVE", "TRAVO", "TRELA", "TREMA", "TREME", "TREMI", "TREMO", "TRENO", "TRENS", "TREPA", "TREPE", "TREPO", "TRETA", "TREVA", "TREVO", "TREZE", "TRIBO", "TRICO", "TRIGO", "TRINA", "TRINE", "TRINO", "TRIOS", "TRIPA", "TRIPE", "TROAI", "TROAM", "TROAR", "TROAS", "TROCA", "TROCE", "TROCO", "TROEI", "TROEM", "TROES", "TROFA", "TROIA", "TRONO", "TROOU", "TROPA", "TROTA", "TROTE", "TROTO", "TROVA", "TROVE", "TROVO", "TRUFA", "TRUFE", "TRUFO", "TRUPE", "TRUTA", "TUBAS", "TUBOS", "TUDOR", "TUFAI", "TUFAM", "TUFAO", "TUFAR", "TUFAS", "TUFEI", "TUFEM", "TUFES", "TUFOS", "TUFOU", "TUGIA", "TUGIR", "TUGIU", "TUMBA", "TUMOR", "TUNAS", "TUNEL", "TUNES", "TUPLO", "TURBA", "TURBE", "TURBO", "TURCA", "TURCO", "TURFA", "TURIM", "TURMA", "TURNE", "TURNO", "TURRA", "TURVA", "TURVE", "TURVO", "TUSSA", "TUSSO", "TUTOR", "UIVAI", "UIVAM", "UIVAR", "UIVAS", "UIVEI", "UIVEM", "UIVES", "UIVOS", "UIVOU", "ULTRA", "UMERO", "UNAIS", "UNCAO", "UNGEM", "UNGES", "UNGIA", "UNGIR", "UNGIS", "UNGIU", "UNHAI", "UNHAM", "UNHAR", "UNHAS", "UNHEI", "UNHEM", "UNHES", "UNHOU", "UNIAM", "UNIAO", "UNIAS", "UNICA", "UNICO", "UNIDA", "UNIDO", "UNIRA", "UNITA", "UNJAM", "UNJAS", "UNTAI", "UNTAM", "UNTAR", "UNTAS", "UNTEI", "UNTEM", "UNTES", "UNTOU", "URAIS", "URANO", "URBES", "URDAM", "URDAS", "URDEM", "URDES", "URDIA", "URDIR", "URDIS", "URDIU", "UREIA", "URGEM", "URGES", "URGIA", "URGIR", "URGIS", "URGIU", "URICA", "URICO", "URINA", "URINE", "URINO", "URJAM", "URJAS", "URNAS", "URRAI", "URRAM", "URRAR", "URRAS", "URREI", "URREM", "URRES", "URROS", "URROU", "URSAS", "URSOS", "URUBU", "URZAL", "URZES", "USADA", "USADO", "USAIS", "USARA", "USAVA", "USEIS", "USINA", "USUAL", "USURA", "UTEIS", "UTERO", "UVACA", "VACAS", "VACUO", "VADES", "VADIA", "VADIE", "VADIO", "VAGAI", "VAGAM", "VAGAO", "VAGAR", "VAGAS", "VAGEM", "VAGOS", "VAGOU", "VAGUE", "VAIAI", "VAIAM", "VAIAR", "VAIAS", "VAIEI", "VAIEM", "VAIES", "VAIOU", "VALAI", "VALAM", "VALAR", "VALAS", "VALEI", "VALEM", "VALER", "VALES", "VALEU", "VALHA", "VALHO", "VALIA", "VALOR", "VALOU", "VALSA", "VALSE", "VALSO", "VALVA", "VAMOS", "VANIA", "VAPOR", "VARAI", "VARAL", "VARAM", "VARAO", "VARAR", "VARAS", "VAREI", "VAREM", "VARES", "VARIA", "VARIE", "VARIO", "VARIZ", "VAROU", "VARRA", "VARRE", "VARRI", "VARRO", "VASAS", "VASCO", "VASOS", "VASTA", "VASTO", "VAZAI", "VAZAM", "VAZAO", "VAZAR", "VAZAS", "VAZEI", "VAZEM", "VAZES", "VAZIA", "VAZIE", "VAZIO", "VAZOU", "VEADA", "VEADO", "VEDAI", "VEDAM", "VEDAR", "VEDAS", "VEDEI", "VEDEM", "VEDES", "VEDOU", "VEIAS", "VEIGA", "VEIOS", "VEJAM", "VEJAS", "VELAI", "VELAM", "VELAR", "VELAS", "VELEI", "VELEM", "VELES", "VELHA", "VELHO", "VELOU", "VELOZ", "VEMOS", "VENCA", "VENCE", "VENCI", "VENCO", "VENDA", "VENDE", "VENDI", "VENDO", "VENHA", "VENHO", "VENIA", "VENTA", "VENTO", "VENUS", "VERAO", "VERAS", "VERBA", "VERBO", "VERDE", "VERDI", "VEREA", "VEREI", "VEREM", "VERES", "VERGA", "VERGO", "VERIA", "VERME", "VERSA", "VERSE", "VERSO", "VERTA", "VERTE", "VERTI", "VERTO", "VESGA", "VESGO", "VESPA", "VESTA", "VESTE", "VESTI", "VETAI", "VETAM", "VETAR", "VETAS", "VETEI", "VETEM", "VETES", "VETOR", "VETOS", "VETOU", "VEXAI", "VEXAM", "VEXAR", "VEXAS", "VEXEI", "VEXEM", "VEXES", "VEXOU", "VEZES", "VIAJA", "VIAJE", "VIAJO", "VIANA", "VIBRA", "VIBRE", "VIBRO", "VICHY", "VICIA", "VICIE", "VICIO", "VIDAS", "VIDEO", "VIDES", "VIDRA", "VIDRE", "VIDRO", "VIEIS", "VIELA", "VIENA", "VIERA", "VIGAS", "VIGIA", "VIGIE", "VIGIO", "VIGOR", "VILAO", "VILAR", "VILAS", "VIMOS", "VINCA", "VINCI", "VINCO", "VINDA", "VINDE", "VINDO", "VINGA", "VINGO", "VINGT", "VINHA", "VINHO", "VINIL", "VINIS", "VINTE", "VIOLA", "VIOLE", "VIOLO", "VIRAI", "VIRAL", "VIRAM", "VIRAO", "VIRAR", "VIRAS", "VIREI", "VIREM", "VIRES", "VIRGO", "VIRIA", "VIRIL", "VIRIS", "VIROU", "VIRUS", "VISAI", "VISAM", "VISAO", "VISAR", "VISAS", "VISCO", "VISEI", "VISEM", "VISES", "VISEU", "VISOR", "VISOS", "VISOU", "VISSE", "VISTA", "VISTE", "VISTO", "VITAE", "VITAL", "VITOR", "VIUVA", "VIUVE", "VIUVO", "VIVAM", "VIVAS", "VIVAZ", "VIVEI", "VIVEM", "VIVER", "VIVES", "VIVEU", "VIVIA", "VIVOS", "VIZIR", "VOADA", "VOADO", "VOAIS", "VOARA", "VOAVA", "VOCAL", "VOCES", "VODCA", "VODKA", "VOEIS", "VOEJA", "VOEJE", "VOEJO", "VOGAI", "VOGAL", "VOGAM", "VOGAR", "VOGAS", "VOGOU", "VOGUE", "VOLEI", "VOLGA", "VOLTA", "VOLTE", "VOLTO", "VOLTS", "VOLVA", "VOLVE", "VOLVI", "VOLVO", "VORAZ", "VOSSA", "VOSSO", "VOTAI", "VOTAM", "VOTAR", "VOTAS", "VOTEI", "VOTEM", "VOTES", "VOTOS", "VOTOU", "VOUGA", "VOZES", "VULGO", "VULTO", "VULVA", "WATTS", "WEBER", "WHITE", "WILDE", "XAILE", "XALES", "XELIM", "XENON", "XEQUE", "XEREZ", "XEXES", "XHTML", "XIITA", "XINGA", "XINGO", "XISTO", "XVIII", "ZAIRE", "ZANGA", "ZANGO", "ZARPA", "ZARPE", "ZARPO", "ZEBRA", "ZEBRE", "ZEBRO", "ZELAI", "ZELAM", "ZELAR", "ZELAS", "ZELEI", "ZELEM", "ZELES", "ZELIA", "ZELOS", "ZELOU", "ZEROS", "ZINCA", "ZINCO", "ZINIA", "ZOADA", "ZOADO", "ZOAIS", "ZOARA", "ZOAVA", "ZOEIS", "ZOMBA", "ZOMBE", "ZOMBO", "ZONAL", "ZONAS", "ZONZO", "ZOOMS", "ZORRA", "ZORRO", "ZULOS", "ZUMBA", "ZUMBE", "ZUMBI", "ZUMBO", "ZURRA", "ZURRE", "ZURRO", "ZURZA", "ZURZE", "ZURZI", "ZURZO"]);
+
+// ===================== HELPERS =====================
+function norm(s){ return s.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toUpperCase().replace(/[^A-Z]/g,""); }
+function lv(ch){ return norm(ch).charCodeAt(0)-65; }
+function wordVals(w){ return norm(w).split("").map(lv); }
+function isValid(w){ const n=norm(w); return n.length===5 && VALIDAS.has(n); }
+
+// ===================== DIÁRIO =====================
+function getDayN(){
+  const o=new Date(2024,0,1), now=new Date(); now.setHours(0,0,0,0);
+  return Math.floor((now-o)/86400000);
+}
+function getDailyWord(){
+  const n=getDayN(); let h=n*2654435761; h=h^(h>>>16); return POOL[Math.abs(h)%POOL.length];
+}
+function fmtDay(){
+  return new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'});
+}
+function countdown(){
+  const now=new Date(), mid=new Date(now); mid.setHours(24,0,0,0);
+  let d=Math.floor((mid-now)/1000);
+  const h=String(Math.floor(d/3600)).padStart(2,'0'); d%=3600;
+  return `${h}:${String(Math.floor(d/60)).padStart(2,'0')}:${String(d%60).padStart(2,'0')}`;
+}
+
+// ===================== ESTADO =====================
+let target="",targetV=[],guesses=[],current=Array(5).fill(""),focusIdx=0,done=false,isDaily=true;
+
+// Stats globais (streak só conta diário)
+let stats=JSON.parse(localStorage.getItem("pr_s")||'{"p":0,"w":0,"streak":0,"lastWonDay":-1}');
+function saveStats(){ localStorage.setItem("pr_s",JSON.stringify(stats)); }
+
+// Chaves de persistência
+const KEY_DAILY = ()=>"pr_d_"+getDayN();
+const KEY_FREE  = "pr_free";
+
+// ===================== GAME =====================
+function newGame(free=false){
+  closeRes(); isDaily=!free; done=false;
+  guesses=[]; current=Array(5).fill(""); focusIdx=0;
+  document.getElementById("historyList").innerHTML="";
+  document.getElementById("histLabel").style.display="none";
+
+  if(isDaily){
+    // Tenta restaurar sessão diária salva
+    const saved=JSON.parse(localStorage.getItem(KEY_DAILY())||"null");
+    target=getDailyWord(); targetV=wordVals(target);
+    if(saved){
+      guesses=saved.guesses; done=saved.done;
+      updateBadge(); buildBoxes(); buildKB();
+      guesses.forEach((_,i)=>addHistItem(i));
+      if(guesses.length>0) document.getElementById("histLabel").style.display="";
+      drawMain();
+      if(done) setTimeout(()=>showRes(saved.won),400);
+      return;
+    }
+  } else {
+    // Modo livre: restaura sessão livre em andamento OU começa nova
+    const saved=JSON.parse(localStorage.getItem(KEY_FREE)||"null");
+    if(saved && !saved.done){
+      // retoma palavra em andamento
+      target=saved.target; targetV=wordVals(target);
+      guesses=saved.guesses; done=false;
+      updateBadge(); buildBoxes(); buildKB();
+      guesses.forEach((_,i)=>addHistItem(i));
+      if(guesses.length>0) document.getElementById("histLabel").style.display="";
+      drawMain(); return;
+    }
+    // nova palavra livre
+    target=POOL[Math.floor(Math.random()*POOL.length)];
+    targetV=wordVals(target);
+    localStorage.setItem(KEY_FREE,JSON.stringify({target,guesses:[],done:false}));
+  }
+  updateBadge(); buildBoxes(); buildKB(); drawMain();
+}
+
+function toggleMode(){
+  if(isDaily) startFreeConfirm();
+  else goDaily();
+}
+
+// Botão do header: alterna entre diário e livre
+function goDaily(){
+  newGame(false);
+}
+
+// Só inicia modo livre se não tiver livre em andamento, ou pergunta
+function startFreeConfirm(){
+  const saved=JSON.parse(localStorage.getItem(KEY_FREE)||"null");
+  if(saved && !saved.done && saved.guesses && saved.guesses.length>0){
+    // retoma o livre em andamento
+    newGame(true);
+  } else {
+    newGame(true);
+  }
+}
+
+function startFree(){ closeRes(); newGame(true); }
+
+function updateBadge(){
+  const b=document.getElementById("modeBadge");
+  const btnToggle=document.getElementById("btnToggleMode");
+  if(isDaily){
+    b.textContent=`🌞 Desafio Diário · #${getDayN()} · ${fmtDay()}`;
+    b.className="mode-badge daily";
+    btnToggle.textContent="🎲";
+    btnToggle.title="Jogar modo livre";
+  } else {
+    b.textContent="🎲 Modo Livre";
+    b.className="mode-badge free";
+    btnToggle.textContent="🌞";
+    btnToggle.title="Voltar ao desafio diário";
+  }
+}
+
+// ===================== BOXES =====================
+function buildBoxes(){
+  const c=document.getElementById("lboxes"); c.innerHTML="";
+  for(let i=0;i<5;i++){
+    const d=document.createElement("div"); d.className="lbox"; d.id="lb"+i;
+    d.addEventListener("click",()=>{ if(!done){focusIdx=i;refreshBoxes();} });
+    c.appendChild(d);
+  }
+  refreshBoxes();
+}
+function refreshBoxes(){
+  for(let i=0;i<5;i++){
+    const b=document.getElementById("lb"+i); if(!b)continue;
+    b.textContent=current[i]||"";
+    const f=!done&&i===focusIdx, fi=!!current[i];
+    b.className="lbox"+(f?" focused":"")+(fi?" filled":"");
+  }
+}
+function popBox(i){ const b=document.getElementById("lb"+i); if(!b)return; b.classList.add("pop"); b.addEventListener("animationend",()=>b.classList.remove("pop"),{once:true}); }
+function shakeBoxes(){ const c=document.getElementById("lboxes"); c.style.animation="none"; void c.offsetHeight; c.style.animation="shk .38s ease"; }
+
+// ===================== KB =====================
+function buildKB(){
+  const rows=[["Q","W","E","R","T","Y","U","I","O","P"],["A","S","D","F","G","H","J","K","L"],["ENTER","Z","X","C","V","B","N","M","⌫"]];
+  const kb=document.getElementById("kb"); kb.innerHTML="";
+  rows.forEach(r=>{ const row=document.createElement("div"); row.className="kb-row"; r.forEach(k=>{ const btn=document.createElement("button"); btn.className="key"+(k.length>1?" wide":""); btn.textContent=k; btn.addEventListener("click",()=>onKey(k)); row.appendChild(btn); }); kb.appendChild(row); });
+}
+document.addEventListener("keydown",e=>{
+  if(done||document.querySelector(".overlay.open"))return;
+  const k=e.key.toUpperCase();
+  if(k==="ENTER"){e.preventDefault();onKey("ENTER");}
+  else if(k==="BACKSPACE"){e.preventDefault();onKey("⌫");}
+  else if(k==="ARROWLEFT"){focusIdx=Math.max(0,focusIdx-1);refreshBoxes();}
+  else if(k==="ARROWRIGHT"){focusIdx=Math.min(4,focusIdx+1);refreshBoxes();}
+  else if(/^[A-ZÁÉÍÓÚÃÕÂÊÔÇÜ]$/.test(k))onKey(k);
+});
+function onKey(k){
+  if(done)return;
+  if(k==="⌫"){ if(current[focusIdx]){current[focusIdx]="";}else{focusIdx=Math.max(0,focusIdx-1);current[focusIdx]="";} refreshBoxes(); }
+  else if(k==="ENTER"){ submit(); }
+  else { const l=norm(k)[0]; if(!l)return; current[focusIdx]=l; popBox(focusIdx); const ne=current.findIndex((v,i)=>i>focusIdx&&!v); focusIdx=ne!==-1?ne:Math.min(4,focusIdx+1); refreshBoxes(); }
+}
+
+// ===================== SUBMIT =====================
+function submit(){
+  if(!current.every(v=>v)){ toast("Preencha todas as letras!"); shakeBoxes(); return; }
+  const word=current.join("");
+  if(!isValid(word)){ toast("Palavra inválida!"); shakeBoxes(); return; }
+  const vals=wordVals(word);
+  const delta=vals.reduce((s,v,i)=>s+Math.abs(v-targetV[i]),0);
+  const won=norm(word)===norm(target);
+  guesses.push({word,vals,delta,won,visible:true});
+  addHistItem(guesses.length-1);
+  document.getElementById("histLabel").style.display="";
+  drawMain();
+
+  const finished=won||guesses.length>=6;
+  if(finished){
+    done=true;
+    if(isDaily){
+      // Persiste estado do diário
+      localStorage.setItem(KEY_DAILY(),JSON.stringify({guesses,won,done:true}));
+      // Streak: só conta se ganhou. Verifica se o dia anterior foi ganho.
+      const dayN=getDayN();
+      stats.p=(stats.p||0)+1;
+      if(won){
+        stats.w=(stats.w||0)+1;
+        // streak consecutivo: lastWonDay deve ser ontem ou hoje (evita dupla contagem)
+        if(stats.lastWonDay===dayN-1||stats.lastWonDay===dayN) stats.streak=(stats.streak||0)+1;
+        else stats.streak=1;
+        stats.lastWonDay=dayN;
+      } else {
+        // perdeu: zera streak só se o último ganho não foi hoje
+        if(stats.lastWonDay!==dayN) stats.streak=0;
+      }
+      saveStats();
+    } else {
+      // Modo livre: marca como concluído
+      localStorage.setItem(KEY_FREE,JSON.stringify({target,guesses,done:true,won}));
+    }
+    setTimeout(()=>showRes(won),won?1600:900);
+  } else {
+    // Salva progresso intermediário
+    if(isDaily) localStorage.setItem(KEY_DAILY(),JSON.stringify({guesses,won:false,done:false}));
+    else localStorage.setItem(KEY_FREE,JSON.stringify({target,guesses,done:false}));
+    current=Array(5).fill(""); focusIdx=0; refreshBoxes();
+  }
+}
+
+// ===================== CANVAS =====================
+const PAD=16, C_H=150;
+function setupCanvas(){
+  const cv=document.getElementById("mainCanvas"); const dpr=window.devicePixelRatio||1;
+  const W=cv.parentElement.clientWidth-28;
+  cv.style.width=W+"px"; cv.style.height=C_H+"px"; cv.width=W*dpr; cv.height=C_H*dpr;
+  const ctx=cv.getContext("2d"); ctx.scale(dpr,dpr); return{ctx,W,H:C_H};
+}
+function toPoints(vals,W,H){ const xs=(W-PAD*2)/(vals.length-1); return vals.map((v,i)=>({x:PAD+i*xs,y:PAD+(1-v/25)*(H-PAD*2)})); }
+function drawCurve(ctx,pts,color,lw,alpha,fillAlpha=0){
+  if(pts.length<2)return; ctx.save();
+  ctx.strokeStyle=color; ctx.lineWidth=lw; ctx.globalAlpha=alpha; ctx.lineJoin="round"; ctx.lineCap="round";
+  function path(){ ctx.beginPath(); ctx.moveTo(pts[0].x,pts[0].y); for(let i=0;i<pts.length-1;i++){const mx=(pts[i].x+pts[i+1].x)/2; ctx.bezierCurveTo(mx,pts[i].y,mx,pts[i+1].y,pts[i+1].x,pts[i+1].y);} }
+  if(fillAlpha>0){ path(); ctx.lineTo(pts[pts.length-1].x,C_H); ctx.lineTo(pts[0].x,C_H); ctx.closePath(); ctx.fillStyle=color; ctx.globalAlpha=fillAlpha; ctx.fill(); }
+  path(); ctx.globalAlpha=alpha; ctx.stroke();
+  pts.forEach(p=>{ ctx.beginPath(); ctx.arc(p.x,p.y,3.2,0,Math.PI*2); ctx.fillStyle=color; ctx.globalAlpha=alpha; ctx.fill(); });
+  ctx.restore();
+}
+function drawGuides(ctx,W,H){
+  ctx.save();
+  [0,8,16,25].forEach(v=>{ const y=PAD+(1-v/25)*(H-PAD*2); ctx.strokeStyle="rgba(59,130,246,0.08)"; ctx.lineWidth=1; ctx.setLineDash([3,7]); ctx.beginPath(); ctx.moveTo(PAD,y); ctx.lineTo(W-PAD,y); ctx.stroke(); ctx.setLineDash([]); });
+  const xs=(W-PAD*2)/4;
+  for(let i=0;i<5;i++){ const x=PAD+i*xs; ctx.strokeStyle="rgba(59,130,246,0.04)"; ctx.lineWidth=1; ctx.setLineDash([2,8]); ctx.beginPath(); ctx.moveTo(x,PAD); ctx.lineTo(x,H-PAD); ctx.stroke(); ctx.setLineDash([]); }
+  ctx.restore();
+}
+function drawMain(){
+  const{ctx,W,H}=setupCanvas(); ctx.clearRect(0,0,W,H); drawGuides(ctx,W,H);
+  const last=guesses.length-1; const won=guesses.length>0&&guesses[last].won;
+  guesses.forEach((g,i)=>{ if(i===last||!g.visible)return; drawCurve(ctx,toPoints(g.vals,W,H),"#2a3a50",1.5,0.7); });
+  if(guesses.length>0){ const g=guesses[last]; if(g.visible) drawCurve(ctx,toPoints(g.vals,W,H),g.won?"#10b981":"#f59e0b",2.2,0.95,0.04); }
+  drawCurve(ctx,toPoints(targetV,W,H),won?"#10b981":"#3b82f6",2.5,0.9,0.05);
+}
+
+// ===================== HISTÓRICO =====================
+function addHistItem(idx){
+  const g=guesses[idx];
+  const item=document.createElement("div");
+  item.className="h-item"+(g.won?" won-item":" last-item"); item.id="hitem-"+idx;
+  const wl=document.createElement("div"); wl.className="h-word"+(g.won?" won":""); wl.textContent=g.word; item.appendChild(wl);
+  const mc=document.createElement("canvas"); mc.className="h-mini"; item.appendChild(mc);
+  const right=document.createElement("div"); right.className="h-right";
+  const dl=document.createElement("div"); dl.className="h-delta"+(g.delta<10?" hot":g.delta<28?" close":""); dl.textContent=g.won?"✓":"Δ"+g.delta; right.appendChild(dl);
+  const tg=document.createElement("div"); tg.className="h-toggle"; tg.textContent="ocultar"; right.appendChild(tg);
+  item.appendChild(right);
+  item.addEventListener("click",()=>{ g.visible=!g.visible; tg.textContent=g.visible?"ocultar":"mostrar"; item.classList.toggle("active-on",g.visible&&idx!==guesses.length-1); drawMain(); });
+  document.getElementById("historyList").appendChild(item);
+  setTimeout(()=>{
+    const dpr=window.devicePixelRatio||1, pw=mc.clientWidth||200;
+    mc.width=pw*dpr; mc.height=32*dpr; mc.style.height="32px";
+    const mctx=mc.getContext("2d"); mctx.scale(dpr,dpr);
+    const W2=pw,H2=32,pad=5;
+    function mpts(vs){ const xs=(W2-pad*2)/(vs.length-1); return vs.map((v,i)=>({x:pad+i*xs,y:pad+(1-v/25)*(H2-pad*2)})); }
+    function mc2(pts,col,lw,alpha){ if(pts.length<2)return; mctx.save(); mctx.globalAlpha=alpha; mctx.strokeStyle=col; mctx.lineWidth=lw; mctx.lineJoin="round"; mctx.lineCap="round"; mctx.beginPath(); mctx.moveTo(pts[0].x,pts[0].y); for(let i=0;i<pts.length-1;i++){const mx=(pts[i].x+pts[i+1].x)/2;mctx.bezierCurveTo(mx,pts[i].y,mx,pts[i+1].y,pts[i+1].x,pts[i+1].y);} mctx.stroke(); pts.forEach(p=>{mctx.beginPath();mctx.arc(p.x,p.y,2,0,Math.PI*2);mctx.fillStyle=col;mctx.fill();}); mctx.restore(); }
+    mc2(mpts(targetV),"#3b82f6",1.5,0.38);
+    mc2(mpts(g.vals),g.won?"#10b981":"#f59e0b",2,0.9);
+  },30);
+  if(idx>0){ const prev=document.getElementById("hitem-"+(idx-1)); if(prev){prev.classList.remove("last-item"); if(guesses[idx-1].visible)prev.classList.add("active-on");} }
+}
+
+// ===================== COR DA BOLINHA =====================
+function dotCol(g){
+  if(g.won) return "#10b981";
+  if(g.delta<15) return"#34d399";
+  if(g.delta<35) return"#f59e0b";
+  if(g.delta<60) return"#f97316";
+  return"#ef4444";
+}
+
+// ===================== RESULTADO =====================
+let cdInt=null;
+function showRes(won){
+  const n=guesses.length, dayN=getDayN();
+  document.getElementById("resTag").textContent=won?"PALAVRA ACERTADA":"GAME OVER";
+  document.getElementById("resDay").textContent=isDaily?`PalavRada #${dayN}`:"Modo Livre";
+  document.getElementById("resNum").textContent=won?`${n}/6`:"X/6";
+  const rw=document.getElementById("resWord"); rw.textContent=target; rw.className="res-word"+(won?"":" lost");
+  const dr=document.getElementById("dotsRow"); dr.innerHTML="";
+  for(let i=0;i<6;i++){
+    const dot=document.createElement("div"); dot.className="dot";
+    if(i<guesses.length){ dot.style.background=dotCol(guesses[i]); dot.style.boxShadow=`0 0 8px ${dotCol(guesses[i])}55`; }
+    else { dot.style.background="var(--surface2)"; dot.style.border="1px solid var(--border)"; }
+    dr.appendChild(dot);
+  }
+  document.getElementById("sP").textContent=stats.p||0;
+  document.getElementById("sW").textContent=stats.w||0;
+  document.getElementById("sS").textContent=stats.streak||0;
+  document.getElementById("dailyExtras").style.display=isDaily?"":"none";
+  if(isDaily){ clearInterval(cdInt); const upd=()=>document.getElementById("countdown").textContent=countdown(); upd(); cdInt=setInterval(upd,1000); }
+  document.getElementById("resModal").classList.add("open");
+}
+function closeRes(){ document.getElementById("resModal").classList.remove("open"); clearInterval(cdInt); }
+
+function buildShareText(){
+  const won=guesses.length>0&&guesses[guesses.length-1].won;
+  const header=isDaily?`PalavRada #${getDayN()}`:"PalavRada 🎲";
+  const score=won?`${guesses.length}/6`:"X/6";
+  const dotsLine=guesses.map(g=>{
+    if(g.won) return "🟢";
+    if(g.delta<15) return "🟡";
+    if(g.delta<35) return "🟠";
+    return "🔴";
+  }).join(" ");
+  const blanks=Array(6-guesses.length).fill("⚫").join(" ");
+  const allDots=dotsLine+(6-guesses.length>0?" "+blanks:"");
+  return `🌊 ${header} — ${score}\n\n${allDots}\n\nhttps://palavrada.app`;
+}
+
+function shareResult(){
+  const text=buildShareText();
+  if(navigator.share){
+    navigator.share({text}).catch(()=>copyToClipboard(text));
+  } else {
+    copyToClipboard(text);
+  }
+}
+
+function copyToClipboard(text){
+  navigator.clipboard.writeText(text).then(()=>{
+    toast("✓ Copiado para a área de transferência!");
+  }).catch(()=>{
+    // fallback para browsers sem clipboard API
+    const ta=document.createElement("textarea");
+    ta.value=text; ta.style.position="fixed"; ta.style.opacity="0";
+    document.body.appendChild(ta); ta.select();
+    document.execCommand("copy"); document.body.removeChild(ta);
+    toast("✓ Copiado!");
+  });
+}
+
+// ===================== HELP =====================
+function openHelp(){ document.getElementById("helpModal").classList.add("open"); }
+function closeHelp(){ document.getElementById("helpModal").classList.remove("open"); }
+document.getElementById("helpModal").addEventListener("click",function(e){ if(e.target===this)closeHelp(); });
+document.getElementById("resModal").addEventListener("click",function(e){ if(e.target===this)closeRes(); });
+
+function openStats(){
+  document.getElementById("stP").textContent=stats.p||0;
+  document.getElementById("stW").textContent=stats.w||0;
+  document.getElementById("stS").textContent=stats.streak||0;
+  document.getElementById("statsModal").classList.add("open");
+}
+function closeStats(){ document.getElementById("statsModal").classList.remove("open"); }
+document.getElementById("statsModal").addEventListener("click",function(e){ if(e.target===this)closeStats(); });
+
+// ===================== TOAST =====================
+let tt;
+function toast(m){ const t=document.getElementById("toast"); t.textContent=m; t.classList.add("show"); clearTimeout(tt); tt=setTimeout(()=>t.classList.remove("show"),2300); }
+
+window.addEventListener("resize",drawMain);
+
+// ===================== START =====================
+// Migra stats antigos se necessário
+if(stats.s!==undefined && stats.streak===undefined){ stats.streak=stats.s; delete stats.s; saveStats(); }
+
+newGame(false); // sempre começa no diário
+if(!localStorage.getItem("pr_v")){ localStorage.setItem("pr_v","1"); setTimeout(openHelp,500); }
+</script>
+</body>
+</html>
