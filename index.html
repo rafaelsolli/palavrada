@@ -245,7 +245,7 @@ main {
     <canvas id="mainCanvas" height="150"></canvas>
   </div>
 
-  <div class="section-label" id="histLabel" style="display:none">— palpites anteriores —</div>
+  <div class="section-label" id="histLabel" style="display:none">- palpites anteriores -</div>
   <div id="historyList"></div>
 
   <div class="input-card">
@@ -565,7 +565,7 @@ function addHistItem(idx){
   const wl=document.createElement("div"); wl.className="h-word"+(g.won?" won":""); wl.textContent=g.word; item.appendChild(wl);
   const mc=document.createElement("canvas"); mc.className="h-mini"; item.appendChild(mc);
   const right=document.createElement("div"); right.className="h-right";
-  const dl=document.createElement("div"); dl.className="h-delta"+(g.delta<10?" hot":g.delta<28?" close":""); dl.textContent=g.won?"✓":"Δ"+g.delta; right.appendChild(dl);
+  const dl=document.createElement("div"); dl.className="h-delta"+(g.delta<10?" hot":g.delta<28?" close":""); dl.textContent=g.won?"✓":"Δ "+g.delta; right.appendChild(dl);
   const tg=document.createElement("div"); tg.className="h-toggle"; tg.textContent="ocultar"; right.appendChild(tg);
   item.appendChild(right);
   item.addEventListener("click",()=>{ g.visible=!g.visible; tg.textContent=g.visible?"ocultar":"mostrar"; item.classList.toggle("active-on",g.visible&&idx!==guesses.length-1); drawMain(); });
@@ -628,13 +628,13 @@ function buildShareText(){
   }).join(" ");
   const blanks=Array(6-guesses.length).fill("⚫").join(" ");
   const allDots=dotsLine+(6-guesses.length>0?" "+blanks:"");
-  const base="https://rafaelsolli.github.io/palavrada/";
+  const base="https://palavrada.com.br/";
   if(isDaily){
-    return `🌊 PalavRada #${dayN} — ${score}\n\n${allDots}\n\n${base}`;
+    return `🌊 PalavRada #${dayN} - ${score}\n\n${allDots}\n\n${base}`;
   } else {
     const idx=getWordId(target);
     const link=idx>=0?`${base}?w=${idx}`:base;
-    return `🌊 PalavRada 🎲 — ${score}\n\n${allDots}\n\n${link}`;
+    return `🌊 PalavRada 🎲 - ${score}\n\n${allDots}\n\n${link}`;
   }
 }
 
