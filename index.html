@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>PalavRada 🌊</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -24,9 +24,11 @@
 body {
   background:var(--bg); color:var(--text);
   font-family:'Space Grotesk',sans-serif;
-  min-height:100vh; display:flex; flex-direction:column; align-items:center;
+  height:100vh; overflow:hidden; display:flex; flex-direction:column; align-items:center;
   -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
 }
+button { touch-action:manipulation; }
 header {
   width:100%; max-width:560px;
   padding:14px 20px 10px;
@@ -69,7 +71,7 @@ header {
 
 main {
   width:100%; max-width:560px; padding:8px 14px 0;
-  display:flex; flex-direction:column; gap:8px; flex:1; overflow-y:auto;
+  display:flex; flex-direction:column; gap:8px; flex:1; overflow:hidden;
 }
 
 .wave-card {
@@ -88,7 +90,20 @@ main {
   font-size:.63rem; text-transform:uppercase; letter-spacing:2px; color:var(--muted);
   padding:0 2px; flex-shrink:0;
 }
-#historyList { display:flex; flex-direction:column; gap:4px; }
+#scrollArea { position:relative; flex:1; min-height:0; overflow:hidden; }
+#historyList { display:flex; flex-direction:column; gap:4px; height:100%; overflow-y:auto; scrollbar-width:none; }
+#historyList::-webkit-scrollbar { display:none; }
+.scroll-arrow {
+  position:absolute; left:50%; transform:translateX(-50%);
+  background:var(--surface2); border:1px solid var(--border);
+  color:var(--muted); border-radius:20px; padding:3px 20px 4px;
+  font-size:.6rem; cursor:pointer; opacity:0; transition:opacity .2s;
+  pointer-events:none; z-index:10;
+}
+.scroll-arrow.visible { opacity:1; pointer-events:auto; }
+.scroll-arrow:hover { color:var(--text); border-color:var(--muted); }
+.scroll-arrow.up { top:2px; }
+.scroll-arrow.down { bottom:2px; }
 
 .h-item {
   display:flex; align-items:center; gap:8px;
@@ -106,10 +121,11 @@ main {
 .h-word {
   font-family:'DM Sans',sans-serif; font-size:.93rem; font-weight:700;
   letter-spacing:3px; text-transform:uppercase; min-width:76px; color:var(--text);
+  flex-shrink:0;
 }
 .h-word.won { color:#10b981; }
-.h-mini { flex:1; height:32px; }
-.h-right { display:flex; flex-direction:column; align-items:flex-end; gap:1px; }
+.h-mini { flex:1; min-width:0; height:52px; display:block; }
+.h-right { display:flex; flex-direction:column; align-items:flex-end; gap:1px; flex-shrink:0; }
 .h-delta { font-size:.7rem; min-width:38px; text-align:right; color:var(--muted); font-variant-numeric:tabular-nums; }
 .h-delta.close { color:#f59e0b; }
 .h-delta.hot   { color:#10b981; }
@@ -246,7 +262,11 @@ main {
   </div>
 
   <div class="section-label" id="histLabel" style="display:none">- palpites anteriores -</div>
-  <div id="historyList"></div>
+  <div id="scrollArea">
+    <div id="historyList"></div>
+    <button class="scroll-arrow up" id="scrollUp" onclick="document.getElementById('historyList').scrollTo({top:0,behavior:'smooth'})">▲</button>
+    <button class="scroll-arrow down" id="scrollDown" onclick="document.getElementById('historyList').scrollTo({top:document.getElementById('historyList').scrollHeight,behavior:'smooth'})">▼</button>
+  </div>
 
   <div class="input-card">
     <div class="lboxes" id="lboxes"></div>
@@ -350,6 +370,7 @@ function newGame(free=false){
   guesses=[]; current=Array(5).fill(""); focusIdx=0;
   document.getElementById("historyList").innerHTML="";
   document.getElementById("histLabel").style.display="none";
+  updateScrollArrows();
 
   if(isDaily){
     // Tenta restaurar sessão diária salva
@@ -365,18 +386,7 @@ function newGame(free=false){
       return;
     }
   } else {
-    // Modo livre: restaura sessão livre em andamento OU começa nova
-    const saved=JSON.parse(localStorage.getItem(KEY_FREE)||"null");
-    if(saved && !saved.done){
-      // retoma palavra em andamento
-      target=saved.target; targetV=wordVals(target);
-      guesses=saved.guesses; done=false;
-      updateBadge(); buildBoxes(); buildKB();
-      guesses.forEach((_,i)=>addHistItem(i));
-      if(guesses.length>0) document.getElementById("histLabel").style.display="";
-      drawMain(); return;
-    }
-    // nova palavra livre
+    // Modo livre: sempre começa nova palavra
     const urlIdx=getUrlWordIdx();
     target= urlIdx!==null ? POOL[urlIdx] : POOL[Math.floor(Math.random()*POOL.length)];
     targetV=wordVals(target);
@@ -395,15 +405,8 @@ function goDaily(){
   newGame(false);
 }
 
-// Só inicia modo livre se não tiver livre em andamento, ou pergunta
 function startFreeConfirm(){
-  const saved=JSON.parse(localStorage.getItem(KEY_FREE)||"null");
-  if(saved && !saved.done && saved.guesses && saved.guesses.length>0){
-    // retoma o livre em andamento
-    newGame(true);
-  } else {
-    newGame(true);
-  }
+  newGame(true);
 }
 
 function startFree(){ closeRes(); newGame(true); }
@@ -558,28 +561,35 @@ function drawMain(){
 }
 
 // ===================== HISTÓRICO =====================
+function drawMini(mc, g){
+  const dpr=window.devicePixelRatio||1, pw=mc.clientWidth||200;
+  mc.width=pw*dpr; mc.height=52*dpr; mc.style.height="52px";
+  const mctx=mc.getContext("2d"); mctx.scale(dpr,dpr);
+  const W2=pw,H2=52,pad=6;
+  function mpts(vs){ const xs=(W2-pad*2)/(vs.length-1); return vs.map((v,i)=>({x:pad+i*xs,y:pad+(1-v/25)*(H2-pad*2)})); }
+  function mc2(pts,col,lw,alpha){ if(pts.length<2)return; mctx.save(); mctx.globalAlpha=alpha; mctx.strokeStyle=col; mctx.lineWidth=lw; mctx.lineJoin="round"; mctx.lineCap="round"; mctx.beginPath(); mctx.moveTo(pts[0].x,pts[0].y); for(let i=0;i<pts.length-1;i++){const mx=(pts[i].x+pts[i+1].x)/2;mctx.bezierCurveTo(mx,pts[i].y,mx,pts[i+1].y,pts[i+1].x,pts[i+1].y);} mctx.stroke(); pts.forEach(p=>{mctx.beginPath();mctx.arc(p.x,p.y,2.5,0,Math.PI*2);mctx.fillStyle=col;mctx.fill();}); mctx.restore(); }
+  mc2(mpts(g.vals),g.won?"#10b981":"#f59e0b",2.5,1);
+}
+function redrawAllMinis(){
+  document.querySelectorAll(".h-mini").forEach(mc=>{
+    const idx=parseInt(mc.dataset.idx);
+    if(!isNaN(idx)&&guesses[idx]) drawMini(mc,guesses[idx]);
+  });
+}
 function addHistItem(idx){
   const g=guesses[idx];
   const item=document.createElement("div");
   item.className="h-item"+(g.won?" won-item":" last-item"); item.id="hitem-"+idx;
   const wl=document.createElement("div"); wl.className="h-word"+(g.won?" won":""); wl.textContent=g.word; item.appendChild(wl);
-  const mc=document.createElement("canvas"); mc.className="h-mini"; item.appendChild(mc);
+  const mc=document.createElement("canvas"); mc.className="h-mini"; mc.dataset.idx=idx; item.appendChild(mc);
   const right=document.createElement("div"); right.className="h-right";
   const dl=document.createElement("div"); dl.className="h-delta"+(g.delta<10?" hot":g.delta<28?" close":""); dl.textContent=g.won?"✓":"Δ "+g.delta; right.appendChild(dl);
   const tg=document.createElement("div"); tg.className="h-toggle"; tg.textContent="ocultar"; right.appendChild(tg);
   item.appendChild(right);
   item.addEventListener("click",()=>{ g.visible=!g.visible; tg.textContent=g.visible?"ocultar":"mostrar"; item.classList.toggle("active-on",g.visible&&idx!==guesses.length-1); drawMain(); });
   document.getElementById("historyList").appendChild(item);
-  setTimeout(()=>{
-    const dpr=window.devicePixelRatio||1, pw=mc.clientWidth||200;
-    mc.width=pw*dpr; mc.height=32*dpr; mc.style.height="32px";
-    const mctx=mc.getContext("2d"); mctx.scale(dpr,dpr);
-    const W2=pw,H2=32,pad=5;
-    function mpts(vs){ const xs=(W2-pad*2)/(vs.length-1); return vs.map((v,i)=>({x:pad+i*xs,y:pad+(1-v/25)*(H2-pad*2)})); }
-    function mc2(pts,col,lw,alpha){ if(pts.length<2)return; mctx.save(); mctx.globalAlpha=alpha; mctx.strokeStyle=col; mctx.lineWidth=lw; mctx.lineJoin="round"; mctx.lineCap="round"; mctx.beginPath(); mctx.moveTo(pts[0].x,pts[0].y); for(let i=0;i<pts.length-1;i++){const mx=(pts[i].x+pts[i+1].x)/2;mctx.bezierCurveTo(mx,pts[i].y,mx,pts[i+1].y,pts[i+1].x,pts[i+1].y);} mctx.stroke(); pts.forEach(p=>{mctx.beginPath();mctx.arc(p.x,p.y,2,0,Math.PI*2);mctx.fillStyle=col;mctx.fill();}); mctx.restore(); }
-    mc2(mpts(targetV),"#3b82f6",1.5,0.38);
-    mc2(mpts(g.vals),g.won?"#10b981":"#f59e0b",2,0.9);
-  },30);
+  setTimeout(updateScrollArrows, 50);
+  setTimeout(()=>drawMini(mc,g), 30);
   if(idx>0){ const prev=document.getElementById("hitem-"+(idx-1)); if(prev){prev.classList.remove("last-item"); if(guesses[idx-1].visible)prev.classList.add("active-on");} }
 }
 
@@ -679,7 +689,16 @@ document.getElementById("statsModal").addEventListener("click",function(e){ if(e
 let tt;
 function toast(m){ const t=document.getElementById("toast"); t.textContent=m; t.classList.add("show"); clearTimeout(tt); tt=setTimeout(()=>t.classList.remove("show"),2300); }
 
-window.addEventListener("resize",drawMain);
+function updateScrollArrows(){
+  const el=document.getElementById("historyList");
+  const up=document.getElementById("scrollUp");
+  const dn=document.getElementById("scrollDown");
+  if(!el||!up||!dn) return;
+  up.classList.toggle("visible", el.scrollTop > 8);
+  dn.classList.toggle("visible", el.scrollTop + el.clientHeight < el.scrollHeight - 8);
+}
+document.getElementById("historyList").addEventListener("scroll", updateScrollArrows);
+window.addEventListener("resize", ()=>{ drawMain(); redrawAllMinis(); updateScrollArrows(); });
 
 // ===================== START =====================
 // Migra stats antigos se necessário
