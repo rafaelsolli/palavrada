@@ -113,11 +113,8 @@ main {
 .h-word.won { color:#10b981; }
 .h-mini { flex:1; min-width:0; align-self:stretch; display:block; height:auto; }
 .h-right { display:flex; flex-direction:column; align-items:flex-end; gap:1px; flex-shrink:0; }
-.h-delta { font-size:.7rem; min-width:38px; text-align:right; color:var(--muted); font-variant-numeric:tabular-nums; }
-.h-delta.close { color:#facc15; }
-.h-delta.hot   { color:#10b981; }
-.h-toggle { font-size:.58rem; color:var(--muted); text-transform:uppercase; letter-spacing:1px; }
-.h-item.active-on .h-toggle { color:#f59e0b; }
+.h-delta { font-size:.7rem; min-width:38px; text-align:right; color:var(--c); font-variant-numeric:tabular-nums; }
+.h-toggle { font-size:.58rem; color:var(--c); text-transform:uppercase; letter-spacing:1px; opacity:0.6; }
 
 .input-card {
   background:var(--surface); border:1px solid var(--border);
@@ -534,7 +531,7 @@ function drawMain(){
   const{ctx,W,H}=setupCanvas(); ctx.clearRect(0,0,W,H); drawGuides(ctx,W,H);
   const last=guesses.length-1; const won=guesses.length>0&&guesses[last].won;
   guesses.forEach((g,i)=>{ if(i===last||!g.visible)return; drawCurve(ctx,toPoints(g.vals,W,H),"#2a3a50",1.5,0.7); });
-  if(guesses.length>0){ const g=guesses[last]; if(g.visible) drawCurve(ctx,toPoints(g.vals,W,H),dotCol(g),2.2,0.95,0.04); }
+  if(guesses.length>0){ const g=guesses[last]; if(g.visible) drawCurve(ctx,toPoints(g.vals,W,H),dotCol(g),2.2,0.95); }
   drawCurve(ctx,toPoints(targetV,W,H),won?"#10b981":"#3b82f6",2.5,0.9);
 }
 
@@ -571,7 +568,7 @@ function addHistItem(idx){
   const wl=document.createElement("div"); wl.className="h-word"+(g.won?" won":""); wl.textContent=g.word; item.appendChild(wl);
   const mc=document.createElement("canvas"); mc.className="h-mini"; mc.dataset.idx=idx; item.appendChild(mc);
   const right=document.createElement("div"); right.className="h-right";
-  const dl=document.createElement("div"); dl.className="h-delta"+(g.won||g.delta<10?" hot":g.delta<20?" close":""); dl.textContent=g.won?"✓":"Δ "+g.delta; right.appendChild(dl);
+  const dl=document.createElement("div"); dl.className="h-delta"; dl.textContent=g.won?"✓":"Δ "+g.delta; right.appendChild(dl);
   const tg=document.createElement("div"); tg.className="h-toggle"; tg.textContent="ocultar"; right.appendChild(tg);
   item.appendChild(right);
   item.addEventListener("click",()=>{ g.visible=!g.visible; tg.textContent=g.visible?"ocultar":"mostrar"; item.classList.toggle("active-on",g.visible); drawMain(); });
