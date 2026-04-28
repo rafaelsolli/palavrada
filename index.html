@@ -63,7 +63,7 @@ header {
   transform:translateX(-50%) translateY(-10px);
   background:var(--text); color:var(--bg);
   padding:8px 20px; border-radius:30px; font-weight:700; font-size:.82rem;
-  opacity:0; transition:all .25s; z-index:200; pointer-events:none; white-space:nowrap;
+  opacity:0; transition:all .25s; z-index:999; pointer-events:none; white-space:nowrap;
 }
 #toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
 
@@ -377,7 +377,8 @@ function newGame(free=false){
       drawMain(); return;
     }
     // nova palavra livre
-    target=POOL[Math.floor(Math.random()*POOL.length)];
+    const urlIdx=getUrlWordIdx();
+    target= urlIdx!==null ? POOL[urlIdx] : POOL[Math.floor(Math.random()*POOL.length)];
     targetV=wordVals(target);
     localStorage.setItem(KEY_FREE,JSON.stringify({target,guesses:[],done:false}));
   }
@@ -407,6 +408,16 @@ function startFreeConfirm(){
 
 function startFree(){ closeRes(); newGame(true); }
 
+// Retorna índice da palavra no POOL (ID estável)
+function getWordId(word){ return POOL.indexOf(norm(word)); }
+
+// Lê ?w=N da URL para carregar palavra específica
+function getUrlWordIdx(){
+  const p=new URLSearchParams(window.location.search).get("w");
+  const n=parseInt(p,10);
+  return(!isNaN(n)&&n>=0&&n<POOL.length)?n:null;
+}
+
 function updateBadge(){
   const b=document.getElementById("modeBadge");
   const btnToggle=document.getElementById("btnToggleMode");
@@ -416,7 +427,8 @@ function updateBadge(){
     btnToggle.textContent="🎲";
     btnToggle.title="Jogar modo livre";
   } else {
-    b.textContent="🎲 Modo Livre";
+    const idx=getWordId(target);
+    b.textContent=`🎲 Modo Livre${idx>=0?" · #"+idx:""}`;
     b.className="mode-badge free";
     btnToggle.textContent="🌞";
     btnToggle.title="Voltar ao desafio diário";
@@ -542,7 +554,7 @@ function drawMain(){
   const last=guesses.length-1; const won=guesses.length>0&&guesses[last].won;
   guesses.forEach((g,i)=>{ if(i===last||!g.visible)return; drawCurve(ctx,toPoints(g.vals,W,H),"#2a3a50",1.5,0.7); });
   if(guesses.length>0){ const g=guesses[last]; if(g.visible) drawCurve(ctx,toPoints(g.vals,W,H),g.won?"#10b981":"#f59e0b",2.2,0.95,0.04); }
-  drawCurve(ctx,toPoints(targetV,W,H),won?"#10b981":"#3b82f6",2.5,0.9,0.05);
+  drawCurve(ctx,toPoints(targetV,W,H),won?"#10b981":"#3b82f6",2.5,0.9);
 }
 
 // ===================== HISTÓRICO =====================
@@ -606,7 +618,7 @@ function closeRes(){ document.getElementById("resModal").classList.remove("open"
 
 function buildShareText(){
   const won=guesses.length>0&&guesses[guesses.length-1].won;
-  const header=isDaily?`PalavRada #${getDayN()}`:"PalavRada 🎲";
+  const dayN=getDayN();
   const score=won?`${guesses.length}/6`:"X/6";
   const dotsLine=guesses.map(g=>{
     if(g.won) return "🟢";
@@ -616,7 +628,14 @@ function buildShareText(){
   }).join(" ");
   const blanks=Array(6-guesses.length).fill("⚫").join(" ");
   const allDots=dotsLine+(6-guesses.length>0?" "+blanks:"");
-  return `🌊 ${header} — ${score}\n\n${allDots}\n\nhttps://rafaelsolli.github.io/palavrada`;
+  const base="https://rafaelsolli.github.io/palavrada/";
+  if(isDaily){
+    return `🌊 PalavRada #${dayN} — ${score}\n\n${allDots}\n\n${base}`;
+  } else {
+    const idx=getWordId(target);
+    const link=idx>=0?`${base}?w=${idx}`:base;
+    return `🌊 PalavRada 🎲 — ${score}\n\n${allDots}\n\n${link}`;
+  }
 }
 
 function shareResult(){
