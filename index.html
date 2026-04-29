@@ -326,6 +326,7 @@ const VALIDAS = new Set(["ABABA", "ABACA", "ABACO", "ABADA", "ABADE", "ABADO", "
 function norm(s){ return s.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toUpperCase().replace(/[^A-Z]/g,""); }
 function lv(ch){ return norm(ch).charCodeAt(0)-65; }
 function wordVals(w){ return norm(w).split("").map(lv); }
+POOL.forEach(w=>VALIDAS.add(norm(w)));
 function isValid(w){ const n=norm(w); return n.length===5 && VALIDAS.has(n); }
 
 // ===================== DIÁRIO =====================
@@ -537,9 +538,7 @@ function drawCurve(ctx,pts,color,lw,alpha,fillAlpha=0){
 }
 function drawGuides(ctx,W,H){
   ctx.save();
-  [0,8,16,25].forEach(v=>{ const y=PAD+(1-v/25)*(H-PAD*2); ctx.strokeStyle="rgba(59,130,246,0.08)"; ctx.lineWidth=1; ctx.setLineDash([3,7]); ctx.beginPath(); ctx.moveTo(PAD,y); ctx.lineTo(W-PAD,y); ctx.stroke(); ctx.setLineDash([]); });
-  const xs=(W-PAD*2)/4;
-  for(let i=0;i<5;i++){ const x=PAD+i*xs; ctx.strokeStyle="rgba(59,130,246,0.04)"; ctx.lineWidth=1; ctx.setLineDash([2,8]); ctx.beginPath(); ctx.moveTo(x,PAD); ctx.lineTo(x,H-PAD); ctx.stroke(); ctx.setLineDash([]); }
+  [0,8,16,25].forEach(v=>{ const y=PAD+(1-v/25)*(H-PAD*2); ctx.strokeStyle="rgba(59,130,246,0.15)"; ctx.lineWidth=1; ctx.setLineDash([3,7]); ctx.beginPath(); ctx.moveTo(PAD,y); ctx.lineTo(W-PAD,y); ctx.stroke(); ctx.setLineDash([]); });
   ctx.restore();
 }
 function drawMain(){
