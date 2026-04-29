@@ -44,6 +44,14 @@ header {
   display:block; font-size:.6rem; letter-spacing:2px; text-transform:uppercase;
   color:var(--muted); -webkit-text-fill-color:var(--muted); margin-top:-2px;
 }
+.logo-compact {
+  display:none; font-size:1.4rem; line-height:1;
+  -webkit-text-fill-color:initial;
+}
+@media (max-width:400px) {
+  .logo-name, .logo small { display:none; }
+  .logo-compact { display:inline; }
+}
 .header-btns { display:flex; gap:8px; }
 .hbtn {
   background:var(--key-bg); border:1px solid var(--border); color:var(--muted);
@@ -221,7 +229,8 @@ main {
 
 /* streak box */
 .streak-box {
-  display:flex; align-items:center; gap:6px;
+  display:inline-flex; align-items:center; gap:6px;
+  white-space:nowrap;
   background:var(--key-bg); border:1px solid var(--border);
   border-radius:8px; padding:6px 12px;
   font-size:.75rem; color:var(--text);
@@ -276,11 +285,15 @@ main {
 <div id="toast"></div>
 
 <header>
-  <div class="logo">PalavRada <small>🌊 jogo de ondas</small></div>
+  <div class="logo"><span class="logo-name">PalavRada</span> <small><span class="logo-tagline">🌊 jogo de ondas</span></small><span class="logo-compact">🌊</span></div>
   <div class="header-btns">
     <div class="streak-box" id="streakBox" style="display:none">
       <span class="streak-fire">🔥</span>
       <span class="streak-text" id="streakText">0 vitórias seguidas</span>
+    </div>
+    <div class="streak-box" id="freeBadge" style="display:none">
+      <span class="streak-fire">🎯</span>
+      <span class="streak-text" id="freeBadgeText">0,00% completo</span>
     </div>
     <button class="hbtn" id="btnToggleMode" onclick="openFreeSelector()" title="Selecionar palavra">🎲</button>
     <button class="hbtn" onclick="openHelp()" title="Ajuda">❓</button>
@@ -382,9 +395,6 @@ function getDayN(){
 function getDailyWord(){
   const n=getDayN(); let h=n*2654435761; h=h^(h>>>16); return POOL[Math.abs(h)%POOL.length];
 }
-function fmtDay(){
-  return new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'});
-}
 function countdown(){
   const now=new Date(), mid=new Date(now); mid.setHours(24,0,0,0);
   let d=Math.floor((mid-now)/1000);
@@ -456,14 +466,14 @@ function updateBadge(){
   const b=document.getElementById("modeBadge");
   const btn=document.getElementById("btnToggleMode");
   if(isDaily){
-    b.textContent=`🌞 Desafio Diário · #${getDayN()} · ${fmtDay()}`;
+    b.textContent=`🌞 Desafio Diário · #${getDayN()}`;
     b.className="mode-badge daily";
-    if(btn){ btn.textContent="🎲"; btn.title="Jogar Modo Livre"; btn.onclick=openFreeSelector; }
+    if(btn){ btn.textContent="🎲"; btn.title="Jogar o Modo Livre"; btn.onclick=openFreeSelector; }
   } else {
     const idx=getWordId(target);
     b.textContent=`🎲 Modo Livre${idx>=0?" · #"+(idx+1):""}`;
     b.className="mode-badge free";
-    if(btn){ btn.textContent="🌞"; btn.title="Voltar ao Desafio Diário"; btn.onclick=goDaily; }
+    if(btn){ btn.textContent="🌞"; btn.title="Jogar o Desafio Diário"; btn.onclick=goDaily; }
   }
   updateStreakBox();
 }
@@ -642,8 +652,8 @@ function dotCol(g){
 let cdInt=null;
 function showRes(won){
   const n=guesses.length, dayN=getDayN();
-  const modeStr=isDaily?`Desafio Diário #${dayN}`:`Modo Livre #${getWordId(target)+1}`;
-  document.getElementById("resTitle").textContent=`${modeStr} – Você ${won?"venceu":"perdeu"}!`;
+  const modeStr=isDaily?`🌞 Desafio Diário #${dayN}`:`🎲 Modo Livre #${getWordId(target)+1}`;
+  document.getElementById("resTitle").textContent=`${modeStr} · Você ${won?"venceu":"perdeu"}!`;
   document.getElementById("resNum").textContent=won?`${n}/6`:"X/6";
   const rw=document.getElementById("resWord"); rw.textContent=target; rw.className="res-word"+(won?"":" lost");
   const dr=document.getElementById("dotsRow"); dr.innerHTML="";
@@ -674,11 +684,11 @@ function buildShareText(){
   const base="https://palavrada.com.br/";
   const result=won?"venci":"perdi";
   if(isDaily){
-    return `Joguei o Desafio Diário #${dayN} e ${result}!\n${allDots} - ${score}\nSua vez! ${base}`;
+    return `Joguei o 🌞 Desafio Diário #${dayN} e ${result}!\n${allDots} · ${score}\nSua vez! ${base}`;
   } else {
     const idx=getWordId(target);
     const link=idx>=0?`${base}?w=${idx+1}`:base;
-    return `Joguei o Modo Livre #${idx+1} e ${result}!\n${allDots} - ${score}\nSua vez! ${link}`;
+    return `Joguei o 🎲 Modo Livre #${idx+1} e ${result}!\n${allDots} · ${score}\nSua vez! ${link}`;
   }
 }
 
@@ -772,7 +782,7 @@ function shareFreeProgress(){
   const pending = total - played;
   const pct = n => (n * 100 / total).toFixed(2).replace('.', ',');
   const txt = [
-    `Estou com ${pct(played)}% do Modo Livre completo!`,
+    `Estou com ${pct(played)}% do 🎲 Modo Livre completo!`,
     `⚫ ${pending} ${pending === 1 ? 'pendente' : 'pendentes'}`,
     `🟢 ${won} ${won === 1 ? 'certo' : 'certos'}`,
     `🔴 ${lost} ${lost === 1 ? 'errado' : 'errados'}`,
@@ -805,11 +815,22 @@ function updateStreakBox(){
   const streak = stats.streak || 0;
   const streakBox = document.getElementById("streakBox");
   const streakText = document.getElementById("streakText");
-  
-  if(isDaily && streak > 0){
-    streakText.textContent = `${streak} vitória${streak === 1 ? '' : 's'} seguida${streak === 1 ? '' : 's'}`;
-    streakBox.style.display = "flex";
+  const freeBadge = document.getElementById("freeBadge");
+  const freeBadgeText = document.getElementById("freeBadgeText");
+
+  if(isDaily){
+    if(streak > 0){
+      streakText.textContent = `${streak} vitória${streak === 1 ? '' : 's'} seguida${streak === 1 ? '' : 's'}`;
+      streakBox.style.display = "flex";
+    } else {
+      streakBox.style.display = "none";
+    }
+    freeBadge.style.display = "none";
   } else {
+    const d = getFreeData();
+    const pct = (d.played.length * 100 / POOL.length).toFixed(2).replace('.', ',');
+    freeBadgeText.textContent = `${pct}% completo`;
+    freeBadge.style.display = "flex";
     streakBox.style.display = "none";
   }
 }
