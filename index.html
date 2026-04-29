@@ -168,7 +168,7 @@ main {
 .overlay.open { opacity:1; pointer-events:all; }
 .modal {
   background:var(--surface); border:1px solid var(--border);
-  border-radius:18px; padding:26px 22px; max-width:370px; width:92%;
+  border-radius:18px; padding:26px 22px; max-width:440px; width:96%;
   transform:translateY(14px); transition:transform .3s; position:relative;
 }
 .overlay.open .modal { transform:none; }
@@ -192,6 +192,32 @@ main {
 }
 .mbtn.sec:hover { border-color:var(--muted); color:var(--text); }
 .mbtn.free-btn { background:linear-gradient(90deg,#7c3aed,#4f46e5); }
+
+/* challenge selector */
+.grid-wrap { position:relative; max-height:260px; overflow:hidden; margin:12px 0; }
+#challengeGrid { display:grid; grid-template-columns:repeat(10,1fr); gap:3px; padding:4px 2px 24px; overflow-y:auto; scrollbar-width:none; max-height:260px; }
+#challengeGrid::-webkit-scrollbar { display:none; }
+.grid-fade { position:absolute; bottom:0; left:0; right:0; height:48px; background:linear-gradient(transparent,var(--surface)); display:flex; align-items:flex-end; justify-content:center; padding-bottom:4px; color:var(--muted); font-size:.75rem; pointer-events:none; transition:opacity .2s; }
+.challenge-cell {
+  aspect-ratio:1; display:flex; align-items:center; justify-content:center;
+  background:var(--key-bg); border:1px solid var(--border); border-radius:4px;
+  font-size:.75rem; font-weight:600; cursor:pointer; transition:all .2s;
+  color:var(--text); overflow:hidden;
+}
+.challenge-cell:hover {
+  background: var(--key-hover);
+  border-color: var(--muted);
+}
+.challenge-cell.completed {
+  background: #10b981; color: white; border-color: #059669;
+  cursor: default; font-size: 1rem;
+}
+.challenge-cell.failed {
+  background: #ef4444; color: white; border-color: #dc2626;
+  cursor: default; font-size: 1rem;
+}
+.challenge-cell.completed:hover { background: #10b981; border-color: #059669; }
+.challenge-cell.failed:hover    { background: #ef4444; border-color: #dc2626; }
 
 /* streak box */
 .streak-box {
@@ -256,7 +282,7 @@ main {
       <span class="streak-fire">🔥</span>
       <span class="streak-text" id="streakText">0 vitórias seguidas</span>
     </div>
-    <button class="hbtn" id="btnToggleMode" onclick="toggleMode()" title="Alternar modo">🎲</button>
+    <button class="hbtn" id="btnToggleMode" onclick="openFreeSelector()" title="Selecionar palavra">🎲</button>
     <button class="hbtn" onclick="openHelp()" title="Ajuda">❓</button>
   </div>
 </header>
@@ -313,8 +339,21 @@ main {
       <div class="divider"></div>
       <div class="countdown-lbl">Próxima palavra em</div>
       <div class="countdown" id="countdown">--:--:--</div>
-      <button class="mbtn free-btn" onclick="startFree()">🎲 Jogar modo livre</button>
+      <button class="mbtn free-btn" onclick="closeRes(); openFreeSelector()">🎲 Jogar Modo Livre</button>
     </div>
+  </div>
+</div>
+
+<!-- Seleção de Desafios -->
+<div class="overlay" id="freeSelectorModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeFreeSelector()" title="Fechar">×</button>
+    <div class="res-title">Selecionar desafio no Modo Livre</div>
+    <div class="grid-wrap" id="gridWrap">
+      <div id="challengeGrid"></div>
+      <div class="grid-fade" id="gridFade">▼</div>
+    </div>
+    <button class="mbtn" style="margin-top:10px;width:100%" onclick="shareFreeProgress()">📊 Compartilhar progresso</button>
   </div>
 </div>
 
@@ -327,6 +366,12 @@ function norm(s){ return s.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toUpp
 function lv(ch){ return norm(ch).charCodeAt(0)-65; }
 function wordVals(w){ return norm(w).split("").map(lv); }
 POOL.forEach(w=>VALIDAS.add(norm(w)));
+// Shuffle fixo e determinístico do POOL pro modo livre (mesma ordem pra todo mundo)
+(function(){
+  let s=0xdeadbeef>>>0;
+  function rnd(){ s=Math.imul(s,1664525)+1013904223>>>0; return s/4294967296; }
+  for(let i=POOL.length-1;i>0;i--){ const j=Math.floor(rnd()*(i+1)); [POOL[i],POOL[j]]=[POOL[j],POOL[i]]; }
+})();
 function isValid(w){ const n=norm(w); return n.length===5 && VALIDAS.has(n); }
 
 // ===================== DIÁRIO =====================
@@ -348,7 +393,7 @@ function countdown(){
 }
 
 // ===================== ESTADO =====================
-let target="",targetV=[],guesses=[],current=Array(5).fill(""),focusIdx=0,done=false,isDaily=true;
+let target="",targetV=[],guesses=[],current=Array(5).fill(""),focusIdx=0,done=false,isDaily=true,wordId;
 
 // Stats globais (streak só conta diário)
 let stats=JSON.parse(localStorage.getItem("pr_s")||'{"p":0,"w":0,"streak":0,"lastWonDay":-1}');
@@ -357,6 +402,7 @@ function saveStats(){ localStorage.setItem("pr_s",JSON.stringify(stats)); }
 // Chaves de persistência
 const KEY_DAILY = ()=>"pr_d_"+getDayN();
 const KEY_FREE  = "pr_free";
+const KEY_FREE_PROGRESS = "pr_free_completed"; // Array de {id: number, won: boolean}
 
 // ===================== GAME =====================
 function newGame(free=false){
@@ -368,6 +414,7 @@ function newGame(free=false){
     // Tenta restaurar sessão diária salva
     const saved=JSON.parse(localStorage.getItem(KEY_DAILY())||"null");
     target=getDailyWord(); targetV=wordVals(target);
+    wordId = POOL.indexOf(target); // Define wordId para o jogo diário também
     if(saved){
       guesses=saved.guesses; done=saved.done;
       updateBadge(); buildBoxes(); buildKB();
@@ -379,28 +426,21 @@ function newGame(free=false){
   } else {
     // Modo livre: sempre começa nova palavra
     const urlIdx=getUrlWordIdx();
-    target= urlIdx!==null ? POOL[urlIdx] : POOL[Math.floor(Math.random()*POOL.length)];
+    if(urlIdx !== null){
+      target = POOL[urlIdx];
+      wordId = urlIdx;
+    } else {
+      wordId = Math.floor(Math.random()*POOL.length);
+      target = POOL[wordId];
+    }
     targetV=wordVals(target);
-    localStorage.setItem(KEY_FREE,JSON.stringify({target,guesses:[],done:false}));
   }
   updateBadge(); buildBoxes(); buildKB(); drawMain();
 }
 
-function toggleMode(){
-  if(isDaily) startFreeConfirm();
-  else goDaily();
-}
-
-// Botão do header: alterna entre diário e livre
-function goDaily(){
-  newGame(false);
-}
-
-function startFreeConfirm(){
-  newGame(true);
-}
-
-function startFree(){ closeRes(); newGame(true); }
+function toggleMode(){ openFreeSelector(); }
+function goDaily(){ window.location.href=window.location.pathname; }
+function startFree(){ closeRes(); openFreeSelector(); }
 
 // Retorna índice da palavra no POOL (ID estável)
 function getWordId(word){ return POOL.indexOf(norm(word)); }
@@ -409,23 +449,21 @@ function getWordId(word){ return POOL.indexOf(norm(word)); }
 function getUrlWordIdx(){
   const p=new URLSearchParams(window.location.search).get("w");
   const n=parseInt(p,10);
-  return(!isNaN(n)&&n>=0&&n<POOL.length)?n:null;
+  return(!isNaN(n)&&n>=1&&n<=POOL.length)?n-1:null;
 }
 
 function updateBadge(){
   const b=document.getElementById("modeBadge");
-  const btnToggle=document.getElementById("btnToggleMode");
+  const btn=document.getElementById("btnToggleMode");
   if(isDaily){
     b.textContent=`🌞 Desafio Diário · #${getDayN()} · ${fmtDay()}`;
     b.className="mode-badge daily";
-    btnToggle.textContent="🎲";
-    btnToggle.title="Jogar modo livre";
+    if(btn){ btn.textContent="🎲"; btn.title="Jogar Modo Livre"; btn.onclick=openFreeSelector; }
   } else {
     const idx=getWordId(target);
-    b.textContent=`🎲 Modo Livre${idx>=0?" · #"+idx:""}`;
+    b.textContent=`🎲 Modo Livre${idx>=0?" · #"+(idx+1):""}`;
     b.className="mode-badge free";
-    btnToggle.textContent="🌞";
-    btnToggle.title="Voltar ao desafio diário";
+    if(btn){ btn.textContent="🌞"; btn.title="Voltar ao Desafio Diário"; btn.onclick=goDaily; }
   }
   updateStreakBox();
 }
@@ -507,14 +545,16 @@ function submit(){
       saveStats();
       updateStreakBox();
     } else {
-      // Modo livre: marca como concluído
-      localStorage.setItem(KEY_FREE,JSON.stringify({target,guesses,done:true,won}));
+      // Modo livre: salva o resultado usando a nova estrutura
+      if(typeof wordId !== 'undefined'){
+        saveFreeResult(wordId, won, guesses.length);
+      }
     }
     setTimeout(()=>showRes(won),won?1600:900);
   } else {
     // Salva progresso intermediário
     if(isDaily) localStorage.setItem(KEY_DAILY(),JSON.stringify({guesses,won:false,done:false}));
-    else localStorage.setItem(KEY_FREE,JSON.stringify({target,guesses,done:false}));
+    // No modo livre, não salvamos progresso intermediário para evitar conflitos
     current=Array(5).fill(""); focusIdx=0; refreshBoxes();
   }
 }
@@ -602,7 +642,7 @@ function dotCol(g){
 let cdInt=null;
 function showRes(won){
   const n=guesses.length, dayN=getDayN();
-  const modeStr=isDaily?`Desafio diário #${dayN}`:`Modo livre #${getWordId(target)}`;
+  const modeStr=isDaily?`Desafio Diário #${dayN}`:`Modo Livre #${getWordId(target)+1}`;
   document.getElementById("resTitle").textContent=`${modeStr} – Você ${won?"venceu":"perdeu"}!`;
   document.getElementById("resNum").textContent=won?`${n}/6`:"X/6";
   const rw=document.getElementById("resWord"); rw.textContent=target; rw.className="res-word"+(won?"":" lost");
@@ -637,8 +677,8 @@ function buildShareText(){
     return `Joguei o Desafio Diário #${dayN} e ${result}!\n${allDots} - ${score}\nSua vez! ${base}`;
   } else {
     const idx=getWordId(target);
-    const link=idx>=0?`${base}?w=${idx}`:base;
-    return `Joguei o Modo Livre #${idx} e ${result}!\n${allDots} - ${score}\nSua vez! ${link}`;
+    const link=idx>=0?`${base}?w=${idx+1}`:base;
+    return `Joguei o Modo Livre #${idx+1} e ${result}!\n${allDots} - ${score}\nSua vez! ${link}`;
   }
 }
 
@@ -667,8 +707,96 @@ function copyToClipboard(text){
 // ===================== HELP =====================
 function openHelp(){ document.getElementById("helpModal").classList.add("open"); }
 function closeHelp(){ document.getElementById("helpModal").classList.remove("open"); }
+
+// ===================== FREE SELECTOR =====================
+function openFreeSelector(){
+  generateChallengeGrid();
+  document.getElementById("freeSelectorModal").classList.add("open");
+  const grid=document.getElementById("challengeGrid");
+  const fade=document.getElementById("gridFade");
+  setTimeout(()=>{
+    const updateFade=()=>{ fade.style.opacity=grid.scrollTop+grid.clientHeight>=grid.scrollHeight-4?"0":"1"; };
+    grid.addEventListener("scroll",updateFade); updateFade();
+  },50);
+}
+
+function closeFreeSelector(){
+  const modal = document.getElementById("freeSelectorModal");
+  modal.classList.remove("open");
+}
+
+function generateChallengeGrid(){
+  const grid = document.getElementById("challengeGrid");
+  const freeData = getFreeData();
+  
+  grid.innerHTML = "";
+  
+  for(let i = 0; i < POOL.length; i++){
+    const cell = document.createElement("div");
+    cell.className = "challenge-cell";
+    cell.textContent = i + 1;
+    cell.onclick = () => selectChallenge(i);
+    
+    const playedChallenge = freeData.played.find(p => p.id === i);
+    if(playedChallenge){
+      if(playedChallenge.won){
+        cell.className += " completed";
+        cell.textContent = "✓";
+        cell.title = `#${i+1}: vencido em ${playedChallenge.tries} tentativa${playedChallenge.tries===1?"":"s"}`;
+      } else {
+        cell.className += " failed";
+        cell.textContent = "✕";
+        cell.title = `#${i+1}: não completado`;
+      }
+      cell.onclick = null;
+    } else {
+      cell.title = `Desafio #${i+1}`;
+    }
+
+    grid.appendChild(cell);
+  }
+}
+
+function selectChallenge(id){
+  closeFreeSelector();
+  window.location.href = '?w=' + (id + 1);
+}
+
+function shareFreeProgress(){
+  const d = getFreeData();
+  const total = POOL.length;
+  const won   = d.played.filter(p => p.won).length;
+  const lost  = d.played.filter(p => !p.won).length;
+  const played = won + lost;
+  const pending = total - played;
+  const pct = n => Math.round(n * 100 / total);
+  const txt = [
+    `Estou com ${pct(played)}% do Modo Livre completo!`,
+    `⚫ ${pending} pendente(s) · 🟢 ${won} certo(s) · 🔴 ${lost} errado(s)`,
+    `Sua vez! https://palavrada.com.br/`
+  ].join('\n');
+  if(navigator.share) navigator.share({text: txt});
+  else navigator.clipboard.writeText(txt).then(()=>toast("Copiado!"));
+}
+
+const KEY_FREE_H = "pr_free_h";
+
+function getFreeData(){
+  try {
+    const d = JSON.parse(localStorage.getItem(KEY_FREE_H) || '{"played":[]}');
+    return (d.played && Array.isArray(d.played)) ? d : {played:[]};
+  } catch(e) { return {played:[]}; }
+}
+
+function saveFreeResult(wordId, won, tries){
+  const d = getFreeData();
+  d.played = d.played.filter(p => p.id !== wordId);
+  d.played.push({id:wordId, won, tries});
+  localStorage.setItem(KEY_FREE_H, JSON.stringify(d));
+}
 document.getElementById("helpModal").addEventListener("click",function(e){ if(e.target===this)closeHelp(); });
 document.getElementById("resModal").addEventListener("click",function(e){ if(e.target===this)closeRes(); });
+document.getElementById("freeSelectorModal").addEventListener("click",function(e){ if(e.target===this)closeFreeSelector(); });
 
 function updateStreakBox(){
   const streak = stats.streak || 0;
@@ -693,7 +821,19 @@ window.addEventListener("resize", ()=>{ drawMain(); redrawAllMinis(); });
 // Migra stats antigos se necessário
 if(stats.s!==undefined && stats.streak===undefined){ stats.streak=stats.s; delete stats.s; saveStats(); }
 
-newGame(false); // sempre começa no diário
+const _startIdx = getUrlWordIdx();
+if(_startIdx !== null){
+  const _played = getFreeData().played.find(p => p.id === _startIdx);
+  if(_played){
+    history.replaceState(null, "", window.location.pathname);
+    newGame(false);
+    setTimeout(()=>toast(`Desafio #${_startIdx+1} já foi jogado!`), 300);
+  } else {
+    newGame(true);
+  }
+} else {
+  newGame(false);
+}
 if(!localStorage.getItem("pr_v")){ localStorage.setItem("pr_v","1"); setTimeout(openHelp,500); }
 </script>
 </body>
