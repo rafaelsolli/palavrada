@@ -654,7 +654,7 @@ function showRes(won){
     dr.appendChild(dot);
   }
   document.getElementById("dailyExtras");
-  if(isDaily){ clearInterval(cdInt); const upd=()=>document.getElementById("countdown").textContent=countdown(); upd(); cdInt=setInterval(upd,1000); }
+  clearInterval(cdInt); const upd=()=>document.getElementById("countdown").textContent=countdown(); upd(); cdInt=setInterval(upd,1000);
   document.getElementById("resModal").classList.add("open");
 }
 function closeRes(){ document.getElementById("resModal").classList.remove("open"); clearInterval(cdInt); }
