@@ -192,6 +192,24 @@ main {
 .mbtn.sec:hover { border-color:var(--muted); color:var(--text); }
 .mbtn.free-btn { background:linear-gradient(90deg,#7c3aed,#4f46e5); }
 
+/* streak box */
+.streak-box {
+  display:flex; align-items:center; gap:6px;
+  background:var(--key-bg); border:1px solid var(--border);
+  border-radius:8px; padding:6px 12px;
+  font-size:.75rem; color:var(--text);
+  transition:border-color .2s, background .2s;
+}
+.streak-box:hover {
+  border-color:var(--muted); background:color-mix(in srgb, var(--key-bg) 85%, var(--muted));
+}
+.streak-fire {
+  font-size:.9rem; line-height:1;
+}
+.streak-text {
+  font-weight:600; letter-spacing:.5px;
+}
+
 /* resultado */
 .res-title { font-size:.78rem; color:var(--muted); text-align:center; margin-bottom:2px; }
 .res-num {
@@ -220,9 +238,12 @@ main {
 <header>
   <div class="logo">PalavRada <small>🌊 jogo de ondas</small></div>
   <div class="header-btns">
+    <div class="streak-box" id="streakBox" style="display:none">
+      <span class="streak-fire">🔥</span>
+      <span class="streak-text" id="streakText">0 vitórias seguidas</span>
+    </div>
     <button class="hbtn" id="btnToggleMode" onclick="toggleMode()" title="Alternar modo">🎲</button>
     <button class="hbtn" onclick="openHelp()" title="Ajuda">❓</button>
-    <button class="hbtn" onclick="openStats()" title="Estatísticas">📊</button>
   </div>
 </header>
 
@@ -261,19 +282,7 @@ main {
   </div>
 </div>
 
-<!-- Stats -->
-<div class="overlay" id="statsModal">
-  <div class="modal" style="text-align:center">
-    <h2>Estatísticas 📊</h2>
-    <div class="stats" style="margin:16px 0">
-      <div class="stat"><div class="stat-n" id="stP">0</div><div class="stat-l">Jogos</div></div>
-      <div class="stat"><div class="stat-n" id="stW">0</div><div class="stat-l">Vitórias</div></div>
-      <div class="stat"><div class="stat-n" id="stS">0</div><div class="stat-l">Sequência 🔥</div></div>
-    </div>
-    <p style="font-size:.78rem;margin-bottom:0">Streak conta apenas com o <strong>desafio diário</strong>.</p>
-    <button class="mbtn sec" onclick="closeStats()">Fechar</button>
-  </div>
-</div>
+
 
 <!-- Resultado -->
 <div class="overlay" id="resModal">
@@ -401,6 +410,7 @@ function updateBadge(){
     btnToggle.textContent="🌞";
     btnToggle.title="Voltar ao desafio diário";
   }
+  updateStreakBox();
 }
 
 // ===================== BOXES =====================
@@ -478,6 +488,7 @@ function submit(){
         if(stats.lastWonDay!==dayN) stats.streak=0;
       }
       saveStats();
+      updateStreakBox();
     } else {
       // Modo livre: marca como concluído
       localStorage.setItem(KEY_FREE,JSON.stringify({target,guesses,done:true,won}));
@@ -646,14 +657,18 @@ function closeHelp(){ document.getElementById("helpModal").classList.remove("ope
 document.getElementById("helpModal").addEventListener("click",function(e){ if(e.target===this)closeHelp(); });
 document.getElementById("resModal").addEventListener("click",function(e){ if(e.target===this)closeRes(); });
 
-function openStats(){
-  document.getElementById("stP").textContent=stats.p||0;
-  document.getElementById("stW").textContent=stats.w||0;
-  document.getElementById("stS").textContent=stats.streak||0;
-  document.getElementById("statsModal").classList.add("open");
+function updateStreakBox(){
+  const streak = stats.streak || 0;
+  const streakBox = document.getElementById("streakBox");
+  const streakText = document.getElementById("streakText");
+  
+  if(isDaily && streak > 0){
+    streakText.textContent = `${streak} vitória${streak === 1 ? '' : 's'} seguida${streak === 1 ? '' : 's'}`;
+    streakBox.style.display = "flex";
+  } else {
+    streakBox.style.display = "none";
+  }
 }
-function closeStats(){ document.getElementById("statsModal").classList.remove("open"); }
-document.getElementById("statsModal").addEventListener("click",function(e){ if(e.target===this)closeStats(); });
 
 // ===================== TOAST =====================
 let tt;
