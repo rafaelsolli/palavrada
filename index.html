@@ -195,13 +195,13 @@ main {
 
 /* challenge selector */
 .grid-wrap { position:relative; max-height:260px; overflow:hidden; margin:12px 0; }
-#challengeGrid { display:grid; grid-template-columns:repeat(10,1fr); gap:3px; padding:4px 2px 24px; overflow-y:auto; scrollbar-width:none; max-height:260px; }
+#challengeGrid { display:grid; grid-template-columns:repeat(auto-fill,34px); justify-content:center; gap:4px; padding:4px 2px 24px; overflow-y:auto; scrollbar-width:none; max-height:260px; }
 #challengeGrid::-webkit-scrollbar { display:none; }
 .grid-fade { position:absolute; bottom:0; left:0; right:0; height:48px; background:linear-gradient(transparent,var(--surface)); display:flex; align-items:flex-end; justify-content:center; padding-bottom:4px; color:var(--muted); font-size:.75rem; pointer-events:none; transition:opacity .2s; }
 .challenge-cell {
-  aspect-ratio:1; display:flex; align-items:center; justify-content:center;
+  width:34px; height:34px; display:flex; align-items:center; justify-content:center;
   background:var(--key-bg); border:1px solid var(--border); border-radius:4px;
-  font-size:.75rem; font-weight:600; cursor:pointer; transition:all .2s;
+  font-size:.78rem; font-weight:600; cursor:pointer; transition:all .2s;
   color:var(--text); overflow:hidden;
 }
 .challenge-cell:hover {
@@ -210,11 +210,11 @@ main {
 }
 .challenge-cell.completed {
   background: #10b981; color: white; border-color: #059669;
-  cursor: default; font-size: 1rem;
+  cursor: default;
 }
 .challenge-cell.failed {
   background: #ef4444; color: white; border-color: #dc2626;
-  cursor: default; font-size: 1rem;
+  cursor: default;
 }
 .challenge-cell.completed:hover { background: #10b981; border-color: #059669; }
 .challenge-cell.failed:hover    { background: #ef4444; border-color: #dc2626; }
@@ -353,7 +353,7 @@ main {
       <div id="challengeGrid"></div>
       <div class="grid-fade" id="gridFade">▼</div>
     </div>
-    <button class="mbtn" style="margin-top:10px;width:100%" onclick="shareFreeProgress()">📊 Compartilhar progresso</button>
+    <button class="mbtn" style="margin-top:10px;width:100%" onclick="shareFreeProgress()">Compartilhar progresso</button>
   </div>
 </div>
 
@@ -755,6 +755,7 @@ function generateChallengeGrid(){
 
     grid.appendChild(cell);
   }
+
 }
 
 function selectChallenge(id){
