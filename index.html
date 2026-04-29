@@ -602,7 +602,7 @@ function dotCol(g){
 let cdInt=null;
 function showRes(won){
   const n=guesses.length, dayN=getDayN();
-  const modeStr=isDaily?`Desafio diário #${dayN}`:"Modo livre";
+  const modeStr=isDaily?`Desafio diário #${dayN}`:`Modo livre #${getWordId(target)}`;
   document.getElementById("resTitle").textContent=`${modeStr} – Você ${won?"venceu":"perdeu"}!`;
   document.getElementById("resNum").textContent=won?`${n}/6`:"X/6";
   const rw=document.getElementById("resWord"); rw.textContent=target; rw.className="res-word"+(won?"":" lost");
