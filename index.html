@@ -770,10 +770,12 @@ function shareFreeProgress(){
   const lost  = d.played.filter(p => !p.won).length;
   const played = won + lost;
   const pending = total - played;
-  const pct = n => Math.round(n * 100 / total);
+  const pct = n => (n * 100 / total).toFixed(2).replace('.', ',');
   const txt = [
     `Estou com ${pct(played)}% do Modo Livre completo!`,
-    `⚫ ${pending} pendente(s) · 🟢 ${won} certo(s) · 🔴 ${lost} errado(s)`,
+    `⚫ ${pending} ${pending === 1 ? 'pendente' : 'pendentes'}`,
+    `🟢 ${won} ${won === 1 ? 'certo' : 'certos'}`,
+    `🔴 ${lost} ${lost === 1 ? 'errado' : 'errados'}`,
     `Sua vez! https://palavrada.com.br/`
   ].join('\n');
   if(navigator.share) navigator.share({text: txt});
