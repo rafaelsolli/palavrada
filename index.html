@@ -168,7 +168,7 @@ main {
 .modal {
   background:var(--surface); border:1px solid var(--border);
   border-radius:18px; padding:26px 22px; max-width:370px; width:92%;
-  transform:translateY(14px); transition:transform .3s;
+  transform:translateY(14px); transition:transform .3s; position:relative;
 }
 .overlay.open .modal { transform:none; }
 .modal h2 {
@@ -208,6 +208,19 @@ main {
 }
 .streak-text {
   font-weight:600; letter-spacing:.5px;
+}
+
+/* botão X dos modais */
+.modal-close {
+  position:absolute; top:12px; right:12px;
+  background:none; border:none; color:var(--muted);
+  font-size:1.2rem; cursor:pointer; padding:4px;
+  border-radius:6px; transition:color .2s, background .2s;
+  display:flex; align-items:center; justify-content:center;
+  width:28px; height:28px;
+}
+.modal-close:hover {
+  color:var(--text); background:var(--surface2);
 }
 
 /* resultado */
@@ -272,6 +285,7 @@ main {
 <!-- Help -->
 <div class="overlay" id="helpModal">
   <div class="modal">
+    <button class="modal-close" onclick="closeHelp()" title="Fechar">×</button>
     <h2>Como Jogar 🌊</h2>
     <p>Cada letra tem um valor numérico: <strong>A = 0, B = 1 ... Z = 25</strong>. Esses valores formam os picos e vales de uma onda.</p>
     <p>A onda da <strong>palavra-alvo</strong> fica sempre visível em <strong style="color:#60a5fa">azul</strong>. Ao dar Enter, sua onda aparece por cima. O objetivo é <strong>fazer as ondas coincidirem</strong>.</p>
@@ -287,17 +301,18 @@ main {
 <!-- Resultado -->
 <div class="overlay" id="resModal">
   <div class="modal">
+    <button class="modal-close" onclick="closeRes()" title="Fechar">×</button>
     <div class="res-title" id="resTitle"></div>
     <div class="res-num" id="resNum">X/6</div>
     <div class="dots-row" id="dotsRow"></div>
     <div class="res-label">A palavra era</div>
     <div class="res-word" id="resWord"></div>
-    <button class="mbtn" onclick="shareResult()">Compartilhar Resultado</button>
+    <button class="mbtn" onclick="shareResult()">Compartilhar resultado</button>
     <div id="dailyExtras">
       <div class="divider"></div>
       <div class="countdown-lbl">Próxima palavra em</div>
       <div class="countdown" id="countdown">--:--:--</div>
-      <button class="mbtn free-btn" onclick="startFree()">🎲 Jogar Modo Livre</button>
+      <button class="mbtn free-btn" onclick="startFree()">🎲 Jogar modo livre</button>
     </div>
   </div>
 </div>
