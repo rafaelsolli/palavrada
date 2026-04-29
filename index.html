@@ -653,7 +653,7 @@ function showRes(won){
     else { dot.style.background="var(--surface2)"; dot.style.border="1px solid var(--border)"; }
     dr.appendChild(dot);
   }
-  document.getElementById("dailyExtras").style.display=isDaily?"":"none";
+  document.getElementById("dailyExtras");
   if(isDaily){ clearInterval(cdInt); const upd=()=>document.getElementById("countdown").textContent=countdown(); upd(); cdInt=setInterval(upd,1000); }
   document.getElementById("resModal").classList.add("open");
 }
