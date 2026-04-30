@@ -27,7 +27,7 @@
       <span class="streak-texto" id="freeBadgeTexto">0,00% completo</span>
     </div>
     <button class="hbtn" id="btnAlternarModo" title="Selecionar palavra">🎲</button>
-    <button class="hbtn" id="btnAjuda" title="Ajuda">❓</button>
+    <button class="hbtn" id="btnConfig" title="Configurações">⚙️</button>
   </div>
 </header>
 
@@ -54,17 +54,60 @@
 </main>
 
 
-<!-- ── Modal: Ajuda ── -->
-<div class="overlay" id="modalAjuda">
-  <div class="modal">
-    <button class="modal-fechar" id="fecharAjuda" title="Fechar">×</button>
-    <h2>Como Jogar 🌊</h2>
-    <p>Cada letra tem um valor numérico: <strong>A = 0, B = 1 ... Z = 25</strong>. Esses valores formam os picos e vales de uma onda.</p>
-    <p>A onda da <strong>palavra-alvo</strong> fica sempre visível em <strong style="color:#60a5fa">azul</strong>. Ao dar Enter, sua onda aparece por cima. O objetivo é <strong>fazer as ondas coincidirem</strong>.</p>
-    <p>💡 Clique em qualquer letra para editar aquela posição. Use ← → para navegar.</p>
-    <p>💡 Clique num palpite anterior para mostrar/ocultar no gráfico.</p>
-    <p>⚠️ Só são aceitas <strong>palavras válidas</strong> do português brasileiro (~9 mil palavras).</p>
-    <button class="mbtn" id="btnEntendidoAjuda">Entendi!</button>
+<!-- ── Modal: Configurações ── -->
+<div class="overlay" id="modalConfig">
+  <div class="modal modal-config">
+    <button class="modal-fechar" id="fecharConfig" title="Fechar">×</button>
+    <h2>⚙️ Configurações</h2>
+
+    <div class="cfg-secao">
+      <div class="cfg-titulo">Gráfico</div>
+      <div class="cfg-item">
+        <label>Réguas horizontais</label>
+        <button class="cfg-ciclo" id="cfgRegraH">4</button>
+      </div>
+      <div class="cfg-item">
+        <label>Letras no eixo Y</label>
+        <button class="cfg-ciclo" id="cfgEixoY">0</button>
+      </div>
+      <div class="cfg-item">
+        <label>Bolinhas nas curvas</label>
+        <button class="cfg-ciclo" id="cfgBolinhas">não</button>
+      </div>
+      <div class="cfg-item">
+        <label>Letras no último palpite</label>
+        <button class="cfg-ciclo" id="cfgLetrasGrafico">não</button>
+      </div>
+    </div>
+
+    <div class="cfg-secao">
+      <div class="cfg-titulo">Histórico</div>
+      <div class="cfg-item">
+        <label>Mostrar onda-alvo</label>
+        <button class="cfg-ciclo" id="cfgAlvoMini">não</button>
+      </div>
+      <div class="cfg-item">
+        <label>Palpites visíveis</label>
+        <button class="cfg-ciclo" id="cfgMaxPalpites">6</button>
+      </div>
+    </div>
+
+    <div class="cfg-secao">
+      <div class="cfg-titulo">Teclado</div>
+      <div class="cfg-item">
+        <label>Layout</label>
+        <button class="cfg-ciclo" id="cfgTeclado">QWERTY</button>
+      </div>
+      <div class="cfg-item">
+        <label>Fixar letras certas</label>
+        <button class="cfg-ciclo" id="cfgFixarLetras">não</button>
+      </div>
+      <div class="cfg-item">
+        <label>Autocomplete</label>
+        <button class="cfg-ciclo" id="cfgAutocomplete">não</button>
+      </div>
+    </div>
+    <button class="mbtn" id="btnResetConfig" style="margin-top:16px;width:100%">Redefinir padrões</button>
   </div>
 </div>
 

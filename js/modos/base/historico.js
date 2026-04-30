@@ -1,29 +1,61 @@
 import { corDelta } from '../../nucleo/ajudantes.js';
 import { redesenharMini, redesenharPrincipal } from '../../nucleo/canvas.js';
+import { cfg } from '../../configuracoes.js';
 
 export class Historico {
   constructor() {
     this._el = document.getElementById('listaHistorico');
+    this._partida = null;
   }
 
   iniciar() {
     this._el.innerHTML = '';
-    for (let i = 0; i < 6; i++) {
-      const placeholder = document.createElement('div');
-      placeholder.className = 'h-placeholder';
-      placeholder.id = 'slot-' + i;
-      this._el.appendChild(placeholder);
+    const total = cfg().maxPalpites;
+    for (let i = 0; i < total; i++) {
+      const ph = document.createElement('div');
+      ph.className = 'h-placeholder';
+      this._el.appendChild(ph);
     }
   }
 
-  // Reconstrói o histórico a partir de tentativas salvas (restauração de sessão)
   reconstruir(partida) {
-    this.iniciar();
-    partida.tentativas.forEach((_, i) => this.adicionarItem(i, partida));
+    this._partida = partida;
+    this._renderizar();
   }
 
   adicionarItem(indice, partida) {
-    const t = partida.tentativas[indice];
+    this._partida = partida;
+    this._renderizar();
+  }
+
+  redesenharMinis(partida) {
+    this._partida = partida;
+    document.querySelectorAll('.h-mini').forEach(mini => {
+      const idx = parseInt(mini.dataset.idx);
+      if (!isNaN(idx) && partida.tentativas[idx]) {
+        redesenharMini(mini, partida.tentativas[idx], partida.valoresAlvo);
+      }
+    });
+  }
+
+  _renderizar() {
+    if (!this._partida) return;
+    const { tentativas, valoresAlvo } = this._partida;
+    const c = cfg();
+
+    let ordenados = tentativas.map((t, i) => ({ t, i })).reverse();
+    ordenados = ordenados.slice(0, c.maxPalpites);
+
+    this._el.innerHTML = '';
+    ordenados.forEach(({ i, t }) => this._el.appendChild(this._criarItem(i, t, valoresAlvo)));
+    for (let k = ordenados.length; k < c.maxPalpites; k++) {
+      const ph = document.createElement('div');
+      ph.className = 'h-placeholder';
+      this._el.appendChild(ph);
+    }
+  }
+
+  _criarItem(indice, t, valoresAlvo) {
     const item = document.createElement('div');
     item.className = 'h-item ativo' + (t.ganhou ? ' ganhou-item' : '');
     item.id = 'hitem-' + indice;
@@ -50,24 +82,12 @@ export class Historico {
     item.appendChild(mini);
 
     item.addEventListener('click', () => {
-      partida.toggleVisibilidade(indice);
-      item.classList.toggle('ativo', partida.tentativas[indice].visivel);
-      redesenharPrincipal(partida);
+      this._partida.toggleVisibilidade(indice);
+      item.classList.toggle('ativo', this._partida.tentativas[indice].visivel);
+      redesenharPrincipal(this._partida);
     });
 
-    const slot = document.getElementById('slot-' + indice);
-    if (slot) slot.replaceWith(item);
-    else this._el.appendChild(item);
-
-    setTimeout(() => redesenharMini(mini, t), 30);
-  }
-
-  redesenharMinis(partida) {
-    document.querySelectorAll('.h-mini').forEach(mini => {
-      const idx = parseInt(mini.dataset.idx);
-      if (!isNaN(idx) && partida.tentativas[idx]) {
-        redesenharMini(mini, partida.tentativas[idx]);
-      }
-    });
+    setTimeout(() => redesenharMini(mini, t, valoresAlvo), 30);
+    return item;
   }
 }

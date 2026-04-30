@@ -4,6 +4,9 @@ import { ModoDesafioDiario } from './modos/diario/modoDesafioDiario.js';
 import { ModoLivre } from './modos/livre/modoLivre.js';
 import { ModalSeletor, carregarProgresso } from './modos/livre/modalSeletor.js';
 import { toast } from './modos/base/toast.js';
+import { carregarConfig } from './configuracoes.js';
+import { registrarModalConfig } from './modos/base/modalConfig.js';
+import { redesenharPrincipal } from './nucleo/canvas.js';
 
 // ── Migração de localStorage (chaves antigas → novas) ──────────────────────
 function migrarLocalStorage() {
@@ -41,43 +44,43 @@ function migrarLocalStorage() {
   localStorage.removeItem('pr_free_completed');
 }
 
-// ── Tutorial ────────────────────────────────────────────────────────────────
-function verificarTutorial() {
-  if (!localStorage.getItem('palavrada.tutorial')) {
-    localStorage.setItem('palavrada.tutorial', '1');
-    setTimeout(() => document.getElementById('modalAjuda').classList.add('aberto'), 500);
-  }
-}
-
-// ── Registro de modais auxiliares ───────────────────────────────────────────
-function registrarModalAjuda() {
-  const modal = document.getElementById('modalAjuda');
-  document.getElementById('btnAjuda').addEventListener('click', () => modal.classList.add('aberto'));
-  document.getElementById('fecharAjuda').addEventListener('click', () => modal.classList.remove('aberto'));
-  document.getElementById('btnEntendidoAjuda').addEventListener('click', () => modal.classList.remove('aberto'));
-  modal.addEventListener('click', e => { if (e.target === modal) modal.classList.remove('aberto'); });
-}
-
 // ── Resize ──────────────────────────────────────────────────────────────────
 function registrarResize(modoAtivo) {
   window.addEventListener('resize', () => {
-    import('./nucleo/canvas.js').then(({ redesenharPrincipal }) => {
-      if (modoAtivo._partida) redesenharPrincipal(modoAtivo._partida);
-    });
+    if (modoAtivo._partida) redesenharPrincipal(modoAtivo._partida);
     document.querySelectorAll('.h-mini').forEach(mini => {
       const idx = parseInt(mini.dataset.idx);
       if (!isNaN(idx) && modoAtivo._partida?.tentativas[idx]) {
         import('./nucleo/canvas.js').then(({ redesenharMini }) => {
-          redesenharMini(mini, modoAtivo._partida.tentativas[idx]);
+          redesenharMini(mini, modoAtivo._partida.tentativas[idx], modoAtivo._partida.valoresAlvo);
         });
       }
     });
   });
 }
 
+// ── Callback de mudança de configuração ─────────────────────────────────────
+function aoMudarConfig(chave, valor) {
+  const p = modoAtivo?._partida;
+  if (!p) return;
+
+  const canvasSettings = ['regraHorizontal', 'eixoY', 'bolinhas', 'letrasNoGrafico', 'maxPalpites'];
+  if (canvasSettings.includes(chave)) redesenharPrincipal(p);
+  if (chave === 'maxPalpites') modoAtivo._historico.reconstruir(p);
+  if (chave === 'alvoNosPalpites') modoAtivo._historico.redesenharMinis(p);
+  if (chave === 'teclado') modoAtivo._teclado.reconstruir();
+  if (chave === 'autocomplete') modoAtivo._grade.atualizar(p);
+  if (chave === 'fixarLetrasAcertadas') {
+    if (valor) p.fixar();
+    else p.letrasFixas = Array(5).fill(false);
+    modoAtivo._grade.atualizar(p);
+  }
+}
+
 // ── Bootstrap ───────────────────────────────────────────────────────────────
 migrarLocalStorage();
-registrarModalAjuda();
+carregarConfig();
+registrarModalConfig(aoMudarConfig);
 
 const idxUrl = idxUrlPalavra(PALAVRAS.length);
 let modoAtivo;
@@ -109,4 +112,3 @@ if (idxUrl !== null) {
 }
 
 registrarResize(modoAtivo);
-verificarTutorial();

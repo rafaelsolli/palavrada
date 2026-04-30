@@ -10,6 +10,7 @@ export class Partida {
     this.indiceFoco = 0;
     this.encerrada = false;
     this._navIndex = -1;
+    this.letrasFixas = Array(5).fill(false);
   }
 
   // Restaura estado a partir de uma sessão salva (modo diário)
@@ -19,11 +20,24 @@ export class Partida {
     this.atual = Array(5).fill('');
     this.indiceFoco = 0;
     this._navIndex = -1;
+    this.letrasFixas = Array(5).fill(false);
   }
 
-  navegarCima() {
+  // Chamado pelo modo após uma tentativa válida quando fixarLetrasAcertadas está ativo
+  fixar() {
+    for (const t of this.tentativas) {
+      for (let i = 0; i < 5; i++) {
+        if (t.palavra[i] === this.palavraAlvo[i]) {
+          this.letrasFixas[i] = true;
+          this.atual[i] = t.palavra[i];
+        }
+      }
+    }
+  }
+
+  navegarCima(minIdx = 0) {
     if (!this.tentativas.length || this.encerrada) return null;
-    if (this._navIndex === 0) return null;
+    if (this._navIndex === minIdx) return null;
     this._navIndex = this._navIndex === -1 ? this.tentativas.length - 1 : this._navIndex - 1;
     this.atual = [...this.tentativas[this._navIndex].palavra];
     return { tipo: 'navegacao' };
@@ -57,11 +71,15 @@ export class Partida {
     this._navIndex = -1;
 
     if (k === '⌫') {
-      if (this.atual[this.indiceFoco]) {
+      if (this.letrasFixas[this.indiceFoco]) {
+        const prev = this._prevLivre(this.indiceFoco);
+        if (prev !== -1) { this.indiceFoco = prev; this.atual[prev] = ''; }
+      } else if (this.atual[this.indiceFoco]) {
         this.atual[this.indiceFoco] = '';
       } else {
-        this.indiceFoco = Math.max(0, this.indiceFoco - 1);
-        this.atual[this.indiceFoco] = '';
+        const prev = this._prevLivre(this.indiceFoco);
+        this.indiceFoco = prev !== -1 ? prev : this.indiceFoco;
+        if (!this.letrasFixas[this.indiceFoco]) this.atual[this.indiceFoco] = '';
       }
       return { tipo: 'edicao' };
     }
@@ -72,11 +90,26 @@ export class Partida {
 
     const letra = normalizar(k)[0];
     if (!letra) return null;
+    if (this.letrasFixas[this.indiceFoco]) {
+      const prox = this._proxLivre(this.indiceFoco + 1);
+      if (prox !== -1) this.indiceFoco = prox;
+      return { tipo: 'edicao' };
+    }
     const indiceAnterior = this.indiceFoco;
     this.atual[this.indiceFoco] = letra;
-    const prox = this.atual.findIndex((v, i) => i > this.indiceFoco && !v);
+    const prox = this.atual.findIndex((v, i) => i > this.indiceFoco && !v && !this.letrasFixas[i]);
     this.indiceFoco = prox !== -1 ? prox : this.indiceFoco;
     return { tipo: 'letra', letra, indice: indiceAnterior };
+  }
+
+  _proxLivre(de) {
+    for (let i = de; i < 5; i++) if (!this.letrasFixas[i]) return i;
+    return -1;
+  }
+
+  _prevLivre(de) {
+    for (let i = de - 1; i >= 0; i--) if (!this.letrasFixas[i]) return i;
+    return -1;
   }
 
   _submeter() {

@@ -10,6 +10,7 @@ import { Historico } from '../base/historico.js';
 import { BadgeStreak } from './badgeStreak.js';
 import { ModalResultado } from './modalResultado.js';
 import { toast } from '../base/toast.js';
+import { cfg } from '../../configuracoes.js';
 
 const CHAVE_STATS   = 'palavrada.diario';
 const CHAVE_SESSAO  = () => `palavrada.diario.sessao.${numeroDoDia()}`;
@@ -59,7 +60,7 @@ export class ModoDesafioDiario extends ModoBase {
   aoTecla(k) {
     if (k === '←') { this._partida.focar(Math.max(0, this._partida.indiceFoco - 1)); this._grade.atualizar(this._partida); return; }
     if (k === '→') { this._partida.focar(Math.min(4, this._partida.indiceFoco + 1)); this._grade.atualizar(this._partida); return; }
-    if (k === '↑') { if (this._partida.navegarCima()) this._grade.atualizar(this._partida); return; }
+    if (k === '↑') { const max = cfg().maxPalpites; const min = max > 0 ? Math.max(0, this._partida.tentativas.length - max) : 0; if (this._partida.navegarCima(min)) this._grade.atualizar(this._partida); return; }
     if (k === '↓') { if (this._partida.navegarBaixo()) this._grade.atualizar(this._partida); return; }
 
     const resultado = this._partida.tecla(k);
@@ -83,6 +84,7 @@ export class ModoDesafioDiario extends ModoBase {
     // tentativa válida
     this._historico.adicionarItem(this._partida.tentativas.length - 1, this._partida);
     redesenharPrincipal(this._partida);
+    if (cfg().fixarLetrasAcertadas && !resultado.encerrou) this._partida.fixar();
     this._grade.atualizar(this._partida);
     this._persistirSessao(resultado.ganhou, resultado.encerrou);
 

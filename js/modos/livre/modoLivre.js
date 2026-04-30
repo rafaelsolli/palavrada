@@ -10,6 +10,7 @@ import { BadgeProgresso } from './badgeProgresso.js';
 import { ModalResultado } from './modalResultado.js';
 import { ModalSeletor, carregarProgresso, salvarResultadoLivre } from './modalSeletor.js';
 import { toast } from '../base/toast.js';
+import { cfg } from '../../configuracoes.js';
 
 export class ModoLivre extends ModoBase {
   constructor(idPalavra, aoVoltarDiario) {
@@ -18,12 +19,12 @@ export class ModoLivre extends ModoBase {
     this._partida   = null;
 
     this._cabecalho = new Cabecalho();
-    this._grade     = new Grade(k => this.aoTecla(k));
+    this._grade     = new Grade();
     this._historico = new Historico();
     this._badge     = new BadgeProgresso();
     this._seletor   = new ModalSeletor(id => this._selecionarPalavra(id));
     this._modal     = new ModalResultado(() => this._seletor.abrir());
-    new Teclado(k => this.aoTecla(k));
+    this._teclado   = new Teclado(k => this.aoTecla(k));
   }
 
   iniciar() {
@@ -44,7 +45,7 @@ export class ModoLivre extends ModoBase {
   aoTecla(k) {
     if (k === '←') { this._partida.focar(Math.max(0, this._partida.indiceFoco - 1)); this._grade.atualizar(this._partida); return; }
     if (k === '→') { this._partida.focar(Math.min(4, this._partida.indiceFoco + 1)); this._grade.atualizar(this._partida); return; }
-    if (k === '↑') { if (this._partida.navegarCima()) this._grade.atualizar(this._partida); return; }
+    if (k === '↑') { const max = cfg().maxPalpites; const min = max > 0 ? Math.max(0, this._partida.tentativas.length - max) : 0; if (this._partida.navegarCima(min)) this._grade.atualizar(this._partida); return; }
     if (k === '↓') { if (this._partida.navegarBaixo()) this._grade.atualizar(this._partida); return; }
 
     const resultado = this._partida.tecla(k);
@@ -68,6 +69,7 @@ export class ModoLivre extends ModoBase {
     // tentativa válida
     this._historico.adicionarItem(this._partida.tentativas.length - 1, this._partida);
     redesenharPrincipal(this._partida);
+    if (cfg().fixarLetrasAcertadas && !resultado.encerrou) this._partida.fixar();
     this._grade.atualizar(this._partida);
 
     if (resultado.encerrou) {

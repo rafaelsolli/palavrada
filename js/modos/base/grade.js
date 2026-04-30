@@ -1,4 +1,13 @@
+import { PALAVRAS } from '../../dados/palavras.js';
+import { cfg } from '../../configuracoes.js';
+
 const modoDebug = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+
+function sugestaoAutocomplete(atual) {
+  const postos = atual.map((l, i) => l ? { i, l } : null).filter(Boolean);
+  if (!postos.length) return null;
+  return PALAVRAS.find(p => postos.every(({ i, l }) => p[i] === l)) || null;
+}
 
 export class Grade {
   constructor() {
@@ -19,18 +28,31 @@ export class Grade {
   }
 
   atualizar(partida) {
+    const c = cfg();
+    const sugestao = c.autocomplete ? sugestaoAutocomplete(partida.atual) : null;
+
     for (let i = 0; i < 5; i++) {
       const caixa = document.getElementById('letra-' + i);
       if (!caixa) continue;
       const letraAtual = partida.atual[i];
-      caixa.textContent = letraAtual || (modoDebug ? partida.palavraAlvo[i] : '');
+      const fixada = partida.letrasFixas[i];
+
+      let placeholder = '';
+      if (!letraAtual) {
+        if (c.autocomplete && sugestao) placeholder = sugestao[i];
+        else if (modoDebug) placeholder = partida.palavraAlvo[i];
+      }
+
+      caixa.textContent = letraAtual || placeholder;
       const focada = !partida.encerrada && i === partida.indiceFoco;
       const preenchida = !!letraAtual;
-      const hint = modoDebug && !letraAtual;
+      const hint = !letraAtual && !!placeholder;
+
       caixa.className = 'letra' +
-        (focada ? ' focada' : '') +
+        (focada   ? ' focada'    : '') +
         (preenchida ? ' preenchida' : '') +
-        (hint ? ' hint' : '');
+        (fixada   ? ' fixada'    : '') +
+        (hint     ? ' hint'      : '');
     }
   }
 

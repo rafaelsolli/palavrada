@@ -1,8 +1,17 @@
-const LINHAS = [
-  ['Q','W','E','R','T','Y','U','I','O','P'],
-  ['A','S','D','F','G','H','J','K','L'],
-  ['ENTER','Z','X','C','V','B','N','M','⌫'],
-];
+import { cfg } from '../../configuracoes.js';
+
+const LAYOUTS = {
+  qwerty: [
+    ['Q','W','E','R','T','Y','U','I','O','P'],
+    ['A','S','D','F','G','H','J','K','L'],
+    ['ENTER','Z','X','C','V','B','N','M','⌫'],
+  ],
+  alfabetico: [
+    ['A','B','C','D','E','F','G','H','I','J'],
+    ['K','L','M','N','O','P','Q','R','S'],
+    ['ENTER','T','U','V','W','X','Y','Z','⌫'],
+  ],
+};
 
 export class Teclado {
   constructor(aoTecla) {
@@ -12,10 +21,15 @@ export class Teclado {
     this._registrarTeclado();
   }
 
+  reconstruir() {
+    this._construir();
+  }
+
   _construir() {
+    const linhas = LAYOUTS[cfg().teclado] || LAYOUTS.qwerty;
     this._el.innerHTML = '';
     this._el.className = 'teclado';
-    LINHAS.forEach(linha => {
+    linhas.forEach(linha => {
       const linha_el = document.createElement('div');
       linha_el.className = 'teclado-linha';
       linha.forEach(k => {

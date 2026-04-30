@@ -1,4 +1,5 @@
 import { corDelta } from './ajudantes.js';
+import { cfg } from '../configuracoes.js';
 
 const MARGEM = 16;
 const ALTURA = 150;
@@ -23,7 +24,7 @@ function parapontos(valores, largura, altura) {
   }));
 }
 
-function desenharCurva(ctx, pontos, cor, espessura, alpha, alphaFundo = 0) {
+function desenharCurva(ctx, pontos, cor, espessura, alpha) {
   if (pontos.length < 2) return;
   ctx.save();
   ctx.strokeStyle = cor;
@@ -31,70 +32,112 @@ function desenharCurva(ctx, pontos, cor, espessura, alpha, alphaFundo = 0) {
   ctx.globalAlpha = alpha;
   ctx.lineJoin = 'round';
   ctx.lineCap = 'round';
-
-  function caminho() {
-    ctx.beginPath();
-    ctx.moveTo(pontos[0].x, pontos[0].y);
-    for (let i = 0; i < pontos.length - 1; i++) {
-      const mx = (pontos[i].x + pontos[i + 1].x) / 2;
-      ctx.bezierCurveTo(mx, pontos[i].y, mx, pontos[i + 1].y, pontos[i + 1].x, pontos[i + 1].y);
-    }
+  ctx.beginPath();
+  ctx.moveTo(pontos[0].x, pontos[0].y);
+  for (let i = 0; i < pontos.length - 1; i++) {
+    const mx = (pontos[i].x + pontos[i + 1].x) / 2;
+    ctx.bezierCurveTo(mx, pontos[i].y, mx, pontos[i + 1].y, pontos[i + 1].x, pontos[i + 1].y);
   }
-
-  if (alphaFundo > 0) {
-    caminho();
-    ctx.lineTo(pontos[pontos.length - 1].x, ALTURA);
-    ctx.lineTo(pontos[0].x, ALTURA);
-    ctx.closePath();
-    ctx.fillStyle = cor;
-    ctx.globalAlpha = alphaFundo;
-    ctx.fill();
-  }
-  caminho();
-  ctx.globalAlpha = alpha;
   ctx.stroke();
   ctx.restore();
 }
 
-function desenharGuias(ctx, largura, altura) {
+function desenharGuias(ctx, largura, altura, count) {
+  if (count === 0) return;
   ctx.save();
-  [0, 8, 16, 25].forEach(v => {
+  ctx.strokeStyle = 'rgba(59,130,246,0.15)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([3, 7]);
+  for (let i = 0; i < count; i++) {
+    const v = count === 1 ? 12.5 : (i / (count - 1)) * 25;
     const y = MARGEM + (1 - v / 25) * (altura - MARGEM * 2);
-    ctx.strokeStyle = 'rgba(59,130,246,0.15)';
-    ctx.lineWidth = 1;
-    ctx.setLineDash([3, 7]);
     ctx.beginPath();
     ctx.moveTo(MARGEM, y);
     ctx.lineTo(largura - MARGEM, y);
     ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function desenharEixoY(ctx, largura, altura, count) {
+  if (count === 0) return;
+  ctx.save();
+  ctx.font = '9px Space Grotesk, sans-serif';
+  ctx.fillStyle = 'rgba(59,130,246,0.45)';
+  ctx.textAlign = 'right';
+  ctx.textBaseline = 'middle';
+  for (let i = 0; i < count; i++) {
+    const v = count === 1 ? 0 : Math.round((i / (count - 1)) * 25);
+    const y = MARGEM + (1 - v / 25) * (altura - MARGEM * 2);
+    ctx.fillText(String.fromCharCode(65 + v), MARGEM - 3, y);
+  }
+  ctx.restore();
+}
+
+function desenharBolinhas(ctx, pontos, cor) {
+  ctx.save();
+  ctx.fillStyle = cor;
+  ctx.globalAlpha = 0.9;
+  pontos.forEach(p => {
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+    ctx.fill();
+  });
+  ctx.restore();
+}
+
+function desenharLetrasNaCurva(ctx, pontos, palavra) {
+  ctx.save();
+  ctx.font = 'bold 10px Space Grotesk, sans-serif';
+  ctx.fillStyle = '#f472b6';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'bottom';
+  ctx.globalAlpha = 0.9;
+  [...palavra].forEach((l, i) => {
+    if (pontos[i]) ctx.fillText(l, pontos[i].x, pontos[i].y - 4);
   });
   ctx.restore();
 }
 
 export function redesenharPrincipal(partida) {
+  const c = cfg();
   const el = document.getElementById('canvasPrincipal');
   const { ctx, largura, altura } = configurarCanvas(el);
   ctx.clearRect(0, 0, largura, altura);
-  desenharGuias(ctx, largura, altura);
 
-  const ultimo = partida.tentativas.length - 1;
-  const ganhou = ultimo >= 0 && partida.tentativas[ultimo].ganhou;
+  desenharGuias(ctx, largura, altura, c.regraHorizontal);
+  desenharEixoY(ctx, largura, altura, c.eixoY);
 
-  partida.tentativas.forEach((t, i) => {
-    if (i === ultimo || !t.visivel) return;
+  const total = partida.tentativas.length;
+  const ultimoIdx = total - 1;
+  const ganhou = total > 0 && partida.tentativas[ultimoIdx].ganhou;
+
+  const visiveis = c.maxPalpites === 0 ? [] : partida.tentativas.slice(-c.maxPalpites);
+  const offsetIdx = total - visiveis.length;
+
+  visiveis.forEach((t, i) => {
+    const globalIdx = offsetIdx + i;
+    if (!t.visivel || globalIdx === ultimoIdx) return;
     desenharCurva(ctx, parapontos(t.valores, largura, altura), '#2a3a50', 1.5, 0.7);
   });
 
-  if (ultimo >= 0) {
-    const t = partida.tentativas[ultimo];
-    if (t.visivel) desenharCurva(ctx, parapontos(t.valores, largura, altura), '#f472b6', 2.2, 0.95);
+  if (total > 0 && visiveis.includes(partida.tentativas[ultimoIdx])) {
+    const t = partida.tentativas[ultimoIdx];
+    if (t.visivel) {
+      const pontos = parapontos(t.valores, largura, altura);
+      desenharCurva(ctx, pontos, '#f472b6', 2.2, 0.95);
+      if (c.bolinhas) desenharBolinhas(ctx, pontos, '#f472b6');
+      if (c.letrasNoGrafico) desenharLetrasNaCurva(ctx, pontos, t.palavra);
+    }
   }
 
   const corAlvo = ganhou ? '#10b981' : '#3b82f6';
-  desenharCurva(ctx, parapontos(partida.valoresAlvo, largura, altura), corAlvo, 2.5, 0.9);
+  const pontosAlvo = parapontos(partida.valoresAlvo, largura, altura);
+  desenharCurva(ctx, pontosAlvo, corAlvo, 2.5, 0.9);
+  if (c.bolinhas) desenharBolinhas(ctx, pontosAlvo, corAlvo);
 }
 
-export function redesenharMini(canvasMini, tentativa) {
+export function redesenharMini(canvasMini, tentativa, valoresAlvo = null) {
   const dpr = window.devicePixelRatio || 1;
   const larg = canvasMini.clientWidth || 200;
   const alt = canvasMini.clientHeight || 52;
@@ -110,20 +153,14 @@ export function redesenharMini(canvasMini, tentativa) {
     y: margem + (1 - v / 25) * (alt - margem * 2),
   }));
 
-  const cor = corDelta(tentativa.delta, tentativa.ganhou);
-  if (pontos.length < 2) return;
-  ctx.save();
-  ctx.globalAlpha = 1;
-  ctx.strokeStyle = cor;
-  ctx.lineWidth = 2.5;
-  ctx.lineJoin = 'round';
-  ctx.lineCap = 'round';
-  ctx.beginPath();
-  ctx.moveTo(pontos[0].x, pontos[0].y);
-  for (let i = 0; i < pontos.length - 1; i++) {
-    const mx = (pontos[i].x + pontos[i + 1].x) / 2;
-    ctx.bezierCurveTo(mx, pontos[i].y, mx, pontos[i + 1].y, pontos[i + 1].x, pontos[i + 1].y);
+  if (valoresAlvo && cfg().alvoNosPalpites) {
+    const pontosAlvo = valoresAlvo.map((v, i) => ({
+      x: margem + i * passoX,
+      y: margem + (1 - v / 25) * (alt - margem * 2),
+    }));
+    desenharCurva(ctx, pontosAlvo, '#3b82f6', 1.2, 0.45);
   }
-  ctx.stroke();
-  ctx.restore();
+
+  const cor = corDelta(tentativa.delta, tentativa.ganhou);
+  desenharCurva(ctx, pontos, cor, 2.5, 1);
 }
