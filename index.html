@@ -37,8 +37,12 @@
 </header>
 
 <main>
-  <div style="display:flex;justify-content:center;padding:2px 0">
+  <div class="badge-container">
     <div class="badge-modo diario" id="badgeModo">🌞 Desafio Diário</div>
+    <div class="tempo-contador" id="tempoContador">
+      <span class="tempo-icone">⏰</span>
+      <span class="tempo-texto" id="tempoTexto">∞</span>
+    </div>
   </div>
 
   <div class="wave-card">
@@ -230,6 +234,15 @@
             <button class="cfg-ciclo" id="cfgPalavrasInvalidas">Recusar</button>
           </div>
           <div class="cfg-ajuda-texto" id="ajudaTxt-palavrasInvalidas">Define o que acontece ao confirmar uma palavra fora do dicionário. <strong>Recusar</strong> descarta o palpite completamente. <strong>Penalizar</strong> desperdiça o palpite. <strong>Aceitar</strong> ignora a validação, permitindo qualquer sequência de letras.</div>
+        </div>
+
+        <div class="cfg-secao">
+          <div class="cfg-titulo">Tempo</div>
+          <div class="cfg-item">
+            <div class="cfg-label-grupo"><label>Tempo limite</label><button class="cfg-ajuda-btn" data-cfg="tempoLimite">?</button></div>
+            <button class="cfg-ciclo" id="cfgTempoLimite">Infinito</button>
+          </div>
+          <div class="cfg-ajuda-texto" id="ajudaTxt-tempoLimite">Define quanto tempo você tem para completar a partida. Quando o tempo se esgota, o jogo encerra automaticamente. Escolha <strong>Infinito</strong> para jogar sem pressão de tempo.</div>
         </div>
 
       </div><!-- /cfg-scroll -->

@@ -13,6 +13,64 @@ export class Partida {
     this._navIndex = -1;
     this.letrasFixas = Array(5).fill(false);
     this.revelado = null;
+    
+    // Timer properties
+    this.tempoLimite = null; // em segundos, null = infinito
+    this.tempoRestante = null; // em segundos
+    this.intervalId = null;
+    this.aoTempoEsgotar = null; // callback
+    this.aoAtualizarTempo = null; // callback para atualizar UI
+  }
+
+  // ── Timer methods ──
+  configurarTempo(tempoEmSegundos, aoTempoEsgotar, aoAtualizarTempo) {
+    this.tempoLimite = tempoEmSegundos;
+    this.tempoRestante = tempoEmSegundos;
+    this.aoTempoEsgotar = aoTempoEsgotar;
+    this.aoAtualizarTempo = aoAtualizarTempo;
+  }
+
+  iniciarTimer() {
+    if (!this.tempoLimite || this.encerrada || this.intervalId) return;
+    
+    this.intervalId = setInterval(() => {
+      this.tempoRestante--;
+      
+      if (this.aoAtualizarTempo) {
+        this.aoAtualizarTempo(this.tempoRestante, this.tempoLimite);
+      }
+      
+      if (this.tempoRestante <= 0) {
+        this.pararTimer();
+        this.encerrada = true;
+        if (this.aoTempoEsgotar) {
+          this.aoTempoEsgotar();
+        }
+      }
+    }, 1000);
+  }
+
+  pararTimer() {
+    if (this.intervalId) {
+      clearInterval(this.intervalId);
+      this.intervalId = null;
+    }
+  }
+
+  pausarTimer() {
+    this.pararTimer();
+  }
+
+  formatarTempo(segundos) {
+    if (segundos === null || segundos === 'infinito') return '∞';
+    
+    const mins = Math.floor(segundos / 60);
+    const secs = segundos % 60;
+    
+    if (mins > 0) {
+      return `${mins}:${secs.toString().padStart(2, '0')}`;
+    }
+    return `${secs}s`;
   }
 
   // Restaura estado a partir de uma sessão salva (modo diário)
@@ -24,6 +82,14 @@ export class Partida {
     this._navIndex = -1;
     this.letrasFixas = Array(5).fill(false);
     this.revelado = null;
+    
+    // Restaurar timer se houver
+    if (sessaoSalva.tempoRestante !== undefined && !this.encerrada) {
+      this.tempoRestante = sessaoSalva.tempoRestante;
+      if (this.aoAtualizarTempo) {
+        this.aoAtualizarTempo(this.tempoRestante, this.tempoLimite);
+      }
+    }
   }
 
   // Chamado pelo modo após uma tentativa válida quando fixarLetrasAcertadas está ativo
@@ -136,7 +202,10 @@ export class Partida {
       const tentativa = { palavra, penalizada: true, ganhou: false, visivel: false };
       this.tentativas.push(tentativa);
       const encerrou = this.tentativas.length >= 6;
-      if (encerrou) this.encerrada = true;
+      if (encerrou) {
+        this.encerrada = true;
+        this.pararTimer(); // Para o timer quando o jogo encerra por excesso de tentativas
+      }
       else { this.atual = Array(5).fill(''); this.indiceFoco = 0; }
       return { tipo: encerrou ? 'encerrou' : 'tentativa', tentativa, ganhou: false, encerrou };
     }
@@ -148,7 +217,10 @@ export class Partida {
     this.tentativas.push(tentativa);
 
     const encerrou = ganhou || this.tentativas.length >= 6;
-    if (encerrou) this.encerrada = true;
+    if (encerrou) {
+      this.encerrada = true;
+      this.pararTimer(); // Para o timer quando o jogo encerra
+    }
     else { this.atual = Array(5).fill(''); this.indiceFoco = 0; }
 
     return { tipo: encerrou ? 'encerrou' : 'tentativa', tentativa, ganhou, encerrou };

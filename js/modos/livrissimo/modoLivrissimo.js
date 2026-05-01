@@ -9,6 +9,7 @@ import { Historico } from '../base/historico.js';
 import { BadgeLivrissimo } from './badgeLivrissimo.js';
 import { ModalResultado } from '../livre/modalResultado.js';
 import { ModalSeletor, carregarProgressoLivrissimo, salvarResultadoLivrissimo } from '../base/modalSeletor.js';
+import { ContadorTempo } from '../base/contadorTempo.js';
 import { toast } from '../base/toast.js';
 import { cfg } from '../../configuracoes.js';
 
@@ -27,6 +28,7 @@ export class ModoLivrissimo extends ModoBase {
       id => this._selecionarPalavra(id)
     );
     this._modal     = new ModalResultado(() => this._seletor.abrir());
+    this._contadorTempo = new ContadorTempo();
     this._teclado   = new Teclado(k => this.aoTecla(k));
   }
 
@@ -40,9 +42,21 @@ export class ModoLivrissimo extends ModoBase {
     this._badge.atualizar(carregarProgressoLivrissimo().jogados.length);
     document.getElementById('streakBox').style.display = 'none';
 
+    // Configurar contador de tempo
+    this._contadorTempo.configurar(this._partida, () => {
+      // Revelar resposta quando o tempo acaba (igual quando as tentativas se esgotam)
+      this._partida.revelarResposta(false);
+      this._grade.atualizar(this._partida);
+      toast('⏰ Tempo esgotado!');
+      this.aoEncerrar(false);
+    });
+
     this._grade.construir(this._partida);
     this._historico.iniciar();
     redesenharPrincipal(this._partida);
+    
+    // Iniciar o timer se configurado
+    this._contadorTempo.iniciar(this._partida);
   }
 
   aoTecla(k) {
@@ -74,6 +88,7 @@ export class ModoLivrissimo extends ModoBase {
   aoEncerrar(ganhou) {
     salvarResultadoLivrissimo(this._idPalavra, ganhou, this._partida.tentativas.length);
     this._badge.atualizar(carregarProgressoLivrissimo().jogados.length);
+    this._contadorTempo.parar(this._partida);
     setTimeout(() => {
       this._modal.mostrar(this._partida, ganhou, this._idPalavra);
       this._registrarBotaoCompartilhar();
@@ -85,6 +100,26 @@ export class ModoLivrissimo extends ModoBase {
   atualizarBadge() {
     this._badge.atualizar(carregarProgressoLivrissimo().jogados.length);
     document.getElementById('streakBox').style.display = 'none';
+  }
+
+  // Reconfigurar timer quando configuração muda
+  reconfigurarTimer() {
+    if (!this._partida || this._partida.encerrada) return;
+    
+    // Para o timer atual
+    this._contadorTempo.parar(this._partida);
+    
+    // Reconfigura com novo tempo
+    this._contadorTempo.configurar(this._partida, () => {
+      // Revelar resposta quando o tempo acaba (igual quando as tentativas se esgotam)
+      this._partida.revelarResposta(false);
+      this._grade.atualizar(this._partida);
+      toast('⏰ Tempo esgotado!');
+      this.aoEncerrar(false);
+    });
+    
+    // Inicia o novo timer
+    this._contadorTempo.iniciar(this._partida);
   }
 
   _registrarBotaoCompartilhar() {

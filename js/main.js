@@ -117,6 +117,9 @@ function aoMudarConfig(chave, valor) {
     else p.letrasFixas = Array(5).fill(false);
     modoAtivo._grade.atualizar(p);
   }
+  if (chave === 'tempoLimite' && modoAtivo.reconfigurarTimer) {
+    modoAtivo.reconfigurarTimer();
+  }
 }
 
 // ── Bootstrap ───────────────────────────────────────────────────────────────

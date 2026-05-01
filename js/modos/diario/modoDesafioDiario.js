@@ -9,6 +9,7 @@ import { Teclado } from '../base/teclado.js';
 import { Historico } from '../base/historico.js';
 import { BadgeStreak } from './badgeStreak.js';
 import { ModalResultado } from './modalResultado.js';
+import { ContadorTempo } from '../base/contadorTempo.js';
 import { toast } from '../base/toast.js';
 import { cfg } from '../../configuracoes.js';
 import { carregarProgresso } from '../base/modalSeletor.js';
@@ -36,6 +37,7 @@ export class ModoDesafioDiario extends ModoBase {
     this._historico = new Historico();
     this._badge     = new BadgeStreak();
     this._modal     = new ModalResultado(aoAbrirSeletorLivre);
+    this._contadorTempo = new ContadorTempo();
     this._teclado   = new Teclado(k => this.aoTecla(k));
   }
 
@@ -48,6 +50,15 @@ export class ModoDesafioDiario extends ModoBase {
     this._badge.atualizar(this._stats.sequencia);
     document.getElementById('livreBadge').style.display = 'none';
 
+    // Configurar contador de tempo
+    this._contadorTempo.configurar(this._partida, () => {
+      // Revelar resposta quando o tempo acaba (igual quando as tentativas se esgotam)
+      this._partida.revelarResposta(false);
+      this._grade.atualizar(this._partida);
+      toast('⏰ Tempo esgotado!');
+      this.aoEncerrar(false);
+    });
+
     const sessao = this._carregarSessao();
     if (sessao) {
       this._restaurar(sessao);
@@ -57,6 +68,9 @@ export class ModoDesafioDiario extends ModoBase {
     this._grade.construir(this._partida);
     this._historico.iniciar();
     redesenharPrincipal(this._partida);
+    
+    // Iniciar o timer se configurado
+    this._contadorTempo.iniciar(this._partida);
   }
 
   aoTecla(k) {
@@ -99,6 +113,7 @@ export class ModoDesafioDiario extends ModoBase {
   aoEncerrar(ganhou) {
     this._atualizarStats(ganhou);
     this._badge.atualizar(this._stats.sequencia);
+    this._contadorTempo.parar(this._partida);
     setTimeout(() => {
       const livreCompleto = carregarProgresso().jogados.length >= PALAVRAS.length;
       this._modal.mostrar(this._partida, ganhou, this._stats, livreCompleto);
@@ -109,6 +124,26 @@ export class ModoDesafioDiario extends ModoBase {
   atualizarBadge() {
     this._badge.atualizar(this._stats.sequencia);
     document.getElementById('livreBadge').style.display = 'none';
+  }
+
+  // Reconfigurar timer quando configuração muda
+  reconfigurarTimer() {
+    if (!this._partida || this._partida.encerrada) return;
+    
+    // Para o timer atual
+    this._contadorTempo.parar(this._partida);
+    
+    // Reconfigura com novo tempo
+    this._contadorTempo.configurar(this._partida, () => {
+      // Revelar resposta quando o tempo acaba (igual quando as tentativas se esgotam)
+      this._partida.revelarResposta(false);
+      this._grade.atualizar(this._partida);
+      toast('⏰ Tempo esgotado!');
+      this.aoEncerrar(false);
+    });
+    
+    // Inicia o novo timer
+    this._contadorTempo.iniciar(this._partida);
   }
 
   _registrarBotoesCompartilhar() {
@@ -166,6 +201,7 @@ export class ModoDesafioDiario extends ModoBase {
       tentativas: this._partida.tentativas,
       ganhou,
       encerrada,
+      tempoRestante: this._partida.tempoRestante,
     }));
   }
 
@@ -185,15 +221,30 @@ export class ModoDesafioDiario extends ModoBase {
   _restaurar(sessao) {
     this._partida.restaurar(sessao);
     if (sessao.encerrada) this._partida.revelarResposta(sessao.ganhou);
+    
+    // Configurar contador de tempo
+    this._contadorTempo.configurar(this._partida, () => {
+      // Revelar resposta quando o tempo acaba (igual quando as tentativas se esgotam)
+      this._partida.revelarResposta(false);
+      this._grade.atualizar(this._partida);
+      toast('⏰ Tempo esgotado!');
+      this.aoEncerrar(false);
+    });
+    
     this._grade.construir(this._partida);
     this._historico.reconstruir(this._partida);
     redesenharPrincipal(this._partida);
+    
     if (sessao.encerrada) {
+      this._contadorTempo.parar(this._partida);
       setTimeout(() => {
         const livreCompleto = carregarProgresso().jogados.length >= PALAVRAS.length;
         this._modal.mostrar(this._partida, sessao.ganhou, this._stats, livreCompleto);
         this._registrarBotoesCompartilhar();
       }, 400);
+    } else {
+      // Iniciar o timer se o jogo não estiver encerrado
+      this._contadorTempo.iniciar(this._partida);
     }
   }
 }

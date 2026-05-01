@@ -11,6 +11,7 @@ export const PADROES = {
   fixarLetrasAcertadas: false,
   autocomplete: false,
   palavrasInvalidas: 'recusar',
+  tempoLimite: 'infinito',
 };
 
 let _cfg = { ...PADROES };

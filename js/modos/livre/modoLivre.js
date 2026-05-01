@@ -10,6 +10,7 @@ import { BadgeProgresso } from './badgeProgresso.js';
 import { ModalResultado } from './modalResultado.js';
 import { ModalSeletor, carregarProgresso, salvarResultadoLivre, carregarProgressoLivrissimo } from '../base/modalSeletor.js';
 import { BadgeLivrissimo } from '../livrissimo/badgeLivrissimo.js';
+import { ContadorTempo } from '../base/contadorTempo.js';
 import { toast } from '../base/toast.js';
 import { cfg } from '../../configuracoes.js';
 
@@ -28,6 +29,7 @@ export class ModoLivre extends ModoBase {
       id => { window.location.href = '?x=' + (id + 1); }
     );
     this._modal     = new ModalResultado(() => this._seletor.abrir());
+    this._contadorTempo = new ContadorTempo();
     this._teclado   = new Teclado(k => this.aoTecla(k));
   }
 
@@ -41,9 +43,21 @@ export class ModoLivre extends ModoBase {
     this._badge.atualizar(carregarProgresso().jogados.length);
     document.getElementById('streakBox').style.display = 'none';
 
+    // Configurar contador de tempo
+    this._contadorTempo.configurar(this._partida, () => {
+      // Revelar resposta quando o tempo acaba (igual quando as tentativas se esgotam)
+      this._partida.revelarResposta(false);
+      this._grade.atualizar(this._partida);
+      toast('⏰ Tempo esgotado!');
+      this.aoEncerrar(false);
+    });
+
     this._grade.construir(this._partida);
     this._historico.iniciar();
     redesenharPrincipal(this._partida);
+    
+    // Iniciar o timer se configurado
+    this._contadorTempo.iniciar(this._partida);
   }
 
   aoTecla(k) {
@@ -88,6 +102,7 @@ export class ModoLivre extends ModoBase {
     const livreCompleto = jogados >= PALAVRAS.length;
     this._badge.atualizar(jogados); // oculta automaticamente se livreCompleto
     if (livreCompleto) new BadgeLivrissimo().atualizar(carregarProgressoLivrissimo().jogados.length);
+    this._contadorTempo.parar(this._partida);
     setTimeout(() => {
       this._modal.mostrar(this._partida, ganhou, this._idPalavra);
       this._registrarBotaoCompartilhar();
@@ -99,6 +114,26 @@ export class ModoLivre extends ModoBase {
   atualizarBadge() {
     this._badge.atualizar(carregarProgresso().jogados.length);
     document.getElementById('streakBox').style.display = 'none';
+  }
+
+  // Reconfigurar timer quando configuração muda
+  reconfigurarTimer() {
+    if (!this._partida || this._partida.encerrada) return;
+    
+    // Para o timer atual
+    this._contadorTempo.parar(this._partida);
+    
+    // Reconfigura com novo tempo
+    this._contadorTempo.configurar(this._partida, () => {
+      // Revelar resposta quando o tempo acaba (igual quando as tentativas se esgotam)
+      this._partida.revelarResposta(false);
+      this._grade.atualizar(this._partida);
+      toast('⏰ Tempo esgotado!');
+      this.aoEncerrar(false);
+    });
+    
+    // Inicia o novo timer
+    this._contadorTempo.iniciar(this._partida);
   }
 
   _registrarBotaoCompartilhar() {

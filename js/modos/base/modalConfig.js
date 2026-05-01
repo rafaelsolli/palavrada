@@ -11,11 +11,13 @@ const CICLOS = {
   autocomplete:         [false, true],
   teclado:              ['qwerty', 'alfabetico'],
   palavrasInvalidas:    ['recusar', 'penalizar', 'aceitar'],
+  tempoLimite:          [10, 20, 40, 60, 300, 900, 'infinito'],
 };
 
 const DISPLAY = {
   teclado:           { qwerty: 'QWERTY', alfabetico: 'Alfabético' },
   palavrasInvalidas: { recusar: 'Recusar', penalizar: 'Penalizar', aceitar: 'Aceitar' },
+  tempoLimite:       { 10: '10 seg', 20: '20 seg', 40: '40 seg', 60: '1 min', 300: '5 min', 900: '15 min', infinito: 'Infinito' },
 };
 
 const ID_MAP = {
@@ -29,6 +31,7 @@ const ID_MAP = {
   autocomplete:         'cfgAutocomplete',
   teclado:              'cfgTeclado',
   palavrasInvalidas:    'cfgPalavrasInvalidas',
+  tempoLimite:          'cfgTempoLimite',
 };
 
 let _staged = {};
