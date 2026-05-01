@@ -4,8 +4,15 @@ import { cfg } from '../../configuracoes.js';
 
 export class Historico {
   constructor() {
-    this._el = document.getElementById('listaHistorico');
+    this._el   = document.getElementById('listaHistorico');
+    this._fade = document.getElementById('historicoFade');
     this._partida = null;
+    this._el.addEventListener('scroll', () => this._atualizarFade());
+  }
+
+  _atualizarFade() {
+    this._fade.style.opacity =
+      this._el.scrollTop + this._el.clientHeight >= this._el.scrollHeight - 4 ? '0' : '1';
   }
 
   iniciar() {
@@ -16,6 +23,7 @@ export class Historico {
       ph.className = 'h-placeholder';
       this._el.appendChild(ph);
     }
+    setTimeout(() => this._atualizarFade(), 30);
   }
 
   reconstruir(partida) {
@@ -53,6 +61,7 @@ export class Historico {
       ph.className = 'h-placeholder';
       this._el.appendChild(ph);
     }
+    setTimeout(() => this._atualizarFade(), 30);
   }
 
   _criarItem(indice, t, valoresAlvo) {
