@@ -64,6 +64,11 @@ function registrarModalAjuda() {
   document.getElementById('btnAjuda').addEventListener('click', abrir);
   document.getElementById('fecharAjuda').addEventListener('click', () => modal.classList.remove('aberto'));
   document.getElementById('btnEntendidoAjuda').addEventListener('click', () => modal.classList.remove('aberto'));
+  document.getElementById('btnCompartilharJogo').addEventListener('click', () => {
+    const texto = 'Conheça o PalavRada! 🌊 Jogo de palavras onde você tenta adivinhar uma palavra de 5 letras combinando ondas.\nhttps://palavrada.com.br/';
+    if (navigator.share) navigator.share({ text: texto });
+    else navigator.clipboard.writeText(texto).then(() => toast('Copiado!'));
+  });
   modal.addEventListener('click', e => { if (e.target === modal) modal.classList.remove('aberto'); });
 }
 

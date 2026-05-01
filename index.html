@@ -146,7 +146,10 @@
       <div class="ajuda-fade" id="ajudaFade">▼</div>
     </div><!-- /ajuda-wrap -->
 
-    <button class="mbtn" id="btnEntendidoAjuda">Entendi!</button>
+    <div class="modal-btns">
+      <button class="mbtn sec" id="btnCompartilharJogo">Compartilhar jogo</button>
+      <button class="mbtn" id="btnEntendidoAjuda">Entendi!</button>
+    </div>
   </div>
 </div>
 
@@ -212,7 +215,10 @@
       <div class="cfg-fade" id="cfgFade">▼</div>
     </div><!-- /cfg-wrap -->
 
-    <button class="mbtn" id="btnResetConfig" style="margin-top:16px;width:100%">Redefinir padrões</button>
+    <div class="modal-btns" style="margin-top:16px">
+      <button class="mbtn sec" id="btnResetConfig">Redefinir</button>
+      <button class="mbtn" id="btnAplicarConfig">Aplicar</button>
+    </div>
   </div>
 </div>
 
@@ -226,11 +232,13 @@
     <div class="pontos-row" id="resPontosDiario"></div>
     <div class="res-label">A palavra era</div>
     <div class="res-palavra" id="resPalavraAtualDiario"></div>
-    <button class="mbtn" id="btnCompartilharDiario">Compartilhar resultado</button>
     <div class="divisor"></div>
     <div class="proximo-lbl">Próxima palavra em</div>
     <div class="contagem-regressiva" id="contagemDiario">--:--:--</div>
-    <button class="mbtn livre-btn" id="btnSelecionarLivreDoResultado">🎲 Jogar Modo Livre</button>
+    <div class="modal-btns">
+      <button class="mbtn sec" id="btnCompartilharDiario">Compartilhar</button>
+      <button class="mbtn livre-btn" id="btnSelecionarLivreDoResultado">🎲 Modo Livre</button>
+    </div>
   </div>
 </div>
 
@@ -244,11 +252,13 @@
     <div class="pontos-row" id="resPontosLivre"></div>
     <div class="res-label">A palavra era</div>
     <div class="res-palavra" id="resPalavraAtualLivre"></div>
-    <button class="mbtn" id="btnCompartilharLivre">Compartilhar resultado</button>
     <div class="divisor"></div>
     <div class="proximo-lbl">Próxima palavra em</div>
     <div class="contagem-regressiva" id="contagemLivre">--:--:--</div>
-    <button class="mbtn livre-btn" id="btnJogarOutraLivre">🎲 Jogar Modo Livre</button>
+    <div class="modal-btns">
+      <button class="mbtn sec" id="btnCompartilharLivre">Compartilhar</button>
+      <button class="mbtn livre-btn" id="btnJogarOutraLivre">🎲 Modo Livre</button>
+    </div>
   </div>
 </div>
 
@@ -262,7 +272,10 @@
       <div id="gridDesafios"></div>
       <div class="grid-fade" id="gridFade">▼</div>
     </div>
-    <button class="mbtn" style="margin-top:10px;width:100%" id="btnCompartilharProgressoLivre">Compartilhar progresso</button>
+    <div class="modal-btns" style="margin-top:10px">
+      <button class="mbtn sec" id="btnCompartilharProgressoLivre">Compartilhar</button>
+      <button class="mbtn" id="btnConfirmarSeletor" disabled>Jogar</button>
+    </div>
   </div>
 </div>
 

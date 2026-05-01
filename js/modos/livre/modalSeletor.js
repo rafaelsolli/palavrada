@@ -21,14 +21,28 @@ export class ModalSeletor {
   constructor(aoSelecionarPalavra) {
     this._el = document.getElementById('modalSeletorLivre');
     this._aoSelecionarPalavra = aoSelecionarPalavra;
+    this._idSelecionado = null;
+
     this._el.addEventListener('click', e => { if (e.target === this._el) this.fechar(); });
     document.getElementById('fecharSeletorLivre').addEventListener('click', () => this.fechar());
     document.getElementById('btnCompartilharProgressoLivre').addEventListener('click', () => this._compartilharProgresso());
+    document.getElementById('btnConfirmarSeletor').addEventListener('click', () => {
+      if (this._idSelecionado !== null) this._aoSelecionarPalavra(this._idSelecionado);
+    });
   }
 
   abrir() {
+    this._idSelecionado = null;
     this._gerarGrid();
     this._el.classList.add('aberto');
+
+    const btnConfirmar = document.getElementById('btnConfirmarSeletor');
+    const primeiraNaoJogada = document.querySelector('.celula-desafio:not(.concluido):not(.falhou)');
+    if (primeiraNaoJogada) {
+      primeiraNaoJogada.click();
+    } else {
+      btnConfirmar.disabled = true;
+    }
 
     const grid = document.getElementById('gridDesafios');
     const fade = document.getElementById('gridFade');
@@ -68,7 +82,12 @@ export class ModalSeletor {
         }
       } else {
         celula.title = `Desafio #${i + 1}`;
-        celula.onclick = () => this._aoSelecionarPalavra(i);
+        celula.onclick = () => {
+          document.querySelectorAll('.celula-desafio.selecionado').forEach(el => el.classList.remove('selecionado'));
+          celula.classList.add('selecionado');
+          this._idSelecionado = i;
+          document.getElementById('btnConfirmarSeletor').disabled = false;
+        };
       }
 
       grid.appendChild(celula);
@@ -77,8 +96,8 @@ export class ModalSeletor {
 
   _compartilharProgresso() {
     const d = carregarProgresso();
-    const total   = PALAVRAS.length;
-    const ganhos  = d.jogados.filter(j => j.ganhou).length;
+    const total    = PALAVRAS.length;
+    const ganhos   = d.jogados.filter(j => j.ganhou).length;
     const perdidos = d.jogados.filter(j => !j.ganhou).length;
     const jogados  = ganhos + perdidos;
     const pct = n => (n * 100 / total).toFixed(2).replace('.', ',');
