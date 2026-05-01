@@ -86,10 +86,10 @@ function desenharBolinhas(ctx, pontos, cor) {
   ctx.restore();
 }
 
-function desenharLetrasNaCurva(ctx, pontos, palavra) {
+function desenharLetrasNaCurva(ctx, pontos, palavra, cor) {
   ctx.save();
   ctx.font = 'bold 10px Space Grotesk, sans-serif';
-  ctx.fillStyle = '#f472b6';
+  ctx.fillStyle = cor;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'bottom';
   ctx.globalAlpha = 0.9;
@@ -124,10 +124,11 @@ export function redesenharPrincipal(partida) {
   if (total > 0 && visiveis.includes(partida.tentativas[ultimoIdx])) {
     const t = partida.tentativas[ultimoIdx];
     if (t.visivel) {
+      const corUltimo = ganhou ? '#10b981' : '#f472b6';
       const pontos = parapontos(t.valores, largura, altura);
-      desenharCurva(ctx, pontos, '#f472b6', 2.2, 0.95);
-      if (c.bolinhas) desenharBolinhas(ctx, pontos, '#f472b6');
-      if (c.letrasNoGrafico) desenharLetrasNaCurva(ctx, pontos, t.palavra);
+      desenharCurva(ctx, pontos, corUltimo, 2.2, 0.95);
+      if (c.bolinhas) desenharBolinhas(ctx, pontos, corUltimo);
+      if (c.letrasNoGrafico) desenharLetrasNaCurva(ctx, pontos, t.palavra, corUltimo);
     }
   }
 
