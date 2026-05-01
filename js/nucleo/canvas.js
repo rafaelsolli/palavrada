@@ -109,20 +109,20 @@ export function redesenharPrincipal(partida) {
   desenharEixoY(ctx, largura, altura, c.eixoY);
 
   const total = partida.tentativas.length;
-  const ultimoIdx = total - 1;
-  const ganhou = total > 0 && partida.tentativas[ultimoIdx].ganhou;
+  const ultimoValidoIdx = partida.tentativas.reduce((acc, t, i) => t.penalizada ? acc : i, -1);
+  const ganhou = ultimoValidoIdx >= 0 && partida.tentativas[ultimoValidoIdx].ganhou;
 
   const visiveis = c.maxPalpites === 0 ? [] : partida.tentativas.slice(-c.maxPalpites);
   const offsetIdx = total - visiveis.length;
 
   visiveis.forEach((t, i) => {
     const globalIdx = offsetIdx + i;
-    if (!t.visivel || globalIdx === ultimoIdx) return;
+    if (t.penalizada || !t.visivel || globalIdx === ultimoValidoIdx) return;
     desenharCurva(ctx, parapontos(t.valores, largura, altura), '#2a3a50', 1.5, 0.7);
   });
 
-  if (total > 0 && visiveis.includes(partida.tentativas[ultimoIdx])) {
-    const t = partida.tentativas[ultimoIdx];
+  if (ultimoValidoIdx >= 0 && visiveis.includes(partida.tentativas[ultimoValidoIdx])) {
+    const t = partida.tentativas[ultimoValidoIdx];
     if (t.visivel) {
       const corUltimo = ganhou ? '#10b981' : '#f472b6';
       const pontos = parapontos(t.valores, largura, altura);

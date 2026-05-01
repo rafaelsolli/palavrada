@@ -66,8 +66,25 @@ export class Historico {
 
   _criarItem(indice, t, valoresAlvo) {
     const item = document.createElement('div');
-    item.className = 'h-item ativo' + (t.ganhou ? ' ganhou-item' : '');
     item.id = 'hitem-' + indice;
+
+    if (t.penalizada) {
+      item.className = 'h-item h-penalizado';
+      const esquerda = document.createElement('div');
+      esquerda.style.cssText = 'display:flex;flex-direction:column;align-items:flex-start;gap:0;flex-shrink:0;';
+      const palavra_el = document.createElement('div');
+      palavra_el.className = 'h-palavra h-penalizado-palavra';
+      palavra_el.textContent = t.palavra;
+      const delta_el = document.createElement('div');
+      delta_el.className = 'h-delta h-penalizado-delta';
+      delta_el.textContent = '✕ inválida';
+      esquerda.appendChild(palavra_el);
+      esquerda.appendChild(delta_el);
+      item.appendChild(esquerda);
+      return item;
+    }
+
+    item.className = 'h-item ativo' + (t.ganhou ? ' ganhou-item' : '');
     item.style.setProperty('--c', corDelta(t.delta, t.ganhou));
 
     const esquerda = document.createElement('div');

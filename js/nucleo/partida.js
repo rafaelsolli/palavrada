@@ -1,5 +1,6 @@
 import { normalizar, valoresPalavra } from './ajudantes.js';
 import { ehValida } from '../dados/validador.js';
+import { cfg } from '../configuracoes.js';
 
 export class Partida {
   constructor(palavraAlvo) {
@@ -26,6 +27,7 @@ export class Partida {
   // Chamado pelo modo após uma tentativa válida quando fixarLetrasAcertadas está ativo
   fixar() {
     for (const t of this.tentativas) {
+      if (t.penalizada) continue;
       for (let i = 0; i < 5; i++) {
         if (t.palavra[i] === this.palavraAlvo[i]) {
           this.letrasFixas[i] = true;
@@ -117,8 +119,19 @@ export class Partida {
       return { tipo: 'erro', motivo: 'incompleta' };
     }
     const palavra = this.atual.join('');
-    if (!ehValida(palavra)) {
+    const modoInvalidas = cfg().palavrasInvalidas;
+
+    if (modoInvalidas === 'recusar' && !ehValida(palavra)) {
       return { tipo: 'erro', motivo: 'invalida' };
+    }
+
+    if (modoInvalidas === 'penalizar' && !ehValida(palavra)) {
+      const tentativa = { palavra, penalizada: true, ganhou: false, visivel: false };
+      this.tentativas.push(tentativa);
+      const encerrou = this.tentativas.length >= 6;
+      if (encerrou) this.encerrada = true;
+      else { this.atual = Array(5).fill(''); this.indiceFoco = 0; }
+      return { tipo: encerrou ? 'encerrou' : 'tentativa', tentativa, ganhou: false, encerrou };
     }
 
     const valores = valoresPalavra(palavra);

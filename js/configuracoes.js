@@ -10,6 +10,7 @@ export const PADROES = {
   teclado: 'qwerty',
   fixarLetrasAcertadas: false,
   autocomplete: false,
+  palavrasInvalidas: 'recusar',
 };
 
 let _cfg = { ...PADROES };

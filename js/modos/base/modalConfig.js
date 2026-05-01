@@ -10,10 +10,12 @@ const CICLOS = {
   fixarLetrasAcertadas: [false, true],
   autocomplete:         [false, true],
   teclado:              ['qwerty', 'alfabetico'],
+  palavrasInvalidas:    ['recusar', 'penalizar', 'aceitar'],
 };
 
 const DISPLAY = {
-  teclado: { qwerty: 'QWERTY', alfabetico: 'Alfabético' },
+  teclado:           { qwerty: 'QWERTY', alfabetico: 'Alfabético' },
+  palavrasInvalidas: { recusar: 'Recusar', penalizar: 'Penalizar', aceitar: 'Aceitar' },
 };
 
 const ID_MAP = {
@@ -26,6 +28,7 @@ const ID_MAP = {
   fixarLetrasAcertadas: 'cfgFixarLetras',
   autocomplete:         'cfgAutocomplete',
   teclado:              'cfgTeclado',
+  palavrasInvalidas:    'cfgPalavrasInvalidas',
 };
 
 let _staged = {};

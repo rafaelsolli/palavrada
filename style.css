@@ -123,6 +123,9 @@ main {
 .h-palavra.ganhou { color:#10b981; }
 .h-mini { flex:1; min-width:0; align-self:stretch; display:block; height:auto; }
 .h-delta { font-size:.75rem; color:var(--c); font-variant-numeric:tabular-nums; opacity:0.8; margin-top:1px; }
+.h-penalizado { cursor:default; }
+.h-penalizado-palavra { text-decoration:line-through; color:var(--muted); }
+.h-penalizado-delta { color:var(--muted); opacity:0.6; }
 
 /* ── Input card (grade + teclado) ── */
 .input-card {
