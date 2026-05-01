@@ -313,6 +313,7 @@ main {
 
 /* letra fixada (fixarLetrasAcertadas) */
 .letra.fixada { border-color:#10b981; color:#10b981; }
+.letra.revelada-erro { border-color:#ef4444; color:#ef4444; }
 
 /* ── Modal de ajuda ── */
 .modal-ajuda { max-height:calc(100dvh - 40px); overflow:hidden; }

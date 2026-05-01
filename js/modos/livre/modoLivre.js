@@ -74,6 +74,7 @@ export class ModoLivre extends ModoBase {
     this._historico.adicionarItem(this._partida.tentativas.length - 1, this._partida);
     redesenharPrincipal(this._partida);
     if (cfg().fixarLetrasAcertadas && !resultado.encerrou) this._partida.fixar();
+    if (resultado.encerrou) this._partida.revelarResposta(resultado.ganhou);
     this._grade.atualizar(this._partida);
 
     if (resultado.encerrou) {

@@ -12,6 +12,7 @@ export class Partida {
     this.encerrada = false;
     this._navIndex = -1;
     this.letrasFixas = Array(5).fill(false);
+    this.revelado = null;
   }
 
   // Restaura estado a partir de uma sessão salva (modo diário)
@@ -22,9 +23,15 @@ export class Partida {
     this.indiceFoco = 0;
     this._navIndex = -1;
     this.letrasFixas = Array(5).fill(false);
+    this.revelado = null;
   }
 
   // Chamado pelo modo após uma tentativa válida quando fixarLetrasAcertadas está ativo
+  revelarResposta(ganhou) {
+    this.atual = [...this.palavraAlvo];
+    this.revelado = ganhou ? 'ganhou' : 'perdeu';
+  }
+
   fixar() {
     for (const t of this.tentativas) {
       if (t.penalizada) continue;

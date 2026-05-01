@@ -28,6 +28,17 @@ export class Grade {
   }
 
   atualizar(partida) {
+    if (partida.revelado) {
+      const classe = partida.revelado === 'ganhou' ? 'fixada' : 'revelada-erro';
+      for (let i = 0; i < 5; i++) {
+        const caixa = document.getElementById('letra-' + i);
+        if (!caixa) continue;
+        caixa.textContent = partida.atual[i];
+        caixa.className = 'letra ' + classe;
+      }
+      return;
+    }
+
     const c = cfg();
     const sugestao = c.autocomplete ? sugestaoAutocomplete(partida.atual) : null;
 
