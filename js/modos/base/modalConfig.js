@@ -76,10 +76,20 @@ function _registrarReset(aoMudar) {
 }
 
 export function registrarModalConfig(aoMudar) {
-  const modal = document.getElementById('modalConfig');
+  const modal  = document.getElementById('modalConfig');
+  const scroll = document.getElementById('cfgScroll');
+  const fade   = document.getElementById('cfgFade');
+
+  function atualizarFade() {
+    fade.style.opacity = scroll.scrollTop + scroll.clientHeight >= scroll.scrollHeight - 4 ? '0' : '1';
+  }
+  scroll.addEventListener('scroll', atualizarFade);
+
   document.getElementById('btnConfig').addEventListener('click', () => {
     _popular();
     modal.classList.add('aberto');
+    scroll.scrollTop = 0;
+    setTimeout(atualizarFade, 50);
   });
   document.getElementById('fecharConfig').addEventListener('click', () => modal.classList.remove('aberto'));
   modal.addEventListener('click', e => { if (e.target === modal) modal.classList.remove('aberto'); });

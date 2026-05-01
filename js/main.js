@@ -44,6 +44,44 @@ function migrarLocalStorage() {
   localStorage.removeItem('pr_free_completed');
 }
 
+// ── Tutorial / Ajuda ────────────────────────────────────────────────────────
+function registrarModalAjuda() {
+  const modal  = document.getElementById('modalAjuda');
+  const scroll = document.getElementById('ajudaScroll');
+  const fade   = document.getElementById('ajudaFade');
+
+  function atualizarFade() {
+    fade.style.opacity = scroll.scrollTop + scroll.clientHeight >= scroll.scrollHeight - 4 ? '0' : '1';
+  }
+  scroll.addEventListener('scroll', atualizarFade);
+
+  function abrir() {
+    modal.classList.add('aberto');
+    scroll.scrollTop = 0;
+    setTimeout(atualizarFade, 50);
+  }
+
+  document.getElementById('btnAjuda').addEventListener('click', abrir);
+  document.getElementById('fecharAjuda').addEventListener('click', () => modal.classList.remove('aberto'));
+  document.getElementById('btnEntendidoAjuda').addEventListener('click', () => modal.classList.remove('aberto'));
+  modal.addEventListener('click', e => { if (e.target === modal) modal.classList.remove('aberto'); });
+}
+
+function verificarTutorial() {
+  if (!localStorage.getItem('palavrada.tutorial')) {
+    localStorage.setItem('palavrada.tutorial', '1');
+    setTimeout(() => {
+      document.getElementById('modalAjuda').classList.add('aberto');
+      const scroll = document.getElementById('ajudaScroll');
+      const fade   = document.getElementById('ajudaFade');
+      scroll.scrollTop = 0;
+      setTimeout(() => {
+        fade.style.opacity = scroll.scrollTop + scroll.clientHeight >= scroll.scrollHeight - 4 ? '0' : '1';
+      }, 50);
+    }, 500);
+  }
+}
+
 // ── Resize ──────────────────────────────────────────────────────────────────
 function registrarResize(modoAtivo) {
   window.addEventListener('resize', () => {
@@ -81,6 +119,7 @@ function aoMudarConfig(chave, valor) {
 migrarLocalStorage();
 carregarConfig();
 registrarModalConfig(aoMudarConfig);
+registrarModalAjuda();
 
 const idxUrl = idxUrlPalavra(PALAVRAS.length);
 let modoAtivo;
@@ -112,3 +151,4 @@ if (idxUrl !== null) {
 }
 
 registrarResize(modoAtivo);
+verificarTutorial();

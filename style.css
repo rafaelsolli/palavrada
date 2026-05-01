@@ -262,7 +262,11 @@ main {
 .contagem-regressiva { text-align:center; font-family:'DM Sans',sans-serif; font-size:1.5rem; font-weight:800; letter-spacing:3px; margin-bottom:8px; }
 
 /* ── Modal de configurações ── */
-.modal-config { max-height:calc(100dvh - 40px); overflow-y:auto; scrollbar-width:thin; scrollbar-color:var(--border) transparent; }
+.modal-config { max-height:calc(100dvh - 40px); overflow:hidden; }
+.cfg-wrap { position:relative; overflow:hidden; margin:0 -2px; }
+.cfg-scroll { overflow-y:auto; scrollbar-width:none; max-height:calc(100dvh - 210px); padding:0 2px 24px; }
+.cfg-scroll::-webkit-scrollbar { display:none; }
+.cfg-fade { position:absolute; bottom:0; left:0; right:0; height:48px; background:linear-gradient(transparent,var(--surface)); display:flex; align-items:flex-end; justify-content:center; padding-bottom:4px; color:var(--muted); font-size:.75rem; pointer-events:none; transition:opacity .2s; }
 .cfg-secao { border-top:1px solid var(--border); margin-top:14px; padding-top:10px; }
 .cfg-secao:first-of-type { border-top:none; margin-top:0; padding-top:0; }
 .cfg-titulo { font-size:.65rem; letter-spacing:2px; text-transform:uppercase; color:var(--muted); margin-bottom:8px; }
@@ -299,3 +303,29 @@ main {
 
 /* letra fixada (fixarLetrasAcertadas) */
 .letra.fixada { border-color:#10b981; color:#10b981; }
+
+/* ── Modal de ajuda ── */
+.modal-ajuda { max-height:calc(100dvh - 40px); overflow:hidden; }
+.ajuda-wrap { position:relative; overflow:hidden; margin:0 -2px; }
+.ajuda-scroll { overflow-y:auto; scrollbar-width:none; max-height:calc(100dvh - 210px); padding:0 2px 24px; }
+.ajuda-scroll::-webkit-scrollbar { display:none; }
+.ajuda-fade { position:absolute; bottom:0; left:0; right:0; height:48px; background:linear-gradient(transparent,var(--surface)); display:flex; align-items:flex-end; justify-content:center; padding-bottom:4px; color:var(--muted); font-size:.75rem; pointer-events:none; transition:opacity .2s; }
+.ajuda-bloco { border-top:1px solid var(--border); padding-top:11px; margin-top:11px; }
+.ajuda-bloco:first-of-type { border-top:none; margin-top:0; padding-top:0; }
+.ajuda-titulo { font-size:.65rem; letter-spacing:2px; text-transform:uppercase; color:var(--muted); margin-bottom:7px; }
+.ajuda-escala { display:flex; align-items:center; gap:8px; margin-top:10px; }
+.ae-ponto { display:flex; flex-direction:column; align-items:center; gap:2px; flex-shrink:0; }
+.ae-letra { font-family:'DM Sans',sans-serif; font-weight:800; font-size:1rem; color:var(--text); line-height:1; }
+.ae-num { font-size:.68rem; color:var(--muted); }
+.ae-trilha { flex:1; height:3px; background:var(--border); border-radius:2px; overflow:hidden; }
+.ae-fill { height:100%; background:linear-gradient(90deg,#3b82f6,#8b5cf6); border-radius:2px; }
+.ajuda-wave-box { background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:8px 8px 4px; margin-top:8px; }
+.ajuda-svg { width:100%; display:block; }
+.ajuda-wave-word { text-align:center; font-family:'DM Sans',sans-serif; font-weight:800; letter-spacing:6px; font-size:.72rem; color:var(--muted); padding-bottom:3px; }
+.ajuda-par { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px; }
+.ajuda-ex { background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:7px 6px 5px; }
+.ajuda-ex-lbl { font-size:.64rem; color:var(--muted); text-align:center; margin-bottom:4px; letter-spacing:.3px; }
+.ajuda-azul { color:#60a5fa; font-weight:600; }
+.ajuda-dicas { list-style:none; display:flex; flex-direction:column; gap:5px; margin-top:6px; }
+.ajuda-dicas li { font-size:.82rem; color:var(--muted); padding-left:16px; position:relative; line-height:1.55; }
+.ajuda-dicas li::before { content:'›'; position:absolute; left:2px; color:var(--accent); font-size:1rem; line-height:1.3; }

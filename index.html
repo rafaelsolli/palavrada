@@ -27,6 +27,7 @@
       <span class="streak-texto" id="freeBadgeTexto">0,00% completo</span>
     </div>
     <button class="hbtn" id="btnAlternarModo" title="Selecionar palavra">🎲</button>
+    <button class="hbtn" id="btnAjuda" title="Como jogar">❓</button>
     <button class="hbtn" id="btnConfig" title="Configurações">⚙️</button>
   </div>
 </header>
@@ -54,65 +55,169 @@
 </main>
 
 
+<!-- ── Modal: Ajuda ── -->
+<div class="overlay" id="modalAjuda">
+  <div class="modal modal-ajuda">
+    <button class="modal-fechar" id="fecharAjuda" title="Fechar">×</button>
+    <h2>Como Jogar 🌊</h2>
+
+    <div class="ajuda-wrap">
+      <div class="ajuda-scroll" id="ajudaScroll">
+
+    <div class="ajuda-bloco">
+      <div class="ajuda-titulo">Letras têm valores</div>
+      <p>Cada letra equivale a um número, indo de <strong>A = 0</strong> até <strong>Z = 25</strong>, correspondente à sua posição no alfabeto.</p>
+      <div class="ajuda-escala">
+        <div class="ae-ponto"><span class="ae-letra">A</span><span class="ae-num">0</span></div>
+        <div class="ae-trilha"><div class="ae-fill"></div></div>
+        <div class="ae-ponto"><span class="ae-letra">M</span><span class="ae-num">12</span></div>
+        <div class="ae-trilha"><div class="ae-fill"></div></div>
+        <div class="ae-ponto"><span class="ae-letra">Z</span><span class="ae-num">25</span></div>
+      </div>
+    </div>
+
+    <div class="ajuda-bloco">
+      <div class="ajuda-titulo">Palavras viram ondas</div>
+      <p>O jogo funciona apenas com palavras de exatamente 5 letras, e os valores letras definem os pontos de uma curva - mais alto perto do Z, mais baixo perto do A.</p>
+      <div class="ajuda-wave-box">
+        <svg class="ajuda-svg" viewBox="0 0 220 76" xmlns="http://www.w3.org/2000/svg">
+          <text x="22"  y="9"  font-size="11" font-family="DM Sans,sans-serif" font-weight="700" fill="#e8f0fe" text-anchor="middle">V</text>
+          <text x="66"  y="9"  font-size="11" font-family="DM Sans,sans-serif" font-weight="700" fill="#e8f0fe" text-anchor="middle">E</text>
+          <text x="110" y="9"  font-size="11" font-family="DM Sans,sans-serif" font-weight="700" fill="#e8f0fe" text-anchor="middle">R</text>
+          <text x="154" y="9"  font-size="11" font-family="DM Sans,sans-serif" font-weight="700" fill="#e8f0fe" text-anchor="middle">S</text>
+          <text x="198" y="9"  font-size="11" font-family="DM Sans,sans-serif" font-weight="700" fill="#e8f0fe" text-anchor="middle">O</text>
+          <path d="M22,22.6 C44,22.6 44,59.4 66,59.4 C88,59.4 88,31.3 110,31.3 C132,31.3 132,29.1 154,29.1 C176,29.1 176,37.8 198,37.8"
+                stroke="#3b82f6" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="22"  cy="22.6" r="3" fill="#3b82f6"/>
+          <circle cx="66"  cy="59.4" r="3" fill="#3b82f6"/>
+          <circle cx="110" cy="31.3" r="3" fill="#3b82f6"/>
+          <circle cx="154" cy="29.1" r="3" fill="#3b82f6"/>
+          <circle cx="198" cy="37.8" r="3" fill="#3b82f6"/>
+          <text x="22"  y="74" font-size="9" font-family="Space Grotesk,sans-serif" fill="rgba(59,130,246,0.65)" text-anchor="middle">21</text>
+          <text x="66"  y="74" font-size="9" font-family="Space Grotesk,sans-serif" fill="rgba(59,130,246,0.65)" text-anchor="middle">4</text>
+          <text x="110" y="74" font-size="9" font-family="Space Grotesk,sans-serif" fill="rgba(59,130,246,0.65)" text-anchor="middle">17</text>
+          <text x="154" y="74" font-size="9" font-family="Space Grotesk,sans-serif" fill="rgba(59,130,246,0.65)" text-anchor="middle">18</text>
+          <text x="198" y="74" font-size="9" font-family="Space Grotesk,sans-serif" fill="rgba(59,130,246,0.65)" text-anchor="middle">14</text>
+        </svg>
+      </div>
+    </div>
+
+    <div class="ajuda-bloco">
+      <div class="ajuda-titulo">O objetivo</div>
+      <p>A onda <span class="ajuda-azul">azul</span> representa a <strong>palavra alvo</strong> e fica sempre visível. Ao digitar um palpite e apertar a tecla "enter", a onda referente ao palpite aparece. O <strong>Δ</strong> mede a distância entre as ondas - quanto menor, mais perto. E você tem <strong>6 palpites</strong> pra tentar acertar a <strong>palavra alvo</strong>.</p>
+      <div class="ajuda-par">
+        <div class="ajuda-ex">
+          <div class="ajuda-ex-lbl">Δ = 54 - longe</div>
+          <svg class="ajuda-svg" viewBox="0 0 220 52" xmlns="http://www.w3.org/2000/svg">
+            <path d="M22,11 C44,11 44,41 66,41 C88,41 88,18.1 110,18.1 C132,18.1 132,16.3 154,16.3 C176,16.3 176,23.4 198,23.4"
+                  stroke="#3b82f6" fill="none" stroke-width="2" stroke-linecap="round" opacity="0.8"/>
+            <path d="M22,44.5 C44,44.5 44,16.3 66,16.3 C88,16.3 88,39.2 110,39.2 C132,39.2 132,11 154,11 C176,11 176,33.9 198,33.9"
+                  stroke="#f472b6" fill="none" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="ajuda-ex">
+          <div class="ajuda-ex-lbl">Δ = 0 - acertou! 🎉</div>
+          <svg class="ajuda-svg" viewBox="0 0 220 52" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <filter id="ajuda-glow" x="-20%" y="-20%" width="140%" height="140%">
+                <feGaussianBlur stdDeviation="2.5" result="blur"/>
+                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
+            </defs>
+            <path d="M22,11 C44,11 44,41 66,41 C88,41 88,18.1 110,18.1 C132,18.1 132,16.3 154,16.3 C176,16.3 176,23.4 198,23.4"
+                  stroke="#10b981" fill="none" stroke-width="3" stroke-linecap="round" filter="url(#ajuda-glow)"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="ajuda-bloco">
+      <div class="ajuda-titulo">Dicas</div>
+      <ul class="ajuda-dicas">
+        <li>Observe a forma da <strong>palavra alvo</strong>: pico = letra perto do Z, vale = letra perto do A</li>
+        <li>Toque em qualquer letra para editar aquela posição</li>
+        <li>Toque num palpite anterior para mostrar/ocultar no gráfico</li>
+        <li>Use as setinhas (no computador) pra navegar entre as letras e palpites</li>
+        <li>Apenas palavras válidas do português são aceitas <strong>(~9 mil palavras)</strong></li>
+      </ul>
+    </div>
+
+      </div><!-- /ajuda-scroll -->
+      <div class="ajuda-fade" id="ajudaFade">▼</div>
+    </div><!-- /ajuda-wrap -->
+
+    <button class="mbtn" id="btnEntendidoAjuda">Entendi!</button>
+  </div>
+</div>
+
+
 <!-- ── Modal: Configurações ── -->
 <div class="overlay" id="modalConfig">
   <div class="modal modal-config">
     <button class="modal-fechar" id="fecharConfig" title="Fechar">×</button>
     <h2>⚙️ Configurações</h2>
 
-    <div class="cfg-secao">
-      <div class="cfg-titulo">Gráfico</div>
-      <div class="cfg-item">
-        <label>Réguas horizontais</label>
-        <button class="cfg-ciclo" id="cfgRegraH">4</button>
-      </div>
-      <div class="cfg-item">
-        <label>Letras no eixo Y</label>
-        <button class="cfg-ciclo" id="cfgEixoY">0</button>
-      </div>
-      <div class="cfg-item">
-        <label>Bolinhas nas curvas</label>
-        <button class="cfg-ciclo" id="cfgBolinhas">não</button>
-      </div>
-      <div class="cfg-item">
-        <label>Letras no último palpite</label>
-        <button class="cfg-ciclo" id="cfgLetrasGrafico">não</button>
-      </div>
-    </div>
+    <div class="cfg-wrap">
+      <div class="cfg-scroll" id="cfgScroll">
 
-    <div class="cfg-secao">
-      <div class="cfg-titulo">Histórico</div>
-      <div class="cfg-item">
-        <label>Mostrar onda-alvo</label>
-        <button class="cfg-ciclo" id="cfgAlvoMini">não</button>
-      </div>
-      <div class="cfg-item">
-        <label>Palpites visíveis</label>
-        <button class="cfg-ciclo" id="cfgMaxPalpites">6</button>
-      </div>
-    </div>
+        <div class="cfg-secao">
+          <div class="cfg-titulo">Gráfico</div>
+          <div class="cfg-item">
+            <label>Réguas horizontais</label>
+            <button class="cfg-ciclo" id="cfgRegraH">4</button>
+          </div>
+          <div class="cfg-item">
+            <label>Letras no eixo Y</label>
+            <button class="cfg-ciclo" id="cfgEixoY">0</button>
+          </div>
+          <div class="cfg-item">
+            <label>Bolinhas nas curvas</label>
+            <button class="cfg-ciclo" id="cfgBolinhas">não</button>
+          </div>
+          <div class="cfg-item">
+            <label>Letras no último palpite</label>
+            <button class="cfg-ciclo" id="cfgLetrasGrafico">não</button>
+          </div>
+        </div>
 
-    <div class="cfg-secao">
-      <div class="cfg-titulo">Teclado</div>
-      <div class="cfg-item">
-        <label>Layout</label>
-        <button class="cfg-ciclo" id="cfgTeclado">QWERTY</button>
-      </div>
-      <div class="cfg-item">
-        <label>Fixar letras certas</label>
-        <button class="cfg-ciclo" id="cfgFixarLetras">não</button>
-      </div>
-      <div class="cfg-item">
-        <label>Autocomplete</label>
-        <button class="cfg-ciclo" id="cfgAutocomplete">não</button>
-      </div>
-    </div>
+        <div class="cfg-secao">
+          <div class="cfg-titulo">Histórico</div>
+          <div class="cfg-item">
+            <label>Mostrar onda-alvo</label>
+            <button class="cfg-ciclo" id="cfgAlvoMini">não</button>
+          </div>
+          <div class="cfg-item">
+            <label>Palpites visíveis</label>
+            <button class="cfg-ciclo" id="cfgMaxPalpites">6</button>
+          </div>
+        </div>
+
+        <div class="cfg-secao">
+          <div class="cfg-titulo">Teclado</div>
+          <div class="cfg-item">
+            <label>Layout</label>
+            <button class="cfg-ciclo" id="cfgTeclado">QWERTY</button>
+          </div>
+          <div class="cfg-item">
+            <label>Fixar letras certas</label>
+            <button class="cfg-ciclo" id="cfgFixarLetras">não</button>
+          </div>
+          <div class="cfg-item">
+            <label>Autocomplete</label>
+            <button class="cfg-ciclo" id="cfgAutocomplete">não</button>
+          </div>
+        </div>
+
+      </div><!-- /cfg-scroll -->
+      <div class="cfg-fade" id="cfgFade">▼</div>
+    </div><!-- /cfg-wrap -->
+
     <button class="mbtn" id="btnResetConfig" style="margin-top:16px;width:100%">Redefinir padrões</button>
   </div>
 </div>
 
 
-<!-- ── Modal: Resultado — Desafio Diário ── -->
+<!-- ── Modal: Resultado - Desafio Diário ── -->
 <div class="overlay" id="modalResultadoDiario">
   <div class="modal">
     <button class="modal-fechar" id="fecharResultadoDiario" title="Fechar">×</button>
@@ -130,7 +235,7 @@
 </div>
 
 
-<!-- ── Modal: Resultado — Modo Livre ── -->
+<!-- ── Modal: Resultado - Modo Livre ── -->
 <div class="overlay" id="modalResultadoLivre">
   <div class="modal">
     <button class="modal-fechar" id="fecharResultadoLivre" title="Fechar">×</button>
