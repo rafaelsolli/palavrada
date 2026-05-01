@@ -1,8 +1,10 @@
 import { PALAVRAS } from './dados/palavras.js';
-import { idxUrlPalavra } from './nucleo/ajudantes.js';
+import { PALAVRAS_LIVRISSIMO } from './dados/palavrasLivrissimo.js';
+import { idxUrlPalavra, idxUrlLivrissimo } from './nucleo/ajudantes.js';
 import { ModoDesafioDiario } from './modos/diario/modoDesafioDiario.js';
 import { ModoLivre } from './modos/livre/modoLivre.js';
-import { ModalSeletor, carregarProgresso } from './modos/livre/modalSeletor.js';
+import { ModoLivrissimo } from './modos/livrissimo/modoLivrissimo.js';
+import { ModalSeletor, carregarProgresso, carregarProgressoLivrissimo } from './modos/base/modalSeletor.js';
 import { toast } from './modos/base/toast.js';
 import { carregarConfig } from './configuracoes.js';
 import { registrarModalConfig } from './modos/base/modalConfig.js';
@@ -10,7 +12,6 @@ import { redesenharPrincipal } from './nucleo/canvas.js';
 
 // ── Migração de localStorage (chaves antigas → novas) ──────────────────────
 function migrarLocalStorage() {
-  // Stats do diário: "pr_s" → "palavrada.diario"
   const statsAntigos = localStorage.getItem('pr_s');
   if (statsAntigos && !localStorage.getItem('palavrada.diario')) {
     try {
@@ -26,7 +27,6 @@ function migrarLocalStorage() {
     localStorage.removeItem('pr_s');
   }
 
-  // Progresso livre: "pr_free_h" → "palavrada.livre"
   const progressoAntigo = localStorage.getItem('pr_free_h');
   if (progressoAntigo && !localStorage.getItem('palavrada.livre')) {
     try {
@@ -39,7 +39,6 @@ function migrarLocalStorage() {
     localStorage.removeItem('pr_free_h');
   }
 
-  // Remove chaves mortas que nunca foram usadas
   localStorage.removeItem('pr_free');
   localStorage.removeItem('pr_free_completed');
 }
@@ -126,32 +125,56 @@ carregarConfig();
 registrarModalConfig(aoMudarConfig);
 registrarModalAjuda();
 
-const idxUrl = idxUrlPalavra(PALAVRAS.length);
+const idxLivrissimo = idxUrlLivrissimo(PALAVRAS_LIVRISSIMO.length);
+const idxUrl        = idxUrlPalavra(PALAVRAS.length);
 let modoAtivo;
 
 function irParaDiario() {
   window.location.href = window.location.pathname;
 }
 
-function abrirSeletorLivre() {
-  const seletor = new ModalSeletor(id => { window.location.href = '?w=' + (id + 1); });
+function abrirSeletor() {
+  const seletor = new ModalSeletor(
+    id => { window.location.href = '?w=' + (id + 1); },
+    id => { window.location.href = '?x=' + (id + 1); }
+  );
   seletor.abrir();
 }
 
-if (idxUrl !== null) {
+if (idxLivrissimo !== null) {
+  const progressoLivre = carregarProgresso();
+  if (progressoLivre.jogados.length >= PALAVRAS.length) {
+    const progressoLivrissimo = carregarProgressoLivrissimo();
+    const jaJogado = progressoLivrissimo.jogados.find(j => j.id === idxLivrissimo);
+    if (jaJogado) {
+      history.replaceState(null, '', window.location.pathname);
+      modoAtivo = new ModoDesafioDiario(abrirSeletor);
+      modoAtivo.iniciar();
+      setTimeout(() => toast(`💀 Modo Livríssimo #${idxLivrissimo + 1} já foi jogado!`), 300);
+    } else {
+      modoAtivo = new ModoLivrissimo(idxLivrissimo, irParaDiario);
+      modoAtivo.iniciar();
+    }
+  } else {
+    history.replaceState(null, '', window.location.pathname);
+    modoAtivo = new ModoDesafioDiario(abrirSeletor);
+    modoAtivo.iniciar();
+    setTimeout(() => toast('Complete o 🎲 Modo Livre primeiro!'), 300);
+  }
+} else if (idxUrl !== null) {
   const progresso = carregarProgresso();
   const jaJogado = progresso.jogados.find(j => j.id === idxUrl);
   if (jaJogado) {
     history.replaceState(null, '', window.location.pathname);
-    modoAtivo = new ModoDesafioDiario(abrirSeletorLivre);
+    modoAtivo = new ModoDesafioDiario(abrirSeletor);
     modoAtivo.iniciar();
-    setTimeout(() => toast(`Desafio #${idxUrl + 1} já foi jogado!`), 300);
+    setTimeout(() => toast(`🎲 Modo Livre #${idxUrl + 1} já foi jogado!`), 300);
   } else {
     modoAtivo = new ModoLivre(idxUrl, irParaDiario);
     modoAtivo.iniciar();
   }
 } else {
-  modoAtivo = new ModoDesafioDiario(abrirSeletorLivre);
+  modoAtivo = new ModoDesafioDiario(abrirSeletor);
   modoAtivo.iniciar();
 }
 

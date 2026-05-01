@@ -22,9 +22,13 @@
       <span class="streak-icone">🔥</span>
       <span class="streak-texto" id="streakTexto">0 vitórias seguidas</span>
     </div>
-    <div class="streak-box" id="freeBadge" style="display:none">
+    <div class="streak-box" id="livreBadge" style="display:none">
       <span class="streak-icone">🎯</span>
-      <span class="streak-texto" id="freeBadgeTexto">0,00% completo</span>
+      <span class="streak-texto" id="livreBadgeTexto">0,00% completo</span>
+    </div>
+    <div class="streak-box" id="livrissimoBadge" style="display:none">
+      <span class="streak-icone">💀</span>
+      <span class="streak-texto" id="livrissimoBadgeTexto">0,00% completo</span>
     </div>
     <button class="hbtn" id="btnAlternarModo" title="Selecionar palavra">🎲</button>
     <button class="hbtn" id="btnAjuda" title="Como jogar">❓</button>
@@ -263,11 +267,11 @@
 </div>
 
 
-<!-- ── Modal: Seletor de Desafios (Modo Livre) ── -->
-<div class="overlay" id="modalSeletorLivre">
+<!-- ── Modal: Seletor de Desafios ── -->
+<div class="overlay" id="modalSeletor">
   <div class="modal">
-    <button class="modal-fechar" id="fecharSeletorLivre" title="Fechar">×</button>
-    <div class="res-titulo">Selecionar desafio no Modo Livre</div>
+    <button class="modal-fechar" id="fecharSeletor" title="Fechar">×</button>
+    <div class="res-titulo">Selecionar desafio</div>
     <div class="grid-wrap" id="gridWrap">
       <div id="gridDesafios"></div>
       <div class="grid-fade" id="gridFade">▼</div>

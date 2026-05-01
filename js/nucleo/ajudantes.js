@@ -39,3 +39,9 @@ export function idxUrlPalavra(totalPalavras) {
   const n = parseInt(p, 10);
   return (!isNaN(n) && n >= 1 && n <= totalPalavras) ? n - 1 : null;
 }
+
+export function idxUrlLivrissimo(totalPalavras) {
+  const p = new URLSearchParams(window.location.search).get('x');
+  const n = parseInt(p, 10);
+  return (!isNaN(n) && n >= 1 && n <= totalPalavras) ? n - 1 : null;
+}

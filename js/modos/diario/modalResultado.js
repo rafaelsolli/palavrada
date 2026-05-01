@@ -14,7 +14,7 @@ export class ModalResultado {
     });
   }
 
-  mostrar(partida, ganhou, stats) {
+  mostrar(partida, ganhou, stats, livreCompleto = false) {
     const numTentativas = partida.tentativas.length;
     const numeroDia = numeroDoDia();
 
@@ -49,6 +49,9 @@ export class ModalResultado {
     };
     atualizar();
     intervaloContagem = setInterval(atualizar, 1000);
+
+    const btnLivre = document.getElementById('btnSelecionarLivreDoResultado');
+    if (btnLivre) btnLivre.textContent = livreCompleto ? '💀 Modo Livríssimo' : '🎲 Modo Livre';
 
     this._el.classList.add('aberto');
   }

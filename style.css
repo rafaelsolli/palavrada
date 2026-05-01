@@ -334,4 +334,9 @@ main {
 .modal-btns { display:flex; gap:8px; margin-top:14px; }
 .modal-btns .mbtn { margin-top:0; flex:1; }
 .mbtn:disabled { opacity:0.35; cursor:not-allowed; }
+
+/* ── Modo Livríssimo ── */
+.badge-modo.livrissimo { color:#e879f9; border-color:#4a1259; background:#1a0520; }
+.grid-secao { grid-column:1/-1; font-size:.62rem; letter-spacing:2px; text-transform:uppercase; color:var(--muted); padding:10px 2px 4px; text-align:center; }
+.celula-desafio.trancada { opacity:0.25; cursor:not-allowed; }
 .celula-desafio.selecionado { background:rgba(59,130,246,0.2); border-color:#3b82f6; color:#60a5fa; }

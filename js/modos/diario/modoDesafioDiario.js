@@ -11,6 +11,7 @@ import { BadgeStreak } from './badgeStreak.js';
 import { ModalResultado } from './modalResultado.js';
 import { toast } from '../base/toast.js';
 import { cfg } from '../../configuracoes.js';
+import { carregarProgresso } from '../base/modalSeletor.js';
 
 const CHAVE_STATS   = 'palavrada.diario';
 const CHAVE_SESSAO  = () => `palavrada.diario.sessao.${numeroDoDia()}`;
@@ -42,9 +43,10 @@ export class ModoDesafioDiario extends ModoBase {
     const palavra = palavraDoDia();
     this._partida = new Partida(palavra);
 
-    this._cabecalho.exibirDiario(this._diaN, this._aoAbrirSeletorLivre);
+    const livreCompleto = carregarProgresso().jogados.length >= PALAVRAS.length;
+    this._cabecalho.exibirDiario(this._diaN, this._aoAbrirSeletorLivre, livreCompleto);
     this._badge.atualizar(this._stats.sequencia);
-    document.getElementById('freeBadge').style.display = 'none';
+    document.getElementById('livreBadge').style.display = 'none';
 
     const sessao = this._carregarSessao();
     if (sessao) {
@@ -97,14 +99,15 @@ export class ModoDesafioDiario extends ModoBase {
     this._atualizarStats(ganhou);
     this._badge.atualizar(this._stats.sequencia);
     setTimeout(() => {
-      this._modal.mostrar(this._partida, ganhou, this._stats);
+      const livreCompleto = carregarProgresso().jogados.length >= PALAVRAS.length;
+      this._modal.mostrar(this._partida, ganhou, this._stats, livreCompleto);
       this._registrarBotoesCompartilhar();
     }, ganhou ? 1600 : 900);
   }
 
   atualizarBadge() {
     this._badge.atualizar(this._stats.sequencia);
-    document.getElementById('freeBadge').style.display = 'none';
+    document.getElementById('livreBadge').style.display = 'none';
   }
 
   _registrarBotoesCompartilhar() {
@@ -185,7 +188,8 @@ export class ModoDesafioDiario extends ModoBase {
     redesenharPrincipal(this._partida);
     if (sessao.encerrada) {
       setTimeout(() => {
-        this._modal.mostrar(this._partida, sessao.ganhou, this._stats);
+        const livreCompleto = carregarProgresso().jogados.length >= PALAVRAS.length;
+        this._modal.mostrar(this._partida, sessao.ganhou, this._stats, livreCompleto);
         this._registrarBotoesCompartilhar();
       }, 400);
     }

@@ -56,7 +56,7 @@ export class ModalResultado {
     clearInterval(intervaloContagem);
   }
 
-  construirTextoCompartilhar(partida, idPalavra, baseUrl) {
+  construirTextoCompartilhar(partida, idPalavra, baseUrl, urlParam = 'w', modeLabel = '🎲 Modo Livre') {
     const ganhou = partida.tentativas.at(-1)?.ganhou;
     const score = ganhou ? `${partida.tentativas.length}/6` : 'X/6';
     const dots = partida.tentativas.map(t => {
@@ -67,7 +67,7 @@ export class ModalResultado {
     }).join(' ');
     const vazios = Array(6 - partida.tentativas.length).fill('⚫').join(' ');
     const todos = dots + (vazios ? ' ' + vazios : '');
-    const link = `${baseUrl}?w=${idPalavra + 1}`;
-    return `Joguei o 🎲 Modo Livre #${idPalavra + 1} e ${ganhou ? 'venci' : 'perdi'}!\n${todos} · ${score}\nSua vez! ${link}`;
+    const link = `${baseUrl}?${urlParam}=${idPalavra + 1}`;
+    return `Joguei o ${modeLabel} #${idPalavra + 1} e ${ganhou ? 'venci' : 'perdi'}!\n${todos} · ${score}\nSua vez! ${link}`;
   }
 }
