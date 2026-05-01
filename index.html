@@ -173,53 +173,63 @@
         <div class="cfg-secao">
           <div class="cfg-titulo">Gráfico</div>
           <div class="cfg-item">
-            <label>Réguas horizontais</label>
+            <div class="cfg-label-grupo"><label>Réguas horizontais</label><button class="cfg-ajuda-btn" data-cfg="regraHorizontal">?</button></div>
             <button class="cfg-ciclo" id="cfgRegraH">4</button>
           </div>
+          <div class="cfg-ajuda-texto" id="ajudaTxt-regraHorizontal">Adiciona linhas de referência horizontais ao gráfico principal. Quanto mais réguas, mais fácil visualizar a altura de cada ponto da onda. Com <strong>0</strong> o gráfico fica limpo, enquanto com <strong>25</strong> cada nível do alfabeto é marcado.</div>
           <div class="cfg-item">
-            <label>Letras no eixo Y</label>
+            <div class="cfg-label-grupo"><label>Letras no eixo Y</label><button class="cfg-ajuda-btn" data-cfg="eixoY">?</button></div>
             <button class="cfg-ciclo" id="cfgEixoY">0</button>
           </div>
+          <div class="cfg-ajuda-texto" id="ajudaTxt-eixoY">Exibe as letras do alfabeto ao longo do eixo vertical. Dá pra ver exatamente qual letra corresponde a cada altura, sem precisar deduzir. Requer pelo menos uma régua ativa.</div>
           <div class="cfg-item">
-            <label>Bolinhas nas curvas</label>
+            <div class="cfg-label-grupo"><label>Bolinhas nas curvas</label><button class="cfg-ajuda-btn" data-cfg="bolinhas">?</button></div>
             <button class="cfg-ciclo" id="cfgBolinhas">não</button>
           </div>
+          <div class="cfg-ajuda-texto" id="ajudaTxt-bolinhas">Marca com um ponto cada uma das 5 posições de cada curva no gráfico. Ajuda a identificar com precisão onde cada letra foi desenhada, especialmente quando as curvas estão próximas e difíceis de distinguir.</div>
           <div class="cfg-item">
-            <label>Letras no último palpite</label>
+            <div class="cfg-label-grupo"><label>Letras no último palpite</label><button class="cfg-ajuda-btn" data-cfg="letrasNoGrafico">?</button></div>
             <button class="cfg-ciclo" id="cfgLetrasGrafico">não</button>
           </div>
+          <div class="cfg-ajuda-texto" id="ajudaTxt-letrasNoGrafico">Mostra as 5 letras do último palpite diretamente sobre sua curva no gráfico principal. Cada letra aparece acima do ponto correspondente, na cor da curva.</div>
         </div>
 
         <div class="cfg-secao">
           <div class="cfg-titulo">Histórico</div>
           <div class="cfg-item">
-            <label>Mostrar onda-alvo</label>
+            <div class="cfg-label-grupo"><label>Mostrar onda-alvo</label><button class="cfg-ajuda-btn" data-cfg="alvoNosPalpites">?</button></div>
             <button class="cfg-ciclo" id="cfgAlvoMini">não</button>
           </div>
+          <div class="cfg-ajuda-texto" id="ajudaTxt-alvoNosPalpites">Exibe a onda da <strong>palavra-alvo</strong> em azul nas miniaturas de cada palpite no histórico. Permite comparar cada tentativa com o alvo sem precisar olhar para o gráfico principal.</div>
           <div class="cfg-item">
-            <label>Palpites visíveis</label>
+            <div class="cfg-label-grupo"><label>Palpites visíveis</label><button class="cfg-ajuda-btn" data-cfg="maxPalpites">?</button></div>
             <button class="cfg-ciclo" id="cfgMaxPalpites">6</button>
           </div>
+          <div class="cfg-ajuda-texto" id="ajudaTxt-maxPalpites">Define quantos palpites aparecem simultaneamente no gráfico e no histórico. Com <strong>0</strong> todos ficam ocultos e só a onda-alvo aparece. Com <strong>3</strong>, por exemplo, apenas os três mais recentes são exibidos.</div>
         </div>
 
         <div class="cfg-secao">
           <div class="cfg-titulo">Teclado</div>
           <div class="cfg-item">
-            <label>Layout</label>
+            <div class="cfg-label-grupo"><label>Layout</label><button class="cfg-ajuda-btn" data-cfg="teclado">?</button></div>
             <button class="cfg-ciclo" id="cfgTeclado">QWERTY</button>
           </div>
+          <div class="cfg-ajuda-texto" id="ajudaTxt-teclado">Altera a disposição das teclas no teclado virtual. <strong>QWERTY</strong> segue o padrão dos teclados físicos. <strong>Alfabético</strong> organiza as letras em ordem alfabética.</div>
           <div class="cfg-item">
-            <label>Fixar letras certas</label>
+            <div class="cfg-label-grupo"><label>Fixar letras certas</label><button class="cfg-ajuda-btn" data-cfg="fixarLetrasAcertadas">?</button></div>
             <button class="cfg-ciclo" id="cfgFixarLetras">não</button>
           </div>
+          <div class="cfg-ajuda-texto" id="ajudaTxt-fixarLetrasAcertadas">Após cada palpite, as letras posicionadas corretamente ficam travadas na sua posição e não podem ser apagadas. No próximo palpite, o cursor pula automaticamente pelas posições ainda livres.</div>
           <div class="cfg-item">
-            <label>Autocomplete</label>
+            <div class="cfg-label-grupo"><label>Autocomplete</label><button class="cfg-ajuda-btn" data-cfg="autocomplete">?</button></div>
             <button class="cfg-ciclo" id="cfgAutocomplete">não</button>
           </div>
+          <div class="cfg-ajuda-texto" id="ajudaTxt-autocomplete">Sugere uma palavra válida com base nas letras já digitadas. A sugestão aparece em cinza claro nas células ainda vazias. Nunca é confirmada automaticamente — continue digitando pra sobrescrever.</div>
           <div class="cfg-item">
-            <label>Palavras inválidas</label>
+            <div class="cfg-label-grupo"><label>Palavras inválidas</label><button class="cfg-ajuda-btn" data-cfg="palavrasInvalidas">?</button></div>
             <button class="cfg-ciclo" id="cfgPalavrasInvalidas">Recusar</button>
           </div>
+          <div class="cfg-ajuda-texto" id="ajudaTxt-palavrasInvalidas">Define o que acontece ao confirmar uma palavra fora do dicionário. <strong>Recusar</strong> descarta sem penalidade. <strong>Penalizar</strong> consome uma tentativa e aparece riscada no histórico, mas não no gráfico. <strong>Aceitar</strong> ignora a validação e qualquer sequência de letras vale.</div>
         </div>
 
       </div><!-- /cfg-scroll -->

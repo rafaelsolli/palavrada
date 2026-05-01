@@ -81,9 +81,15 @@ export function registrarModalConfig(aoMudar) {
   }
   scroll.addEventListener('scroll', atualizarFade);
 
+  function _colapsarAjudas() {
+    document.querySelectorAll('.cfg-ajuda-texto').forEach(el => el.classList.remove('aberto'));
+    document.querySelectorAll('.cfg-ajuda-btn').forEach(btn => { btn.textContent = '?'; });
+  }
+
   function fechar() {
     _staged = {};
     _popular();
+    _colapsarAjudas();
     modal.classList.remove('aberto');
   }
 
@@ -113,4 +119,14 @@ export function registrarModalConfig(aoMudar) {
   });
 
   _registrarControles();
+
+  document.querySelectorAll('.cfg-ajuda-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const texto = document.getElementById('ajudaTxt-' + btn.dataset.cfg);
+      if (!texto) return;
+      const aberto = texto.classList.toggle('aberto');
+      btn.textContent = aberto ? '✕' : '?';
+    });
+  });
 }
