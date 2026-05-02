@@ -44,6 +44,16 @@ function migrarLocalStorage() {
 }
 
 // ── Tutorial / Ajuda ────────────────────────────────────────────────────────
+
+// Atualiza visibilidade da seção de pontuação no modal de ajuda
+function atualizarVisibilidadePontuacao() {
+  const secao = document.getElementById('secaoPontuacao');
+  const config = carregarConfig();
+  if (secao) {
+    secao.style.display = config.exibirPontuacao ? '' : 'none';
+  }
+}
+
 function registrarModalAjuda() {
   const modal  = document.getElementById('modalAjuda');
   const scroll = document.getElementById('ajudaScroll');
@@ -58,6 +68,8 @@ function registrarModalAjuda() {
     modal.classList.add('aberto');
     scroll.scrollTop = 0;
     setTimeout(atualizarFade, 50);
+    // Atualizar visibilidade da seção de pontuação sempre que abrir
+    atualizarVisibilidadePontuacao();
   }
 
   document.getElementById('btnAjuda').addEventListener('click', abrir);
@@ -104,21 +116,25 @@ function registrarResize(modoAtivo) {
 // ── Callback de mudança de configuração ─────────────────────────────────────
 function aoMudarConfig(chave, valor) {
   const p = modoAtivo?._partida;
-  if (!p) return;
-
+  
   const canvasSettings = ['regraHorizontal', 'eixoY', 'bolinhas', 'letrasNoGrafico', 'maxPalpites'];
   if (canvasSettings.includes(chave)) redesenharPrincipal(p);
-  if (chave === 'maxPalpites') modoAtivo._historico.reconstruir(p);
-  if (chave === 'alvoNosPalpites') modoAtivo._historico.redesenharMinis(p);
-  if (chave === 'teclado') modoAtivo._teclado.reconstruir();
-  if (chave === 'autocomplete') modoAtivo._grade.atualizar(p);
-  if (chave === 'fixarLetrasAcertadas') {
+  if (chave === 'maxPalpites' && p) modoAtivo._historico.reconstruir(p);
+  if (chave === 'alvoNosPalpites' && p) modoAtivo._historico.redesenharMinis(p);
+  if (chave === 'teclado' && p) modoAtivo._teclado.reconstruir();
+  if (chave === 'autocomplete' && p) modoAtivo._grade.atualizar(p);
+  if (chave === 'fixarLetrasAcertadas' && p) {
     if (valor) p.fixar();
     else p.letrasFixas = Array(5).fill(false);
     modoAtivo._grade.atualizar(p);
   }
   if (chave === 'tempoLimite' && modoAtivo.reconfigurarTimer) {
     modoAtivo.reconfigurarTimer();
+  }
+  
+  // Atualizar visibilidade da seção de pontuação quando a configuração mudar
+  if (chave === 'exibirPontuacao') {
+    atualizarVisibilidadePontuacao();
   }
 }
 
@@ -127,6 +143,9 @@ migrarLocalStorage();
 carregarConfig();
 registrarModalConfig(aoMudarConfig);
 registrarModalAjuda();
+
+// Atualizar visibilidade inicial da seção de pontuação
+atualizarVisibilidadePontuacao();
 
 const idxLivrissimo = idxUrlLivrissimo(PALAVRAS_LIVRISSIMO.length);
 const idxUrl        = idxUrlPalavra(PALAVRAS.length);

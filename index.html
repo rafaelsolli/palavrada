@@ -136,7 +136,7 @@
       </div>
     </div>
 
-    <div class="ajuda-bloco">
+    <div class="ajuda-bloco" id="secaoPontuacao">
       <div class="ajuda-titulo">Pontuação (pra quem é competitivo)</div>
       <p>Você começa com <strong>1000 pontos</strong> e perde pontos a cada palpite. O objetivo é acertar gastando o menor número de pontos possível!</p>
       <p>Cada palpite errado gera uma penalidade calculada como:</p>
@@ -255,6 +255,15 @@
             <button class="cfg-ciclo" id="cfgTempoLimite">Infinito</button>
           </div>
           <div class="cfg-ajuda-texto" id="ajudaTxt-tempoLimite">Define quanto tempo você tem para completar a partida. Quando o tempo se esgota, o jogo encerra automaticamente. Escolha <strong>Infinito</strong> para jogar sem pressão de tempo.</div>
+        </div>
+
+        <div class="cfg-secao">
+          <div class="cfg-titulo">Interface</div>
+          <div class="cfg-item">
+            <div class="cfg-label-grupo"><label>Exibir pontuação</label><button class="cfg-ajuda-btn" data-cfg="exibirPontuacao">?</button></div>
+            <button class="cfg-ciclo" id="cfgExibirPontuacao">não</button>
+          </div>
+          <div class="cfg-ajuda-texto" id="ajudaTxt-exibirPontuacao">Controla se a pontuação detalhada é mostrada no resultado e na mensagem de compartilhamento. Quando desativada, exibe apenas as tradicionais bolinhas coloridas.</div>
         </div>
 
       </div><!-- /cfg-scroll -->

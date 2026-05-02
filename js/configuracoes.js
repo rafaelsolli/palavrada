@@ -12,6 +12,7 @@ export const PADROES = {
   autocomplete: false,
   palavrasInvalidas: 'recusar',
   tempoLimite: 'infinito',
+  exibirPontuacao: false,
 };
 
 let _cfg = { ...PADROES };

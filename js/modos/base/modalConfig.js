@@ -12,6 +12,7 @@ const CICLOS = {
   teclado:              ['qwerty', 'alfabetico'],
   palavrasInvalidas:    ['recusar', 'penalizar', 'aceitar'],
   tempoLimite:          [10, 20, 40, 60, 180, 300, 600, 900, 'infinito'],
+  exibirPontuacao:      [false, true],
 };
 
 const DISPLAY = {
@@ -32,6 +33,7 @@ const ID_MAP = {
   teclado:              'cfgTeclado',
   palavrasInvalidas:    'cfgPalavrasInvalidas',
   tempoLimite:          'cfgTempoLimite',
+  exibirPontuacao:      'cfgExibirPontuacao',
 };
 
 let _staged = {};

@@ -1,6 +1,7 @@
 import { corDelta, contagemRegressiva, numeroDoDia } from '../../nucleo/ajudantes.js';
 import { formatarExtratoHTML } from '../../nucleo/pontuacao.js';
 import { toast } from './toast.js';
+import { cfg } from '../../configuracoes.js';
 
 let intervaloContagem = null;
 
@@ -25,9 +26,15 @@ export class ModalResultado {
     const titulo = this._config.obterTitulo(ganhou, ...parametrosEspecificos);
     document.getElementById('resTitulo').textContent = titulo;
     
-    // Gerar e inserir extrato
-    const extrato = partida.obterExtratoPontuacao();
-    document.getElementById('extratoContent').innerHTML = formatarExtratoHTML(extrato);
+    // Gerar e inserir extrato (só se pontuação estiver ativa)
+    const extratoElement = document.getElementById('extratoContent');
+    if (cfg().exibirPontuacao) {
+      const extrato = partida.obterExtratoPontuacao();
+      extratoElement.innerHTML = formatarExtratoHTML(extrato);
+      extratoElement.style.display = '';
+    } else {
+      extratoElement.style.display = 'none';
+    }
 
     // Configurar pontos e bolinhas
     const pontos = document.getElementById('resPontos');
@@ -126,7 +133,6 @@ export const ConfiguracaoDiario = {
   
   construirTextoCompartilhar: (partida, ganhou) => {
     const numeroDia = numeroDoDia();
-    const pontuacao = partida.pontuacaoAtual || 0;
     const dots = partida.tentativas.map(t => {
       if (t.ganhou || t.delta < 10) return '🟢';
       if (t.delta < 20) return '🟡';
@@ -136,7 +142,13 @@ export const ConfiguracaoDiario = {
     const vazios = Array(6 - partida.tentativas.length).fill('⚫').join(' ');
     const todos = dots + (vazios ? ' ' + vazios : '');
     const baseUrl = `${window.location.origin}${window.location.pathname}`;
-    return `*🌞 Desafio Diário* #${numeroDia}\n${ganhou ? 'Venci' : 'Perdi'} com ${pontuacao} pontos!\n${todos}\nSua vez: ${baseUrl}`;
+    
+    if (cfg().exibirPontuacao) {
+      const pontuacao = partida.pontuacaoAtual || 0;
+      return `*🌞 Desafio Diário* #${numeroDia}\n${ganhou ? 'Venci' : 'Perdi'} com ${pontuacao} pontos!\n${todos}\nSua vez: ${baseUrl}`;
+    } else {
+      return `*🌞 Desafio Diário* #${numeroDia}\n${ganhou ? 'Venci' : 'Perdi'}!\n${todos}\nSua vez: ${baseUrl}`;
+    }
   },
   
   aoClicarAcao: () => {} // Será definido no construtor do modo
@@ -153,7 +165,6 @@ export const ConfiguracaoLivre = {
   }),
   
   construirTextoCompartilhar: (partida, ganhou, idPalavra) => {
-    const pontuacao = partida.pontuacaoAtual || 0;
     const dots = partida.tentativas.map(t => {
       if (t.ganhou || t.delta < 10) return '🟢';
       if (t.delta < 20) return '🟡';
@@ -164,7 +175,13 @@ export const ConfiguracaoLivre = {
     const todos = dots + (vazios ? ' ' + vazios : '');
     const baseUrl = `${window.location.origin}${window.location.pathname}`;
     const link = `${baseUrl}?w=${idPalavra + 1}`;
-    return `*🎲 Modo Livre* #${idPalavra + 1}\n${ganhou ? 'Venci' : 'Perdi'} com ${pontuacao} pontos!\n${todos}\nSua vez: ${link}`;
+    
+    if (cfg().exibirPontuacao) {
+      const pontuacao = partida.pontuacaoAtual || 0;
+      return `*🎲 Modo Livre* #${idPalavra + 1}\n${ganhou ? 'Venci' : 'Perdi'} com ${pontuacao} pontos!\n${todos}\nSua vez: ${link}`;
+    } else {
+      return `*🎲 Modo Livre* #${idPalavra + 1}\n${ganhou ? 'Venci' : 'Perdi'}!\n${todos}\nSua vez: ${link}`;
+    }
   },
   
   aoClicarAcao: () => {} // Será definido no construtor do modo
@@ -181,7 +198,6 @@ export const ConfiguracaoLivrissimo = {
   }),
   
   construirTextoCompartilhar: (partida, ganhou, idPalavra) => {
-    const pontuacao = partida.pontuacaoAtual || 0;
     const dots = partida.tentativas.map(t => {
       if (t.ganhou || t.delta < 10) return '🟢';
       if (t.delta < 20) return '🟡';
@@ -192,7 +208,13 @@ export const ConfiguracaoLivrissimo = {
     const todos = dots + (vazios ? ' ' + vazios : '');
     const baseUrl = `${window.location.origin}${window.location.pathname}`;
     const link = `${baseUrl}?l=${idPalavra + 1}`;
-    return `*💀 Modo Livríssimo* #${idPalavra + 1}\n${ganhou ? 'Venci' : 'Perdi'} com ${pontuacao} pontos!\n${todos}\nSua vez: ${link}`;
+    
+    if (cfg().exibirPontuacao) {
+      const pontuacao = partida.pontuacaoAtual || 0;
+      return `*💀 Modo Livríssimo* #${idPalavra + 1}\n${ganhou ? 'Venci' : 'Perdi'} com ${pontuacao} pontos!\n${todos}\nSua vez: ${link}`;
+    } else {
+      return `*💀 Modo Livríssimo* #${idPalavra + 1}\n${ganhou ? 'Venci' : 'Perdi'}!\n${todos}\nSua vez: ${link}`;
+    }
   },
   
   aoClicarAcao: () => {} // Será definido no construtor do modo
