@@ -114,7 +114,7 @@
     </div>
 
     <div class="ajuda-bloco">
-      <div class="ajuda-titulo">O objetivo</div>
+      <div class="ajuda-titulo">Objetivo</div>
       <p>A onda <span class="ajuda-azul">azul</span> representa a <strong>palavra alvo</strong> e fica sempre visível. Ao digitar um palpite e apertar a tecla "enter", a onda referente ao palpite aparece. O <strong>Δ</strong> mede a distância entre as ondas - quanto menor, mais perto. E você tem <strong>6 palpites</strong> pra tentar acertar a <strong>palavra alvo</strong>.</p>
       <div class="ajuda-par">
         <div class="ajuda-ex">
@@ -129,12 +129,6 @@
         <div class="ajuda-ex">
           <div class="ajuda-ex-lbl">Δ = 0 - acertou! 🎉</div>
           <svg class="ajuda-svg" viewBox="0 0 220 52" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <filter id="ajuda-glow" x="-20%" y="-20%" width="140%" height="140%">
-                <feGaussianBlur stdDeviation="2.5" result="blur"/>
-                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-              </filter>
-            </defs>
             <path d="M22,11 C44,11 44,41 66,41 C88,41 88,18.1 110,18.1 C132,18.1 132,16.3 154,16.3 C176,16.3 176,23.4 198,23.4"
                   stroke="#10b981" fill="none" stroke-width="3" stroke-linecap="round" filter="url(#ajuda-glow)"/>
           </svg>
@@ -143,14 +137,32 @@
     </div>
 
     <div class="ajuda-bloco">
-      <div class="ajuda-titulo">Dicas</div>
+      <div class="ajuda-titulo">Pontuação (pra quem é competitivo)</div>
+      <p>Você começa com <strong>1000 pontos</strong> e perde pontos a cada palpite. O objetivo é acertar gastando o menor número de pontos possível!</p>
+      <p>Cada palpite errado gera uma penalidade calculada como:</p>
+      <div class="ajuda-formula">
+        <strong>[base + delta + tempo] × agravantes</strong>
+      </div>
       <ul class="ajuda-dicas">
-        <li>Observe a forma da <strong>palavra alvo</strong>: pico = letra perto do Z, vale = letra perto do A</li>
-        <li>Toque em qualquer letra para editar aquela posição</li>
-        <li>Toque num palpite anterior para mostrar/ocultar no gráfico</li>
-        <li>Use as setinhas (no computador) pra navegar entre as letras e palpites</li>
-        <li>Apenas palavras válidas do português são aceitas <strong>(~9 mil palavras)</strong></li>
+        <li><strong>Base:</strong> 100 pontos fixos por palpite</li>
+        <li><strong>Delta:</strong> distância da palavra alvo (0 a 100 pontos)</li>
+        <li><strong>Tempo:</strong> penalidade crescente conforme você demora (0,5 a 2 pontos por segundo)</li>
+        <li><strong>Agravantes:</strong> multiplicador baseado nas suas configurações</li>
       </ul>
+      <p>Configurações que <strong>facilitam</strong> o jogo aumentam a penalidade, enquanto as que <strong>dificultam</strong> a reduzem:</p>
+      <ul class="ajuda-dicas">
+        <li><strong>Réguas horizontais e letras no eixo Y:</strong> +2% cada</li>
+        <li><strong>Bolinhas nas curvas, letras no último palpite e curva alvo no histórico:</strong> +5% cada, se ativo</li>
+        <li><strong>Palpites visíveis:</strong> -3% cada palpite oculto</li>
+        <li><strong>Fixar letras:</strong> pode ajudar ou atrapalhar dependendo do nº de palpites</li>
+        <li><strong>Autocomplete:</strong> dobra a penalidade (×200%)</li>
+        <li><strong>Palavras inválidas:</strong> aceitar = +20%, penalizar = -20%</li>
+      </ul>
+      <p><strong>Exemplo:</strong> Palpite após 15 segundos com delta 28 e configuração padrão:</p>
+      <div class="ajuda-exemplo">
+        <strong>[100 + 7,5 + 28] × 121% = 164 pontos</strong><br>
+        <small>Restam: 1000 - 164 = 836 pontos</small>
+      </div>
     </div>
 
       </div><!-- /ajuda-scroll -->
@@ -257,41 +269,23 @@
 </div>
 
 
-<!-- ── Modal: Resultado - Desafio Diário ── -->
-<div class="overlay" id="modalResultadoDiario">
+<!-- ── Modal: Resultado Unificado ── -->
+<div class="overlay" id="modalResultado">
   <div class="modal">
-    <button class="modal-fechar" id="fecharResultadoDiario" title="Fechar">×</button>
-    <div class="res-titulo" id="resTituloDiario"></div>
-    <div class="res-numero" id="resNumeroDiario">X/6</div>
-    <div class="pontos-row" id="resPontosDiario"></div>
-    <div class="res-label">A palavra era</div>
-    <div class="res-palavra" id="resPalavraAtualDiario"></div>
-    <div class="divisor"></div>
-    <div class="proximo-lbl">Próxima palavra em</div>
-    <div class="contagem-regressiva" id="contagemDiario">--:--:--</div>
-    <div class="modal-btns">
-      <button class="mbtn sec" id="btnCompartilharDiario">Compartilhar</button>
-      <button class="mbtn livre-btn" id="btnSelecionarLivreDoResultado">🎲 Modo Livre</button>
+    <button class="modal-fechar" id="fecharResultado" title="Fechar">×</button>
+    <div class="res-titulo" id="resTitulo"></div>
+    <div class="res-extrato-content" id="extratoContent"></div>
+    <div class="pontos-row" id="resPontos">
+      <div class="res-numero" id="resNumero">X/6</div>
     </div>
-  </div>
-</div>
-
-
-<!-- ── Modal: Resultado - Modo Livre ── -->
-<div class="overlay" id="modalResultadoLivre">
-  <div class="modal">
-    <button class="modal-fechar" id="fecharResultadoLivre" title="Fechar">×</button>
-    <div class="res-titulo" id="resTituloLivre"></div>
-    <div class="res-numero" id="resNumeroLivre">X/6</div>
-    <div class="pontos-row" id="resPontosLivre"></div>
-    <div class="res-label">A palavra era</div>
-    <div class="res-palavra" id="resPalavraAtualLivre"></div>
+    <div class="res-label">Você <span id="resultadoTexto">perdeu, mas</span> a palavra era</div>
+    <div class="res-palavra" id="resPalavraAtual"></div>
     <div class="divisor"></div>
     <div class="proximo-lbl">Próxima palavra em</div>
-    <div class="contagem-regressiva" id="contagemLivre">--:--:--</div>
+    <div class="contagem-regressiva" id="contagem">--:--:--</div>
     <div class="modal-btns">
-      <button class="mbtn sec" id="btnCompartilharLivre">Compartilhar</button>
-      <button class="mbtn livre-btn" id="btnJogarOutraLivre">🎲 Modo Livre</button>
+      <button class="mbtn sec" id="btnCompartilhar">Compartilhar</button>
+      <button class="mbtn" id="btnAcao">Ação</button>
     </div>
   </div>
 </div>

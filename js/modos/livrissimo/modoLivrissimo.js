@@ -7,7 +7,7 @@ import { Grade } from '../base/grade.js';
 import { Teclado } from '../base/teclado.js';
 import { Historico } from '../base/historico.js';
 import { BadgeLivrissimo } from './badgeLivrissimo.js';
-import { ModalResultado } from '../livre/modalResultado.js';
+import { ModalResultado, ConfiguracaoLivrissimo } from '../base/modalResultado.js';
 import { ModalSeletor, carregarProgressoLivrissimo, salvarResultadoLivrissimo } from '../base/modalSeletor.js';
 import { ContadorTempo } from '../base/contadorTempo.js';
 import { toast } from '../base/toast.js';
@@ -27,7 +27,10 @@ export class ModoLivrissimo extends ModoBase {
       id => { window.location.href = '?w=' + (id + 1); },
       id => this._selecionarPalavra(id)
     );
-    this._modal     = new ModalResultado(() => this._seletor.abrir());
+    // Configurar modal resultado
+    const configuracao = { ...ConfiguracaoLivrissimo };
+    configuracao.aoClicarAcao = () => this._seletor.abrir();
+    this._modal = new ModalResultado(configuracao);
     this._contadorTempo = new ContadorTempo();
     this._teclado   = new Teclado(k => this.aoTecla(k));
   }
@@ -139,7 +142,7 @@ export class ModoLivrissimo extends ModoBase {
 
   _copiar(texto) {
     navigator.clipboard.writeText(texto)
-      .then(() => toast('✓ Copiado para a área de transferência!'))
+      .then(() => toast('✓ Copiado!'))
       .catch(() => {
         const ta = document.createElement('textarea');
         ta.value = texto; ta.style.cssText = 'position:fixed;opacity:0';

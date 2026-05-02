@@ -287,19 +287,90 @@ main {
 }
 
 /* ── Modal de resultado ── */
-.res-titulo { font-size:.78rem; color:var(--muted); text-align:center; margin-bottom:2px; }
-.res-numero {
-  font-family:'DM Sans',sans-serif; font-size:2.4rem; font-weight:800;
-  color:var(--text); text-align:center; line-height:1.1; margin:2px 0 6px;
+.res-titulo { font-size:.78rem; color:var(--muted); text-align:center; margin-bottom:12px; }
+.res-extrato-content {
+  margin: 12px 0 6px 0;
+  font-size: 0.85rem;
 }
-.res-label { font-size:.7rem; color:var(--muted); text-align:center; margin-bottom:2px; }
+.extrato-pontuacao-simples {
+  font-size: 0.85rem;
+}
+.extrato-linha {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+}
+.extrato-descricao {
+  font-family: 'Inter', -apple-system, sans-serif;
+  font-size: 0.8rem;
+  color: var(--muted);
+  font-weight: 400;
+}
+.extrato-palavra {
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--text);
+}
+.extrato-linha.base {
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 4px;
+}
+.extrato-linha.final {
+  padding: 12px 0 4px;
+  border-top: 1px solid var(--border);
+  margin-top: 8px;
+}
+.extrato-valor {
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 600;
+}
+.extrato-valor.negativo {
+  color: #ef4444;
+}
+.extrato-valor.positivo {
+  color: #10b981;
+}
+.extrato-final-label {
+  font-weight: 700;
+  color: var(--text);
+}
+.extrato-final-valor {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--text);
+}
+.memoria-calculo {
+  font-size: 0.7rem;
+  color: var(--muted);
+  font-weight: 400;
+}
+.extrato-valor.neutro {
+  opacity: 0;
+}
+.extrato-divisor {
+  height: 1px;
+  background: var(--border);
+  margin: 8px 0;
+}
+.res-label { font-size:.7rem; color:var(--muted); text-align:center; margin-bottom:2px; margin-top:6px; }
 .res-palavra {
   font-family:'DM Sans',sans-serif; font-size:1.6rem; font-weight:800;
   letter-spacing:5px; text-align:center; margin-bottom:10px; color:#10b981;
 }
 .res-palavra.perdeu { color:var(--muted); }
-.pontos-row { display:flex; gap:7px; justify-content:center; margin:4px 0 14px; }
-.ponto { width:30px; height:30px; border-radius:50%; }
+.pontos-row { 
+  display:flex; 
+  gap:7px; 
+  justify-content:center; 
+  align-items: center; 
+  margin:8px 0 14px; 
+}
+.ponto-emoji {
+  font-size: 20px;
+  line-height: 1;
+}
 .divisor { height:1px; background:var(--border); margin:10px 0; }
 .proximo-lbl { text-align:center; font-size:.66rem; letter-spacing:2px; text-transform:uppercase; color:var(--muted); margin-bottom:3px; }
 .contagem-regressiva { text-align:center; font-family:'DM Sans',sans-serif; font-size:1.5rem; font-weight:800; letter-spacing:3px; margin-bottom:8px; }
@@ -377,6 +448,9 @@ main {
 .ajuda-azul { color:#60a5fa; font-weight:600; }
 .ajuda-dicas { list-style:none; display:flex; flex-direction:column; gap:5px; margin-top:6px; }
 .ajuda-dicas li { font-size:.82rem; color:var(--muted); padding-left:16px; position:relative; line-height:1.55; }
+.ajuda-subtitulo { font-size:.72rem; font-weight:700; color:var(--text); margin:12px 0 6px; letter-spacing:.5px; }
+.ajuda-formula { background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:10px; margin:8px 0; text-align:center; font-family:'Space Grotesk',monospace; }
+.ajuda-exemplo { background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:8px; margin:6px 0; font-family:'Space Grotesk',monospace; font-size:.8rem; text-align:center; }
 .ajuda-dicas li::before { content:'›'; position:absolute; left:2px; color:var(--accent); font-size:1rem; line-height:1.3; }
 
 /* ── Rodapé de dois botões nos modais ── */

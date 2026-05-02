@@ -8,7 +8,7 @@ import { Grade } from '../base/grade.js';
 import { Teclado } from '../base/teclado.js';
 import { Historico } from '../base/historico.js';
 import { BadgeStreak } from './badgeStreak.js';
-import { ModalResultado } from './modalResultado.js';
+import { ModalResultado, ConfiguracaoDiario } from '../base/modalResultado.js';
 import { ContadorTempo } from '../base/contadorTempo.js';
 import { toast } from '../base/toast.js';
 import { cfg } from '../../configuracoes.js';
@@ -36,7 +36,10 @@ export class ModoDesafioDiario extends ModoBase {
     this._grade     = new Grade();
     this._historico = new Historico();
     this._badge     = new BadgeStreak();
-    this._modal     = new ModalResultado(aoAbrirSeletorLivre);
+    // Configurar modal resultado
+    const configuracao = { ...ConfiguracaoDiario };
+    configuracao.aoClicarAcao = () => this._aoAbrirSeletorLivre();
+    this._modal = new ModalResultado(configuracao);
     this._contadorTempo = new ContadorTempo();
     this._teclado   = new Teclado(k => this.aoTecla(k));
   }
@@ -167,7 +170,7 @@ export class ModoDesafioDiario extends ModoBase {
 
   _copiar(texto) {
     navigator.clipboard.writeText(texto)
-      .then(() => toast('✓ Copiado para a área de transferência!'))
+      .then(() => toast('✓ Copiado!'))
       .catch(() => {
         const ta = document.createElement('textarea');
         ta.value = texto; ta.style.cssText = 'position:fixed;opacity:0';
@@ -202,6 +205,8 @@ export class ModoDesafioDiario extends ModoBase {
       ganhou,
       encerrada,
       tempoRestante: this._partida.tempoRestante,
+      inicioPartida: this._partida.inicioPartida,
+      historicoJogadas: this._partida.historicoJogadas,
     }));
   }
 

@@ -1,11 +1,12 @@
 import { normalizar, valoresPalavra } from './ajudantes.js';
 import { ehValida } from '../dados/validador.js';
 import { cfg } from '../configuracoes.js';
+import { calcularPenalidadePalpite, calcularPontuacaoFinal, gerarExtratoPontuacao } from './pontuacao.js';
 
 export class Partida {
   constructor(palavraAlvo) {
     this.palavraAlvo = normalizar(palavraAlvo);
-    this.valoresAlvo = valoresPalavra(palavraAlvo);
+    this.valoresAlvo = valoresPalavra(this.palavraAlvo); // Usar palavra já normalizada
     this.tentativas = [];
     this.atual = Array(5).fill('');
     this.indiceFoco = 0;
@@ -20,6 +21,11 @@ export class Partida {
     this.intervalId = null;
     this.aoTempoEsgotar = null; // callback
     this.aoAtualizarTempo = null; // callback para atualizar UI
+    
+    // Pontuação properties
+    this.inicioPartida = Date.now(); // timestamp do início
+    this.historicoJogadas = []; // array com histórico de jogadas para pontuação
+    this.pontuacaoAtual = 1000; // pontuação atual (atualizada a cada jogada)
   }
 
   // ── Timer methods ──
@@ -73,6 +79,22 @@ export class Partida {
     return `${secs}s`;
   }
 
+  // ── Pontuação methods ──
+  obterTempoPassadoSegundos() {
+    return Math.floor((Date.now() - this.inicioPartida) / 1000);
+  }
+
+  calcularPontuacaoAtual() {
+    const ganhou = this.tentativas.some(t => t.ganhou) || this.revelado === 'ganhou';
+    return calcularPontuacaoFinal(this.historicoJogadas, ganhou);
+  }
+
+  obterExtratoPontuacao() {
+    const ganhou = this.tentativas.some(t => t.ganhou) || this.revelado === 'ganhou';
+    const pontuacaoFinal = this.calcularPontuacaoAtual();
+    return gerarExtratoPontuacao(this.historicoJogadas, pontuacaoFinal, ganhou, this.tentativas);
+  }
+
   // Restaura estado a partir de uma sessão salva (modo diário)
   restaurar(sessaoSalva) {
     this.tentativas = sessaoSalva.tentativas.map(t => ({ ...t, visivel: true }));
@@ -82,6 +104,15 @@ export class Partida {
     this._navIndex = -1;
     this.letrasFixas = Array(5).fill(false);
     this.revelado = null;
+    
+    // Restaurar dados de pontuação
+    if (sessaoSalva.inicioPartida) {
+      this.inicioPartida = sessaoSalva.inicioPartida;
+    }
+    if (sessaoSalva.historicoJogadas) {
+      this.historicoJogadas = [...sessaoSalva.historicoJogadas];
+      this.pontuacaoAtual = this.calcularPontuacaoAtual();
+    }
     
     // Restaurar timer se houver
     if (sessaoSalva.tempoRestante !== undefined && !this.encerrada) {
@@ -193,12 +224,32 @@ export class Partida {
     }
     const palavra = this.atual.join('');
     const modoInvalidas = cfg().palavrasInvalidas;
+    const tempoPassado = this.obterTempoPassadoSegundos();
 
     if (modoInvalidas === 'recusar' && !ehValida(palavra)) {
+      // Palavra inválida rejeitada - adiciona penalidade fixa
+      const penalidade = calcularPenalidadePalpite(tempoPassado, true, null, false);
+      this.historicoJogadas.push({
+        palavra,
+        tempoSegundos: tempoPassado,
+        penalidade,
+        ehInvalida: true
+      });
+      this.pontuacaoAtual = this.calcularPontuacaoAtual();
+      
       return { tipo: 'erro', motivo: 'invalida' };
     }
 
     if (modoInvalidas === 'penalizar' && !ehValida(palavra)) {
+      // Palavra inválida penalizada
+      const penalidade = calcularPenalidadePalpite(tempoPassado, true, null, false);
+      this.historicoJogadas.push({
+        palavra,
+        tempoSegundos: tempoPassado,
+        penalidade,
+        ehInvalida: true
+      });
+      
       const tentativa = { palavra, penalizada: true, ganhou: false, visivel: false };
       this.tentativas.push(tentativa);
       const encerrou = this.tentativas.length >= 6;
@@ -207,12 +258,35 @@ export class Partida {
         this.pararTimer(); // Para o timer quando o jogo encerra por excesso de tentativas
       }
       else { this.atual = Array(5).fill(''); this.indiceFoco = 0; }
+      
+      this.pontuacaoAtual = this.calcularPontuacaoAtual();
       return { tipo: encerrou ? 'encerrou' : 'tentativa', tentativa, ganhou: false, encerrou };
     }
 
+    // Calcula valores e delta primeiro
     const valores = valoresPalavra(palavra);
-    const delta = valores.reduce((s, v, i) => s + Math.abs(v - this.valoresAlvo[i]), 0);
+    let delta = valores.reduce((s, v, i) => s + Math.abs(v - this.valoresAlvo[i]), 0);
     const ganhou = normalizar(palavra) === this.palavraAlvo;
+    
+    // DEBUG: Investigar por que delta não é zero para palavras corretas
+    if (ganhou && delta !== 0) {
+      console.log('BUG: Palavra correta com delta != 0');
+      console.log('Palavra digitada:', palavra, '-> normalizada:', normalizar(palavra));
+      console.log('Palavra alvo:', this.palavraAlvo);
+      console.log('Valores digitados:', valores);
+      console.log('Valores alvo:', this.valoresAlvo);
+      console.log('Delta calculado:', delta);
+    }
+    
+    // Calcula penalidade com multiplicador baseado no delta
+    const penalidade = calcularPenalidadePalpite(tempoPassado, false, delta, ganhou);
+    this.historicoJogadas.push({
+      palavra,
+      tempoSegundos: tempoPassado,
+      penalidade,
+      ehInvalida: false,
+      delta: delta
+    });
     const tentativa = { palavra, valores, delta, ganhou, visivel: true };
     this.tentativas.push(tentativa);
 
@@ -223,6 +297,7 @@ export class Partida {
     }
     else { this.atual = Array(5).fill(''); this.indiceFoco = 0; }
 
+    this.pontuacaoAtual = this.calcularPontuacaoAtual();
     return { tipo: encerrou ? 'encerrou' : 'tentativa', tentativa, ganhou, encerrou };
   }
 }

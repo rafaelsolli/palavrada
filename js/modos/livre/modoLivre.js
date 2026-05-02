@@ -7,7 +7,7 @@ import { Grade } from '../base/grade.js';
 import { Teclado } from '../base/teclado.js';
 import { Historico } from '../base/historico.js';
 import { BadgeProgresso } from './badgeProgresso.js';
-import { ModalResultado } from './modalResultado.js';
+import { ModalResultado, ConfiguracaoLivre } from '../base/modalResultado.js';
 import { ModalSeletor, carregarProgresso, salvarResultadoLivre, carregarProgressoLivrissimo } from '../base/modalSeletor.js';
 import { BadgeLivrissimo } from '../livrissimo/badgeLivrissimo.js';
 import { ContadorTempo } from '../base/contadorTempo.js';
@@ -28,7 +28,10 @@ export class ModoLivre extends ModoBase {
       id => this._selecionarPalavra(id),
       id => { window.location.href = '?x=' + (id + 1); }
     );
-    this._modal     = new ModalResultado(() => this._seletor.abrir());
+    // Configurar modal resultado
+    const configuracao = { ...ConfiguracaoLivre };
+    configuracao.aoClicarAcao = () => this._seletor.abrir();
+    this._modal = new ModalResultado(configuracao);
     this._contadorTempo = new ContadorTempo();
     this._teclado   = new Teclado(k => this.aoTecla(k));
   }
@@ -153,7 +156,7 @@ export class ModoLivre extends ModoBase {
 
   _copiar(texto) {
     navigator.clipboard.writeText(texto)
-      .then(() => toast('✓ Copiado para a área de transferência!'))
+      .then(() => toast('✓ Copiado!'))
       .catch(() => {
         const ta = document.createElement('textarea');
         ta.value = texto; ta.style.cssText = 'position:fixed;opacity:0';
