@@ -108,7 +108,10 @@ export class Partida {
     // Restaurar dados de pontuação
     if (sessaoSalva.inicioPartida) {
       this.inicioPartida = sessaoSalva.inicioPartida;
+    } else {
+      this.inicioPartida = Date.now(); // Fallback se não houver inicioPartida
     }
+    
     if (sessaoSalva.historicoJogadas) {
       this.historicoJogadas = [...sessaoSalva.historicoJogadas];
       this.pontuacaoAtual = this.calcularPontuacaoAtual();

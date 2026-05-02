@@ -211,7 +211,27 @@ export class ModoDesafioDiario extends ModoBase {
   }
 
   _carregarSessao() {
-    try { return JSON.parse(localStorage.getItem(CHAVE_SESSAO())); } catch { return null; }
+    try {
+      const sessao = JSON.parse(localStorage.getItem(CHAVE_SESSAO()));
+      if (!sessao) return null;
+      
+      // Verificar se a sessão é do mesmo dia que hoje
+      if (sessao.inicioPartida) {
+        const hoje = new Date();
+        const diaInicioPartida = new Date(sessao.inicioPartida);
+        
+        // Comparar apenas dia, mês e ano
+        if (hoje.getDate() !== diaInicioPartida.getDate() ||
+            hoje.getMonth() !== diaInicioPartida.getMonth() ||
+            hoje.getFullYear() !== diaInicioPartida.getFullYear()) {
+          // Sessão é de outro dia - limpar para evitar contaminação
+          localStorage.removeItem(CHAVE_SESSAO());
+          return null;
+        }
+      }
+      
+      return sessao;
+    } catch { return null; }
   }
 
   _carregarStats() {
