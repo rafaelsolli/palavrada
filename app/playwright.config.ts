@@ -19,7 +19,7 @@ export default defineConfig({
   reporter: process.env.CI ? 'list' : [['list'], ['html', { open: 'never' }]],
 
   use: {
-    baseURL: `http://localhost:${PORTA}/beta/`,
+    baseURL: `http://localhost:${PORTA}/`,
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
   },
@@ -31,7 +31,7 @@ export default defineConfig({
 
   webServer: {
     command: `npm run build && npm run preview -- --port ${PORTA} --strictPort`,
-    url: `http://localhost:${PORTA}/beta/`,
+    url: `http://localhost:${PORTA}/`,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
   },

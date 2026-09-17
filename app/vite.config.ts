@@ -1,11 +1,8 @@
 import { defineConfig } from 'vitest/config';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 
-// `base` muda conforme o alvo do deploy:
-//   staging  → /beta/  (padrão; convive com o site legado na raiz)
-//   produção → /       (definido por BASE_PUBLICA no workflow, na virada)
 export default defineConfig(({ mode }) => ({
-  base: process.env.BASE_PUBLICA ?? '/beta/',
+  base: '/',
   plugins: [svelte()],
   // Sem a condição "browser" os testes carregam a build de servidor do Svelte,
   // que não sabe montar componentes. Fora do teste o campo é omitido de

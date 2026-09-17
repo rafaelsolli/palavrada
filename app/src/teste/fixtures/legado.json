@@ -1,0 +1,328 @@
+{
+  "_leiaMe": "Gerado por scripts/congelar-fixtures.mjs a partir do código do site anterior à reescrita, antes de ele ser removido. Não editar à mão.",
+  "_geradoEm": "2026-09-17",
+  "emAndamento": {
+    "sessao": {
+      "tentativas": [
+        {
+          "palavra": "MUNDO",
+          "valores": [
+            12,
+            20,
+            13,
+            3,
+            14
+          ],
+          "delta": 44,
+          "ganhou": false,
+          "visivel": true
+        },
+        {
+          "palavra": "CASAS",
+          "valores": [
+            2,
+            0,
+            18,
+            0,
+            18
+          ],
+          "delta": 46,
+          "ganhou": false,
+          "visivel": true
+        },
+        {
+          "palavra": "PRATO",
+          "valores": [
+            15,
+            17,
+            0,
+            19,
+            14
+          ],
+          "delta": 37,
+          "ganhou": false,
+          "visivel": true
+        }
+      ],
+      "ganhou": false,
+      "encerrada": false,
+      "tempoRestante": null,
+      "inicioPartida": 1789681195299,
+      "historicoJogadas": [
+        {
+          "palavra": "MUNDO",
+          "tempoSegundos": 12,
+          "penalidade": 182,
+          "ehInvalida": false,
+          "delta": 44
+        },
+        {
+          "palavra": "CASAS",
+          "tempoSegundos": 24,
+          "penalidade": 206,
+          "ehInvalida": false,
+          "delta": 46
+        },
+        {
+          "palavra": "PRATO",
+          "tempoSegundos": 36,
+          "penalidade": 209,
+          "ehInvalida": false,
+          "delta": 37
+        }
+      ]
+    },
+    "esperado": {
+      "palavras": [
+        "MUNDO",
+        "CASAS",
+        "PRATO"
+      ],
+      "deltas": [
+        44,
+        46,
+        37
+      ],
+      "penalidades": [
+        182,
+        206,
+        209
+      ],
+      "pontuacao": 0,
+      "encerrada": false
+    }
+  },
+  "vencida": {
+    "sessao": {
+      "tentativas": [
+        {
+          "palavra": "MUNDO",
+          "valores": [
+            12,
+            20,
+            13,
+            3,
+            14
+          ],
+          "delta": 44,
+          "ganhou": false,
+          "visivel": true
+        },
+        {
+          "palavra": "CASAS",
+          "valores": [
+            2,
+            0,
+            18,
+            0,
+            18
+          ],
+          "delta": 46,
+          "ganhou": false,
+          "visivel": true
+        },
+        {
+          "palavra": "VERSO",
+          "valores": [
+            21,
+            4,
+            17,
+            18,
+            14
+          ],
+          "delta": 0,
+          "ganhou": true,
+          "visivel": true
+        }
+      ],
+      "ganhou": true,
+      "encerrada": true,
+      "tempoRestante": null,
+      "inicioPartida": 1789681195299,
+      "historicoJogadas": [
+        {
+          "palavra": "MUNDO",
+          "tempoSegundos": 12,
+          "penalidade": 182,
+          "ehInvalida": false,
+          "delta": 44
+        },
+        {
+          "palavra": "CASAS",
+          "tempoSegundos": 24,
+          "penalidade": 206,
+          "ehInvalida": false,
+          "delta": 46
+        },
+        {
+          "palavra": "VERSO",
+          "tempoSegundos": 36,
+          "penalidade": 165,
+          "ehInvalida": false,
+          "delta": 0
+        }
+      ]
+    },
+    "esperado": {
+      "palavras": [
+        "MUNDO",
+        "CASAS",
+        "VERSO"
+      ],
+      "deltas": [
+        44,
+        46,
+        0
+      ],
+      "penalidades": [
+        182,
+        206,
+        165
+      ],
+      "pontuacao": 447,
+      "encerrada": true
+    }
+  },
+  "umPalpite": {
+    "sessao": {
+      "tentativas": [
+        {
+          "palavra": "MUNDO",
+          "valores": [
+            12,
+            20,
+            13,
+            3,
+            14
+          ],
+          "delta": 44,
+          "ganhou": false,
+          "visivel": true
+        }
+      ],
+      "ganhou": false,
+      "encerrada": false,
+      "tempoRestante": null,
+      "inicioPartida": 1789681219299,
+      "historicoJogadas": [
+        {
+          "palavra": "MUNDO",
+          "tempoSegundos": 12,
+          "penalidade": 182,
+          "ehInvalida": false,
+          "delta": 44
+        }
+      ]
+    },
+    "esperado": {
+      "palavras": [
+        "MUNDO"
+      ],
+      "deltas": [
+        44
+      ],
+      "penalidades": [
+        182
+      ],
+      "pontuacao": 0,
+      "encerrada": false
+    }
+  },
+  "comInvalida": {
+    "sessao": {
+      "tentativas": [
+        {
+          "palavra": "XXXXX",
+          "penalizada": true,
+          "ganhou": false,
+          "visivel": false
+        },
+        {
+          "palavra": "MUNDO",
+          "valores": [
+            12,
+            20,
+            13,
+            3,
+            14
+          ],
+          "delta": 44,
+          "ganhou": false,
+          "visivel": true
+        }
+      ],
+      "ganhou": false,
+      "encerrada": false,
+      "tempoRestante": null,
+      "inicioPartida": 1789681207299,
+      "historicoJogadas": [
+        {
+          "palavra": "XXXXX",
+          "tempoSegundos": 12,
+          "penalidade": 100,
+          "ehInvalida": true
+        },
+        {
+          "palavra": "MUNDO",
+          "tempoSegundos": 24,
+          "penalidade": 163,
+          "ehInvalida": false,
+          "delta": 44
+        }
+      ]
+    },
+    "esperado": {
+      "palavras": [
+        "XXXXX",
+        "MUNDO"
+      ],
+      "deltas": [
+        null,
+        44
+      ],
+      "penalidades": [
+        100,
+        163
+      ],
+      "pontuacao": 0,
+      "encerrada": false
+    }
+  },
+  "config": {
+    "regraHorizontal": 25,
+    "eixoY": 0,
+    "bolinhas": false,
+    "alvoNosPalpites": false,
+    "letrasNoGrafico": false,
+    "maxPalpites": 6,
+    "teclado": "alfabetico",
+    "fixarLetrasAcertadas": false,
+    "autocomplete": false,
+    "palavrasInvalidas": "recusar",
+    "tempoLimite": 180,
+    "exibirPontuacao": true
+  },
+  "progressoLivre": {
+    "jogados": [
+      {
+        "id": 41,
+        "ganhou": true,
+        "tentativas": 3
+      },
+      {
+        "id": 7,
+        "ganhou": false,
+        "tentativas": 6
+      }
+    ]
+  },
+  "progressoLivrissimo": {
+    "jogados": [
+      {
+        "id": 900,
+        "ganhou": true,
+        "tentativas": 2
+      }
+    ]
+  }
+}

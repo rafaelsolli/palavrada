@@ -16,7 +16,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
 
 const LEGADO = process.env.URL_LEGADO ?? 'https://palavrada.com.br/';
-const NOVO = process.env.URL_NOVO ?? 'http://localhost:4173/beta/';
+const NOVO = process.env.URL_NOVO ?? 'http://localhost:4173/';
 const PASTA = 'e2e-screenshots';
 const TELAS = [
   { nome: 'celular', viewport: { width: 412, height: 900 }, isMobile: true },

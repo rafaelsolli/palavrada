@@ -1,9 +1,4 @@
-# Publica as duas versões no mesmo GitHub Pages:
-#   /       → site legado (arquivos da raiz do repo, copiados sem alteração)
-#   /beta/  → build novo de app/ (Vite + Svelte)
-#
-# Nada é commitado de volta, então não há loop de CI. Na virada, basta remover
-# o passo "Copiar site legado" e trocar BASE_PUBLICA para "/".
+# Publica o jogo no GitHub Pages.
 #
 # Requer, uma única vez: Settings → Pages → Source = "GitHub Actions".
 name: Pages
@@ -46,20 +41,16 @@ jobs:
         working-directory: app
         run: npm run check
 
-      - name: Build do beta
+      - name: Build
         working-directory: app
-        env:
-          BASE_PUBLICA: /beta/
         run: npm run build
 
       - name: Montar artefato
         run: |
-          mkdir -p site/beta
-          # Copiar site legado (remover este passo na virada)
-          cp -r index.html style.css js favicon.ico favicon.png favicon.svg site/
-          # CNAME precisa estar na raiz do artefato ou o domínio custom cai
+          mkdir -p site
+          cp -r app/dist/. site/
+          # CNAME precisa estar na raiz do artefato ou o domínio custom cai.
           cp CNAME site/
-          cp -r app/dist/. site/beta/
 
       - uses: actions/upload-pages-artifact@v3
         with:
@@ -84,7 +75,6 @@ jobs:
 
       - name: Cache do navegador
         uses: actions/cache@v4
-        id: cache-playwright
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('app/package-lock.json') }}
