@@ -10,9 +10,7 @@ name: Pages
 
 on:
   push:
-    # Ambas as branches publicam. Elas nunca rodam em paralelo (ver concurrency),
-    # mas o último push a terminar é o que fica no ar — evite empurrar nas duas juntas.
-    branches: [main, reescrita]
+    branches: [main]
   workflow_dispatch:
 
 permissions:
