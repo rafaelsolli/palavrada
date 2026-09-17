@@ -12,10 +12,12 @@
   import { DIARIO, LIVRE, LIVRISSIMO } from './modos/definicoes';
   import { linkDoDesafio, rotulo, type ModoDefinicao } from './modos/tipos';
   import { numeroDoDia } from './nucleo/tempo';
+  import { registrarConsole } from './ui/console';
   import {
     carregarProgresso,
     carregarStats,
     jaJogado,
+    garantirBackup,
     limparSessoesDiariasAntigas,
     marcarTutorialVisto,
     migrarChavesAntigas,
@@ -122,6 +124,10 @@
   }
 
   async function iniciar() {
+    registrarConsole();
+    // Antes de qualquer escrita: o beta divide o armazenamento com o site
+    // publicado, então uma cópia do estado anterior fica guardada.
+    garantirBackup();
     migrarChavesAntigas();
     const dia = numeroDoDia();
     limparSessoesDiariasAntigas(dia);

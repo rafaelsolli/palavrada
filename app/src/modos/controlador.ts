@@ -190,6 +190,7 @@ export class ControladorJogo {
       encerrada: this.partida.encerrada,
       ganhou: this.partida.ganhou,
       cronometroMs: this.cronometro.decorridoMs,
+      restanteSegundos: this.cronometro.restanteSegundos,
     });
   }
 
