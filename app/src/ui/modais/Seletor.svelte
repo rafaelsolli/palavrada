@@ -95,11 +95,8 @@
 <Modal aberto={props.aberto} aoFechar={props.aoFechar} classe="seletor">
   <div class="titulo">Selecionar desafio</div>
 
-  <!-- Só monta a grade com o modal aberto: são milhares de células, e mantê-las
-       no DOM o tempo todo pesa em toda visita, mesmo sem ninguém abrir o seletor. -->
   <div class="area-wrap">
     <div class="area" bind:this={area} onscroll={aoRolar}>
-      {#if props.aberto}
       <div class="secao">{rotulo(LIVRE)}</div>
       <div class="grade">
         {#each { length: props.totalLivre } as _, i (i)}
@@ -140,7 +137,6 @@
 
       {#if visiveisLivrissimo < props.totalLivrissimo}
         <div class="carregando">carregando mais…</div>
-      {/if}
       {/if}
     </div>
     <div class="fade" style:opacity={noFim ? 0 : 1}>▼</div>

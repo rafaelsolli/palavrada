@@ -22,11 +22,25 @@
   </div>
   <div class="botoes">
     {#if props.selo}{@render props.selo()}{/if}
-    <button class="hbtn" title={props.rotuloAlternar} onclick={props.aoAlternarModo}>
+    <button
+      class="hbtn"
+      title={props.rotuloAlternar}
+      aria-label={props.rotuloAlternar}
+      onclick={props.aoAlternarModo}
+    >
       {props.iconeAlternar}
     </button>
-    <button class="hbtn" title="Como jogar" onclick={props.aoAbrirAjuda}>❓</button>
-    <button class="hbtn" title="Configurações" onclick={props.aoAbrirConfig}>⚙️</button>
+    <button class="hbtn" title="Como jogar" aria-label="Como jogar" onclick={props.aoAbrirAjuda}>
+      ❓
+    </button>
+    <button
+      class="hbtn"
+      title="Configurações"
+      aria-label="Configurações"
+      onclick={props.aoAbrirConfig}
+    >
+      ⚙️
+    </button>
   </div>
 </header>
 

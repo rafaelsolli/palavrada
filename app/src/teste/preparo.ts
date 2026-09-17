@@ -2,6 +2,7 @@ import '@testing-library/jest-dom/vitest';
 import { readFileSync } from 'node:fs';
 import { afterEach, beforeEach, vi } from 'vitest';
 import { cleanup } from '@testing-library/svelte';
+import { config } from '../config/estado.svelte';
 
 /**
  * Preparo comum dos testes.
@@ -31,6 +32,9 @@ globalThis.ResizeObserver ??= class {
 
 beforeEach(() => {
   localStorage.clear();
+  // A store é um singleton de módulo, compartilhado por todos os casos do
+  // arquivo: sem recarregar, a configuração aplicada num teste vaza no seguinte.
+  config.recarregar();
 
   vi.stubGlobal('fetch', async (url: string) => {
     const nome = String(url).split('/').pop()?.replace('.txt', '') ?? '';

@@ -15,6 +15,12 @@ class EstadoConfig {
   /** Alterações ainda não aplicadas, enquanto o modal está aberto. */
   rascunho = $state<Partial<Config>>({});
 
+  /** Relê do armazenamento, descartando o que estiver em memória. */
+  recarregar(): void {
+    this.atual = carregarConfig();
+    this.rascunho = {};
+  }
+
   /** Valor a exibir: o do rascunho, se houver, senão o vigente. */
   valorExibido<K extends ChaveConfig>(chave: K): Config[K] {
     return (this.rascunho[chave] ?? this.atual[chave]) as Config[K];

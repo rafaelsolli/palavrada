@@ -5,7 +5,13 @@ import { readFileSync } from 'node:fs';
 import App from '../App.svelte';
 import { palavraDoDia } from '../modos/palavraDoDia';
 import { numeroDoDia } from '../nucleo/tempo';
-import { carregarProgresso, carregarStats, chaveSessao, carregarSessao } from '../nucleo/armazenamento';
+import {
+  carregarProgresso,
+  carregarStats,
+  chaveSessao,
+  carregarSessao,
+  marcarTutorialVisto,
+} from '../nucleo/armazenamento';
 
 /**
  * Testes de ponta a ponta da interface, no jsdom.
@@ -16,8 +22,14 @@ import { carregarProgresso, carregarStats, chaveSessao, carregarSessao } from '.
 
 const curadas = readFileSync('public/lexico/curadas.txt', 'utf8').trim().split('\n');
 
-/** Espera o jogo sair do estado de carregamento. */
-async function abrirJogo() {
+/**
+ * Espera o jogo sair do estado de carregamento.
+ *
+ * Por padrão marca o tutorial como já visto: senão ele abriria sozinho meio
+ * segundo depois e atrapalharia os casos que não são sobre ele.
+ */
+async function abrirJogo({ tutorial = false } = {}) {
+  if (!tutorial) marcarTutorialVisto();
   render(App);
   await waitFor(() => expect(screen.getByLabelText('Letra 1')).toBeInTheDocument(), {
     timeout: 3000,

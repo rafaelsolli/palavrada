@@ -20,18 +20,28 @@
 
 <svelte:window onkeydown={aoTeclar} />
 
+<!-- Fechado, o modal continua no DOM para a transição de opacidade, mas sai da
+     árvore de acessibilidade e do alcance do teclado: sem isto, leitores de tela
+     e a navegação por Tab alcançam os botões de modais invisíveis. -->
 <div
   class="overlay"
   class:aberto={props.aberto}
+  inert={!props.aberto}
+  aria-hidden={!props.aberto}
   onclick={(e) => e.target === e.currentTarget && props.aoFechar()}
   role="presentation"
 >
   <div class="modal {props.classe ?? ''}" role="dialog" aria-modal="true" aria-label={props.titulo}>
-    <button class="fechar" title="Fechar" onclick={props.aoFechar}>×</button>
-    {#if props.titulo}<h2>{props.titulo}</h2>{/if}
-    {@render props.children()}
-    {#if props.rodape}
-      <div class="rodape">{@render props.rodape()}</div>
+    <!-- O conteúdo só existe enquanto o modal está aberto. Além de aliviar o
+         DOM, evita que texto de modal invisível apareça em busca na página,
+         em leitores de tela e na navegação por Tab. -->
+    {#if props.aberto}
+      <button class="fechar" title="Fechar" aria-label="Fechar" onclick={props.aoFechar}>×</button>
+      {#if props.titulo}<h2>{props.titulo}</h2>{/if}
+      {@render props.children()}
+      {#if props.rodape}
+        <div class="rodape">{@render props.rodape()}</div>
+      {/if}
     {/if}
   </div>
 </div>

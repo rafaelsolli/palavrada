@@ -2,7 +2,10 @@
   import Jogo from './ui/Jogo.svelte';
   import Toast from './ui/Toast.svelte';
   import Seletor from './ui/modais/Seletor.svelte';
-  import { lerConfig } from './config/estado.svelte';
+  import Ajuda from './ui/modais/Ajuda.svelte';
+  import Config from './ui/modais/Config.svelte';
+  import Resultado from './ui/modais/Resultado.svelte';
+  import { config, lerConfig } from './config/estado.svelte';
   import { carregarLexico, type Lexico } from './nucleo/lexico';
   import { ControladorJogo } from './modos/controlador';
   import { lerDesafioDaUrl, resolverModo } from './modos/resolver';
@@ -14,7 +17,9 @@
     carregarStats,
     jaJogado,
     limparSessoesDiariasAntigas,
+    marcarTutorialVisto,
     migrarChavesAntigas,
+    tutorialJaVisto,
     type Progresso,
   } from './nucleo/armazenamento';
 
@@ -26,7 +31,7 @@
   let toast = $state<Toast | null>(null);
   let controlador = $state<ControladorJogo | null>(null);
   let erro = $state<string | null>(null);
-  let modal = $state<'seletor' | null>(null);
+  let modal = $state<'seletor' | 'ajuda' | 'config' | 'resultado' | null>(null);
   let versaoProgresso = $state(0);
 
   let lexicoCuradas = $state<Lexico | null>(null);
@@ -82,6 +87,40 @@
     window.location.href = url;
   }
 
+  /**
+   * Dados do modal de resultado.
+   *
+   * Precisa passar pelo contador de versão: o controlador é uma classe comum e
+   * sua identidade não muda ao fim da partida, então ler
+   * `controlador.partida.ganhou` direto no template congelaria o valor do
+   * primeiro render — o modal anunciava derrota depois de uma vitória.
+   */
+  const resultado = $derived.by(() => {
+    void versaoProgresso;
+    if (!controlador) return null;
+    const { partida } = controlador;
+    return {
+      tentativas: partida.tentativas,
+      ganhou: partida.ganhou,
+      palavraAlvo: partida.palavraAlvo,
+      extrato: config.atual.exibirPontuacao ? partida.extrato() : null,
+    };
+  });
+
+  /** Botão principal do modal de resultado: sempre leva ao seletor. */
+  const acaoDoResultado = $derived.by(() => {
+    const destino = livreCompleto || controlador?.modo.id === 'livrissimo' ? LIVRISSIMO : LIVRE;
+    return { rotulo: rotulo(destino), ao: () => (modal = 'seletor') };
+  });
+
+  /**
+   * O resultado aparece depois da animação de revelação da grade. Os tempos são
+   * os do site atual: mais folga na vitória, para dar tempo de ver a onda verde.
+   */
+  function agendarResultado(ganhou: boolean, atrasoMs = ganhou ? 1600 : 900) {
+    setTimeout(() => (modal = 'resultado'), atrasoMs);
+  }
+
   async function iniciar() {
     migrarChavesAntigas();
     const dia = numeroDoDia();
@@ -119,11 +158,25 @@
         config: lerConfig,
         base: BASE,
       });
-      c.aoEncerrar = () => versaoProgresso++;
-      c.iniciar();
+      c.aoEncerrar = (ganhou) => {
+        versaoProgresso++;
+        agendarResultado(ganhou);
+      };
+      const restaurou = c.iniciar();
       controlador = c;
 
+      // Reabrir uma partida já encerrada mostra o resultado de novo, sem
+      // recontar nada: o encerramento não é disparado outra vez.
+      if (restaurou && c.partida.encerrada) {
+        versaoProgresso++;
+        agendarResultado(c.partida.ganhou, 400);
+      }
+
       if (resolucao.aviso) setTimeout(() => toast?.mostrar(resolucao.aviso!), 300);
+      if (!tutorialJaVisto()) {
+        marcarTutorialVisto();
+        setTimeout(() => (modal = 'ajuda'), 500);
+      }
     } catch (e) {
       erro = e instanceof Error ? e.message : 'Não consegui carregar o jogo';
     }
@@ -152,8 +205,32 @@
     iconeAlternar={alternar.icone}
     rotuloAlternar={alternar.rotulo}
     aoAlternarModo={alternar.ao}
-    aoAbrirAjuda={() => toast?.mostrar('Ajuda chega na próxima etapa')}
-    aoAbrirConfig={() => toast?.mostrar('Configurações chegam na próxima etapa')}
+    aoAbrirAjuda={() => (modal = 'ajuda')}
+    aoAbrirConfig={() => (modal = 'config')}
+    aoAvisar={(m) => toast?.mostrar(m)}
+  />
+
+  <Ajuda
+    aberto={modal === 'ajuda'}
+    aoFechar={() => (modal = null)}
+    mostrarPontuacao={config.atual.exibirPontuacao}
+    base={BASE}
+    aoAvisar={(m) => toast?.mostrar(m)}
+  />
+
+  <Config aberto={modal === 'config'} aoFechar={() => (modal = null)} />
+
+  <Resultado
+    aberto={modal === 'resultado'}
+    aoFechar={() => (modal = null)}
+    modo={controlador.modo}
+    indice={controlador.indice}
+    tentativas={resultado?.tentativas ?? []}
+    ganhou={resultado?.ganhou ?? false}
+    palavraAlvo={resultado?.palavraAlvo ?? ''}
+    extrato={resultado?.extrato ?? null}
+    textoCompartilhamento={() => controlador!.textoCompartilhamento()}
+    acao={acaoDoResultado}
     aoAvisar={(m) => toast?.mostrar(m)}
   />
 
