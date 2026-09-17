@@ -184,6 +184,30 @@ export class Partida {
     return { tipo: 'tentativa', tentativa, ganhou: tentativa.ganhou, encerrou };
   }
 
+  /**
+   * Repõe o estado de uma sessão salva.
+   *
+   * A grade volta vazia de propósito: o palpite que estava sendo digitado não é
+   * persistido, só os já confirmados.
+   */
+  restaurar(sessao: {
+    tentativas: Tentativa[];
+    jogadas: Jogada[];
+    encerrada: boolean;
+    ganhou: boolean;
+  }): void {
+    this.tentativas = sessao.tentativas.map((t) => ({ ...t }));
+    this.jogadas = sessao.jogadas.map((j) => ({ ...j }));
+    this.encerrada = sessao.encerrada;
+    this.atual = Array(TAMANHO_PALAVRA).fill('');
+    this.indiceFoco = 0;
+    this.letrasFixas = Array(TAMANHO_PALAVRA).fill(false);
+    this.revelado = null;
+    this.#navegacao = -1;
+
+    if (sessao.encerrada) this.revelarResposta(sessao.ganhou);
+  }
+
   // ── Navegação e foco ──────────────────────────────────────────────────────
 
   focar(indice: number): void {

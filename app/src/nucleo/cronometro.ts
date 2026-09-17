@@ -45,6 +45,11 @@ export class Cronometro {
     this.#retomadoEm = null;
   }
 
+  /** Repõe tempo já jogado, ao restaurar uma sessão. */
+  acumular(ms: number): void {
+    if (Number.isFinite(ms) && ms > 0) this.#acumuladoMs += ms;
+  }
+
   get decorridoMs(): number {
     const emCurso = this.#retomadoEm === null ? 0 : this.#agora() - this.#retomadoEm;
     return this.#acumuladoMs + emCurso;
