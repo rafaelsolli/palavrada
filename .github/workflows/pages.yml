@@ -1,0 +1,78 @@
+# Publica as duas versões no mesmo GitHub Pages:
+#   /       → site legado (arquivos da raiz do repo, copiados sem alteração)
+#   /beta/  → build novo de app/ (Vite + Svelte)
+#
+# Nada é commitado de volta, então não há loop de CI. Na virada, basta remover
+# o passo "Copiar site legado" e trocar BASE_PUBLICA para "/".
+#
+# Requer, uma única vez: Settings → Pages → Source = "GitHub Actions".
+name: Pages
+
+on:
+  push:
+    # Ambas as branches publicam. Elas nunca rodam em paralelo (ver concurrency),
+    # mas o último push a terminar é o que fica no ar — evite empurrar nas duas juntas.
+    branches: [main, reescrita]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - name: Instalar dependências
+        working-directory: app
+        run: npm ci
+
+      - name: Testes
+        working-directory: app
+        run: npm test
+
+      - name: Typecheck
+        working-directory: app
+        run: npm run check
+
+      - name: Build do beta
+        working-directory: app
+        env:
+          BASE_PUBLICA: /beta/
+        run: npm run build
+
+      - name: Montar artefato
+        run: |
+          mkdir -p site/beta
+          # Copiar site legado (remover este passo na virada)
+          cp -r index.html style.css js favicon.ico favicon.png favicon.svg site/
+          # CNAME precisa estar na raiz do artefato ou o domínio custom cai
+          cp CNAME site/
+          cp -r app/dist/. site/beta/
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4

@@ -1,0 +1,24 @@
+:root {
+  --bg: #080d18;
+  --surface: #0f1623;
+  --surface2: #111827;
+  --border: #1e2a3a;
+  --text: #e8f0fe;
+  --muted: #4a6080;
+  --accent: #3b82f6;
+  --key-bg: #141e2e;
+  --wave-target: #3b82f6;
+  --wave-last: #f472b6;
+  --wave-old: #2a3a50;
+  --wave-win: #10b981;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Space Grotesk', sans-serif;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
