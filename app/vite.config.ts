@@ -15,5 +15,8 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     include: ['src/**/*.test.ts'],
+    // O teste de paridade da pontuação percorre ~870k combinações; o runner do
+    // CI é bem mais lento que a máquina local.
+    testTimeout: 20_000,
   },
 });

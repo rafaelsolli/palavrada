@@ -60,11 +60,19 @@ describe('calcularAgravantes', () => {
   });
 
   it('bate com o legado em TODAS as combinações de configuração', () => {
+    // Acumula as divergências e afirma uma vez só: um expect() por combinação
+    // custaria mais que o cálculo e estoura o timeout no CI.
+    const divergentes: { config: Config; novo: number; legado: number }[] = [];
     let n = 0;
     for (const config of todasAsConfigs()) {
-      expect(calcularAgravantes(config)).toBe(agravantesLegado(config));
+      const novoValor = calcularAgravantes(config);
+      const legado = agravantesLegado(config);
+      if (novoValor !== legado && divergentes.length < 5) {
+        divergentes.push({ config, novo: novoValor, legado });
+      }
       n++;
     }
+    expect(divergentes).toEqual([]);
     // 6 × 6 × 2 × 2 × 2 × 7 × 2 × 2 × 2 × 3 × 9 × 2 combinações
     expect(n).toBe(6 * 6 * 2 * 2 * 2 * 7 * 2 * 2 * 2 * 3 * 9 * 2);
   });
