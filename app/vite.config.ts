@@ -7,11 +7,11 @@ import { svelte } from '@sveltejs/vite-plugin-svelte';
 export default defineConfig(({ mode }) => ({
   base: process.env.BASE_PUBLICA ?? '/beta/',
   plugins: [svelte()],
-  resolve: {
-    // Sem isto os testes carregam a build de servidor do Svelte, que não sabe
-    // montar componentes. Só vale no modo de teste.
-    conditions: mode === 'test' ? ['browser'] : [],
-  },
+  // Sem a condição "browser" os testes carregam a build de servidor do Svelte,
+  // que não sabe montar componentes. Fora do teste o campo é omitido de
+  // propósito: passar uma lista vazia apaga as condições padrão do Vite e o
+  // build de produção acaba resolvendo essa mesma build de servidor.
+  ...(mode === 'test' ? { resolve: { conditions: ['browser'] } } : {}),
   build: {
     outDir: 'dist',
     emptyOutDir: true,
