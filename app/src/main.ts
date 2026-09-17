@@ -1,4 +1,5 @@
 import './estilos/tokens.css';
+import './estilos/botoes.css';
 import { mount } from 'svelte';
 import App from './App.svelte';
 

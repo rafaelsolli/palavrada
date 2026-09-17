@@ -1,0 +1,38 @@
+/* Botões de rodapé dos modais — compartilhados por todos eles. */
+.mbtn {
+  margin-top: 14px;
+  width: 100%;
+  padding: 11px;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+  border: none;
+  border-radius: 11px;
+  color: #fff;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 700;
+  font-size: 0.92rem;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.mbtn:hover {
+  opacity: 0.85;
+}
+.mbtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.mbtn.sec {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  margin-top: 7px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 600;
+  font-size: 0.86rem;
+}
+.mbtn.sec:hover {
+  border-color: var(--muted);
+  color: var(--text);
+}
+.mbtn.destaque {
+  background: linear-gradient(90deg, #7c3aed, #4f46e5);
+}

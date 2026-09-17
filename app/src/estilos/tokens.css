@@ -21,4 +21,19 @@ body {
   font-family: 'Space Grotesk', sans-serif;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
+  /* A tela inteira, sem rolagem: quem rola são o histórico e os modais. */
+  height: 100dvh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#app {
+  display: contents;
+}
+
+button {
+  touch-action: manipulation;
+  font-family: inherit;
 }

@@ -1,132 +1,185 @@
 <script lang="ts">
-  // Placeholder da Fase 0. Existe para provar duas coisas em produção:
-  //   1. o pipeline de build/deploy publica em /beta/ sem tocar na raiz;
-  //   2. /beta/ enxerga o mesmo localStorage do site legado (mesma origem),
-  //      que é o motivo de termos escolhido subpasta em vez de subdomínio.
-  const PREFIXOS = ['palavrada.', 'pr_'];
+  import Jogo from './ui/Jogo.svelte';
+  import Toast from './ui/Toast.svelte';
+  import Seletor from './ui/modais/Seletor.svelte';
+  import { lerConfig } from './config/estado.svelte';
+  import { carregarLexico, type Lexico } from './nucleo/lexico';
+  import { ControladorJogo } from './modos/controlador';
+  import { lerDesafioDaUrl, resolverModo } from './modos/resolver';
+  import { DIARIO, LIVRE, LIVRISSIMO } from './modos/definicoes';
+  import { linkDoDesafio, rotulo, type ModoDefinicao } from './modos/tipos';
+  import { numeroDoDia } from './nucleo/tempo';
+  import {
+    carregarProgresso,
+    carregarStats,
+    jaJogado,
+    limparSessoesDiariasAntigas,
+    migrarChavesAntigas,
+    type Progresso,
+  } from './nucleo/armazenamento';
 
-  type Entrada = { chave: string; tamanho: number };
+  const BASE = `${window.location.origin}${window.location.pathname}`;
+  /** `?debug=1` mostra a palavra-alvo em cinza. Antes isso era automático em
+   *  localhost, o que impedia testar o jogo de verdade durante o desenvolvimento. */
+  const DEPURANDO = new URLSearchParams(window.location.search).get('debug') === '1';
 
-  function lerChaves(): Entrada[] {
+  let toast = $state<Toast | null>(null);
+  let controlador = $state<ControladorJogo | null>(null);
+  let erro = $state<string | null>(null);
+  let modal = $state<'seletor' | null>(null);
+  let versaoProgresso = $state(0);
+
+  let lexicoCuradas = $state<Lexico | null>(null);
+
+  const progressoLivre = $derived.by((): Progresso => {
+    void versaoProgresso;
+    return carregarProgresso('livre');
+  });
+  const progressoLivrissimo = $derived.by((): Progresso => {
+    void versaoProgresso;
+    return carregarProgresso('livrissimo');
+  });
+
+  const totalLivre = $derived(lexicoCuradas?.palavras.length ?? 0);
+  const totalLivrissimo = $derived(9147);
+  const livreCompleto = $derived(totalLivre > 0 && progressoLivre.jogados.length >= totalLivre);
+
+  /** Cápsula do cabeçalho: sequência no diário, progresso nos modos livres. */
+  const selo = $derived.by(() => {
+    if (!controlador) return null;
+    void versaoProgresso;
+    const pct = (n: number, total: number) =>
+      `${((n * 100) / total).toFixed(2).replace('.', ',')}% completo`;
+
+    switch (controlador.modo.id) {
+      case 'diario': {
+        const s = carregarStats().sequencia;
+        if (s <= 0) return null;
+        return { icone: '🔥', texto: `${s} vitória${s === 1 ? '' : 's'} seguida${s === 1 ? '' : 's'}` };
+      }
+      case 'livre':
+        return livreCompleto
+          ? null
+          : { icone: LIVRE.icone, texto: pct(progressoLivre.jogados.length, totalLivre) };
+      case 'livrissimo':
+        return {
+          icone: LIVRISSIMO.icone,
+          texto: pct(progressoLivrissimo.jogados.length, totalLivrissimo),
+        };
+    }
+  });
+
+  const alternar = $derived.by(() => {
+    if (!controlador) return { icone: '🎲', rotulo: '', ao: () => {} };
+    if (controlador.modo.id !== 'diario') {
+      return { icone: DIARIO.icone, rotulo: 'Jogar o Desafio Diário', ao: () => irPara(BASE) };
+    }
+    const destino = livreCompleto ? LIVRISSIMO : LIVRE;
+    return { icone: destino.icone, rotulo: rotulo(destino), ao: () => (modal = 'seletor') };
+  });
+
+  function irPara(url: string) {
+    window.location.href = url;
+  }
+
+  async function iniciar() {
+    migrarChavesAntigas();
+    const dia = numeroDoDia();
+    limparSessoesDiariasAntigas(dia);
+
+    const pedido = lerDesafioDaUrl(window.location.search);
+
     try {
-      return Object.keys(localStorage)
-        .filter((c) => PREFIXOS.some((p) => c.startsWith(p)))
-        .sort()
-        .map((chave) => ({ chave, tamanho: (localStorage.getItem(chave) ?? '').length }));
-    } catch {
-      return [];
+      const lexico = await carregarLexico(pedido?.modo.fonte ?? 'curadas');
+      lexicoCuradas = pedido?.modo.fonte === 'livrissimo' ? await carregarLexico('curadas') : lexico;
+
+      const resolucao = resolverModo(pedido, {
+        dia,
+        totalDoModo: lexico.palavras.length,
+        totalLivre: lexicoCuradas.palavras.length,
+        jogadosLivre: carregarProgresso('livre').jogados.length,
+        jaJogado:
+          pedido !== null &&
+          pedido.modo.persistencia !== null &&
+          jaJogado(pedido.modo.persistencia, pedido.indice),
+      });
+
+      if (resolucao.redirecionado) {
+        history.replaceState(null, '', window.location.pathname);
+      }
+
+      // Se a resolução mandou para outro modo, a lista pode ser outra. Não custa
+      // nova requisição: os arquivos já estão em cache.
+      const lexicoFinal = await carregarLexico(resolucao.modo.fonte);
+
+      const c = new ControladorJogo({
+        modo: resolucao.modo,
+        indice: resolucao.indice,
+        lexico: lexicoFinal,
+        config: lerConfig,
+        base: BASE,
+      });
+      c.aoEncerrar = () => versaoProgresso++;
+      c.iniciar();
+      controlador = c;
+
+      if (resolucao.aviso) setTimeout(() => toast?.mostrar(resolucao.aviso!), 300);
+    } catch (e) {
+      erro = e instanceof Error ? e.message : 'Não consegui carregar o jogo';
     }
   }
 
-  const entradas = lerChaves();
+  function escolherDesafio(modo: ModoDefinicao, indice: number) {
+    irPara(linkDoDesafio(modo, indice, BASE));
+  }
+
+  iniciar();
 </script>
 
-<main>
-  <h1>PalavRada <span>beta</span></h1>
-  <p class="sub">Reescrita em andamento — Vite + TypeScript + Svelte 5.</p>
+<Toast bind:this={toast} />
 
-  <section>
-    <h2>localStorage visível daqui</h2>
-    {#if entradas.length}
-      <ul>
-        {#each entradas as { chave, tamanho } (chave)}
-          <li><code>{chave}</code><span>{tamanho} bytes</span></li>
-        {/each}
-      </ul>
-      <p class="ok">
-        ✓ Mesma origem do site legado — a migração de progresso pode ser testada aqui.
-      </p>
-    {:else}
-      <p class="vazio">
-        Nenhuma chave encontrada. Jogue uma partida em
-        <a href="/">palavrada.com.br</a> e recarregue esta página.
-      </p>
-    {/if}
-  </section>
+{#if erro}
+  <div class="aviso">
+    <p>{erro}</p>
+    <button class="mbtn" onclick={() => window.location.reload()}>Tentar de novo</button>
+  </div>
+{:else if controlador}
+  <Jogo
+    {controlador}
+    {selo}
+    bloqueado={modal !== null}
+    espiar={DEPURANDO ? controlador.partida.palavraAlvo : null}
+    iconeAlternar={alternar.icone}
+    rotuloAlternar={alternar.rotulo}
+    aoAlternarModo={alternar.ao}
+    aoAbrirAjuda={() => toast?.mostrar('Ajuda chega na próxima etapa')}
+    aoAbrirConfig={() => toast?.mostrar('Configurações chegam na próxima etapa')}
+    aoAvisar={(m) => toast?.mostrar(m)}
+  />
 
-  <p class="voltar"><a href="/">← voltar para a versão atual</a></p>
-</main>
+  <Seletor
+    aberto={modal === 'seletor'}
+    aoFechar={() => (modal = null)}
+    {totalLivre}
+    {totalLivrissimo}
+    {progressoLivre}
+    {progressoLivrissimo}
+    base={BASE}
+    aoEscolher={escolherDesafio}
+    aoAvisar={(m) => toast?.mostrar(m)}
+  />
+{:else}
+  <div class="carregando">carregando…</div>
+{/if}
 
 <style>
-  main {
-    max-width: 560px;
-    margin: 0 auto;
-    padding: 48px 20px;
-  }
-  h1 {
-    font-family: 'DM Sans', sans-serif;
-    font-size: 1.8rem;
-    font-weight: 800;
-    background: linear-gradient(90deg, #60a5fa, #a78bfa, #f472b6);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-  }
-  h1 span {
-    font-size: 0.7rem;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    vertical-align: middle;
-    -webkit-text-fill-color: var(--muted);
-  }
-  .sub {
+  .carregando,
+  .aviso {
+    margin: auto;
     color: var(--muted);
     font-size: 0.85rem;
-    margin-top: 4px;
-  }
-  section {
-    margin-top: 32px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 18px;
-  }
-  h2 {
-    font-size: 0.75rem;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    color: var(--muted);
-    font-weight: 600;
-  }
-  ul {
-    list-style: none;
-    margin-top: 12px;
-  }
-  li {
-    display: flex;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 7px 0;
-    border-bottom: 1px solid var(--border);
-    font-size: 0.85rem;
-  }
-  li:last-child {
-    border-bottom: 0;
-  }
-  li span {
-    color: var(--muted);
-    flex-shrink: 0;
-  }
-  code {
-    font-family: 'Space Grotesk', monospace;
-    color: var(--accent);
-    overflow-wrap: anywhere;
-  }
-  .ok {
-    margin-top: 14px;
-    font-size: 0.8rem;
-    color: var(--wave-win);
-  }
-  .vazio {
-    margin-top: 12px;
-    font-size: 0.85rem;
-    color: var(--muted);
-  }
-  .voltar {
-    margin-top: 28px;
-    font-size: 0.85rem;
-  }
-  a {
-    color: var(--accent);
+    text-align: center;
+    padding: 24px;
+    max-width: 320px;
   }
 </style>
