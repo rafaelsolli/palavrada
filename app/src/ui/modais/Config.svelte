@@ -65,7 +65,9 @@
         {#each chaves as chave (chave)}
           <div class="item">
             <div class="rotulo">
-              <label for={`cfg-${chave}`}>{DEFINICOES[chave].rotulo}</label>
+              <label id={`cfg-rot-${chave}`} for={`cfg-${chave}`}>
+                {DEFINICOES[chave].rotulo}
+              </label>
               <button
                 class="ajuda-btn"
                 aria-expanded={ajudaAberta === chave}
@@ -76,10 +78,14 @@
                 {ajudaAberta === chave ? '✕' : '?'}
               </button>
             </div>
+            <!-- Referenciar o rótulo e o próprio botão faz o nome acessível
+                 virar "Réguas horizontais 5": sem isso, em navegador de verdade
+                 o botão anuncia apenas o valor, sem dizer do que ele é. -->
             <button
               id={`cfg-${chave}`}
               class="ciclo"
               class:modificado={config.foiAlterado(chave)}
+              aria-labelledby={`cfg-rot-${chave} cfg-${chave}`}
               onclick={() => config.ciclar(chave)}
             >
               {rotuloValor(chave, config.valorExibido(chave))}

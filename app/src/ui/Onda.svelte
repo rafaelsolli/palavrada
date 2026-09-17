@@ -30,7 +30,7 @@
     <span><div class="ldot" style:background={COR.ultimo}></div>Último</span>
     <span><div class="ldot" style:background={COR.anterior}></div>Anteriores</span>
   </div>
-  <div class="area" bind:clientWidth={largura}>
+  <div class="moldura" bind:clientWidth={largura}>
     <canvas bind:this={canvas} aria-label="Gráfico das ondas"></canvas>
   </div>
 </div>
@@ -62,7 +62,7 @@
     height: 3px;
     border-radius: 2px;
   }
-  .area {
+  .moldura {
     width: 100%;
   }
   canvas {

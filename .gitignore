@@ -2,3 +2,6 @@ node_modules/
 app/dist/
 app/.svelte-kit/
 *.log
+app/test-results/
+app/playwright-report/
+app/e2e-screenshots/

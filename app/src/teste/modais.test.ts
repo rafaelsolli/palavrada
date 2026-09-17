@@ -34,14 +34,19 @@ async function teclar(...teclas: string[]) {
 
 const digitar = (palavra: string) => teclar(...palavra.split(''));
 
+/** O botão de ciclo de uma opção. O nome acessível é "<opção> <valor>". */
+const botaoDaOpcao = (rotulo: string) =>
+  screen.getByRole('button', { name: new RegExp(`^${rotulo}\\b`) });
+
 describe('modal de configurações', () => {
   it('gera todas as opções a partir das definições', async () => {
     await abrirJogo();
     await clicar(screen.getByRole('button', { name: 'Configurações' }));
 
     // Se alguém acrescentar uma opção às definições, ela aparece aqui sozinha.
+    // O nome do botão é "<opção> <valor>", daí a âncora no início.
     for (const chave of CHAVES) {
-      expect(screen.getByLabelText(DEFINICOES[chave].rotulo)).toBeInTheDocument();
+      expect(botaoDaOpcao(DEFINICOES[chave].rotulo)).toBeInTheDocument();
     }
     expect(CHAVES.length).toBe(12);
   });
@@ -50,7 +55,7 @@ describe('modal de configurações', () => {
     await abrirJogo();
     await clicar(screen.getByRole('button', { name: 'Configurações' }));
 
-    const botao = screen.getByLabelText('Layout');
+    const botao = botaoDaOpcao('Layout');
     expect(botao).toHaveTextContent('QWERTY');
 
     await clicar(botao);
@@ -64,19 +69,19 @@ describe('modal de configurações', () => {
   it('fechar sem aplicar descarta a mudança', async () => {
     await abrirJogo();
     await clicar(screen.getByRole('button', { name: 'Configurações' }));
-    await clicar(screen.getByLabelText('Layout'));
+    await clicar(botaoDaOpcao('Layout'));
     await clicar(screen.getByRole('button', { name: 'Fechar' }));
 
     expect(carregarConfig().teclado).toBe('qwerty');
 
     await clicar(screen.getByRole('button', { name: 'Configurações' }));
-    expect(screen.getByLabelText('Layout')).toHaveTextContent('QWERTY');
+    expect(botaoDaOpcao('Layout')).toHaveTextContent('QWERTY');
   });
 
   it('aplicar o layout alfabético reordena o teclado na hora', async () => {
     await abrirJogo();
     await clicar(screen.getByRole('button', { name: 'Configurações' }));
-    await clicar(screen.getByLabelText('Layout'));
+    await clicar(botaoDaOpcao('Layout'));
     await clicar(screen.getByRole('button', { name: 'Aplicar' }));
     await tick();
 
@@ -103,12 +108,12 @@ describe('modal de configurações', () => {
   it('redefinir volta tudo ao padrão', async () => {
     await abrirJogo();
     await clicar(screen.getByRole('button', { name: 'Configurações' }));
-    await clicar(screen.getByLabelText('Layout'));
-    await clicar(screen.getByLabelText('Autocomplete'));
+    await clicar(botaoDaOpcao('Layout'));
+    await clicar(botaoDaOpcao('Autocomplete'));
     await clicar(screen.getByRole('button', { name: 'Redefinir' }));
 
-    expect(screen.getByLabelText('Layout')).toHaveTextContent('QWERTY');
-    expect(screen.getByLabelText('Autocomplete')).toHaveTextContent('não');
+    expect(botaoDaOpcao('Layout')).toHaveTextContent('QWERTY');
+    expect(botaoDaOpcao('Autocomplete')).toHaveTextContent('não');
   });
 });
 
